@@ -1,0 +1,19 @@
+# Setări locale Claude Code (per mașină)
+.claude/settings.local.json
+
+# Dependențe și build
+node_modules/
+.next/
+out/
+coverage/
+playwright-report/
+test-results/
+
+# Variabile de mediu și secrete
+.env
+.env.*
+!.env.example
+
+# Sistem
+.DS_Store
+Thumbs.db
