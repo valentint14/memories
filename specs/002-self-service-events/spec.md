@@ -397,8 +397,8 @@ linkul invitaților devine invalid, iar fișierele nu mai sunt accesibile.
   (dacă există) și, pentru evenimentele active sau suspendate, numărul de fișiere, spațiul
   ocupat și data ștergerii, cu filtrare după stare și după „activare solicitată”.
 - **FR-028**: Administratorul TREBUIE să poată activa pachetul complet și suspenda sau reactiva
-  un eveniment, cu un motiv opțional. Fiecare acțiune TREBUIE să ceară confirmare și TREBUIE
-  înregistrată conform FR-024.
+  un eveniment, cu un motiv obligatoriu (1–500 de caractere). Fiecare acțiune TREBUIE să ceară
+  confirmare și TREBUIE înregistrată conform FR-024, împreună cu motivul.
 - **FR-028a**: Pentru un eveniment suspendat, organizatorul TREBUIE să vadă un mesaj de
   suspendare și TREBUIE să poată în continuare vizualiza, descărca (individual și arhivă) și
   șterge fișierele. Actualizarea în timp real a galeriei (001, US7) nu este disponibilă, iar
