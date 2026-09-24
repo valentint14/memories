@@ -34,5 +34,12 @@ export const config = {
   get appUrl(): string {
     return required("APP_URL");
   },
+  /** Destinatarii cererilor de activare (002/FR-018a); gol → adresele din platform_admins. */
+  get adminNotifyEmails(): string[] {
+    return (process.env.ADMIN_NOTIFY_EMAILS ?? "")
+      .split(",")
+      .map((e) => e.trim())
+      .filter((e) => e !== "");
+  },
   sentryDsn: process.env.SENTRY_DSN,
 };

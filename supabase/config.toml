@@ -421,7 +421,7 @@ enabled = true
 
 # Șablon magic link cu token_hash, verificat pe server în /auth/confirm (research.md R4).
 [auth.email.template.magic_link]
-subject = "Linkul tău de autentificare"
+subject = "Codul tău de autentificare Memories: {{ .Token }}"
 content_path = "./supabase/templates/magic_link.html"
 
 # Producție: SMTP personalizat Resend, regiunea eu-west-1 (research.md R4). Setat în proiectul

@@ -1,17 +1,24 @@
 import "server-only";
 import { serverEnv } from "../server-env";
 import { throwIfDbError } from "../actions/result";
+import type { Database } from "../supabase/types";
 import { requireAdminPage as requireAdmin } from "./guard";
+
+type EventStatus = Database["public"]["Enums"]["event_status"];
 
 export interface AdminEventRow {
   id: string;
   name: string | null;
   eventDate: string;
   organizerEmail: string | null;
-  status: "active" | "expiring" | "expired" | "deleting";
+  status: EventStatus;
+  origin: "admin" | "self_service";
   finalPriceMinor: number;
   retentionMonths: number;
-  purgeAt: string;
+  /** Null până la activare (002/FR-025). */
+  purgeAt: string | null;
+  pendingPurgeAt: string | null;
+  createdAt: string;
   anonymizedAt: string | null;
   fileCount: number;
   totalBytes: number;
@@ -23,8 +30,8 @@ export async function listEvents(): Promise<AdminEventRow[]> {
   const [events, stats] = await Promise.all([
     supabase
       .from("events")
-      .select("id, name, event_date, organizer_email, status, final_price_minor, retention_months, purge_at, anonymized_at")
-      .neq("status", "deleting")
+      .select("id, name, event_date, organizer_email, status, origin, final_price_minor, retention_months, purge_at, pending_purge_at, created_at, anonymized_at")
+      .not("status", "in", "(deleting,unconfirmed)")
       .order("event_date", { ascending: false }),
     supabase.rpc("admin_event_stats", {}),
   ]);
@@ -37,9 +44,12 @@ export async function listEvents(): Promise<AdminEventRow[]> {
     eventDate: e.event_date,
     organizerEmail: e.organizer_email,
     status: e.status,
+    origin: e.origin,
     finalPriceMinor: e.final_price_minor ?? 0,
     retentionMonths: e.retention_months,
     purgeAt: e.purge_at,
+    pendingPurgeAt: e.pending_purge_at,
+    createdAt: e.created_at,
     anonymizedAt: e.anonymized_at,
     fileCount: byId.get(e.id)?.file_count ?? 0,
     totalBytes: byId.get(e.id)?.total_bytes ?? 0,
@@ -47,13 +57,14 @@ export async function listEvents(): Promise<AdminEventRow[]> {
 }
 
 export interface AdminEventDetail extends AdminEventRow {
-  uploadStartsAt: string;
-  uploadEndsAt: string;
+  /** Câmpurile comerciale sunt null până la activare (002/FR-016). */
+  uploadStartsAt: string | null;
+  uploadEndsAt: string | null;
   maxFilesPerGuest: number;
   maxPhotoBytes: number;
   maxVideoBytes: number;
-  basePriceMinor: number;
-  retentionOptionId: string;
+  basePriceMinor: number | null;
+  retentionOptionId: string | null;
   uploadUrl: string;
 }
 
@@ -62,10 +73,10 @@ export async function getEvent(eventId: string): Promise<AdminEventDetail | null
   const { data: e, error } = await supabase
     .from("events")
     .select(
-      "id, name, event_date, organizer_email, status, final_price_minor, retention_months, purge_at, anonymized_at, upload_starts_at, upload_ends_at, max_files_per_guest, max_photo_bytes, max_video_bytes, base_price_minor, retention_option_id",
+      "id, name, event_date, organizer_email, status, origin, final_price_minor, retention_months, purge_at, pending_purge_at, created_at, anonymized_at, upload_starts_at, upload_ends_at, max_files_per_guest, max_photo_bytes, max_video_bytes, base_price_minor, retention_option_id",
     )
     .eq("id", eventId)
-    .neq("status", "deleting")
+    .not("status", "in", "(deleting,unconfirmed)")
     .maybeSingle();
   throwIfDbError(error);
   if (!e) return null;
@@ -81,9 +92,12 @@ export async function getEvent(eventId: string): Promise<AdminEventDetail | null
     eventDate: e.event_date,
     organizerEmail: e.organizer_email,
     status: e.status,
+    origin: e.origin,
     finalPriceMinor: e.final_price_minor ?? 0,
     retentionMonths: e.retention_months,
     purgeAt: e.purge_at,
+    pendingPurgeAt: e.pending_purge_at,
+    createdAt: e.created_at,
     anonymizedAt: e.anonymized_at,
     fileCount: stat?.file_count ?? 0,
     totalBytes: stat?.total_bytes ?? 0,
@@ -130,7 +144,9 @@ export async function listRetentionCatalog(): Promise<CatalogOptionRow[]> {
   throwIfDbError(options.error);
   throwIfDbError(events.error);
   const usage = new Map<string, number>();
-  for (const e of events.data ?? []) usage.set(e.retention_option_id, (usage.get(e.retention_option_id) ?? 0) + 1);
+  for (const e of events.data ?? []) {
+    if (e.retention_option_id !== null) usage.set(e.retention_option_id, (usage.get(e.retention_option_id) ?? 0) + 1);
+  }
   return (options.data ?? []).map((o) => ({
     id: o.id,
     months: o.months,

@@ -89,7 +89,7 @@ test("dacă prețul se schimbă între timp, dialogul arată prețul nou înaint
 test("un eveniment expirat apare ca „expirat”, fără galerie, iar linkul invitaților nu mai funcționează (FR-044)", async () => {
   const event = await createEvent({ organizerEmail: email, name: uniqueName("Nunta expirată") });
   // Starea se schimbă doar prin transition_event (002, research R5).
-  await serviceClient().rpc("transition_event", { p_event_id: event.id, p_to: "expiring", p_source: "system", p_actor: null });
+  await serviceClient().rpc("transition_event", { p_event_id: event.id, p_to: "expiring", p_source: "system" });
   await serviceClient().rpc("complete_event_expiry", { p_event_id: event.id });
 
   await page.goto("/events");

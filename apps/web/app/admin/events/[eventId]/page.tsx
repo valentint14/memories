@@ -15,9 +15,18 @@ export default async function AdminEventPage({ params }: { params: Promise<{ eve
   const [options, history] = await Promise.all([listActiveRetentionOptions(), listRetentionChanges(eventId)]);
 
   // Opțiunea curentă rămâne în listă chiar dacă între timp a fost dezactivată.
-  const formOptions = options.some((o) => o.id === event.retentionOptionId)
-    ? options
-    : [...options, { id: event.retentionOptionId, months: event.retentionMonths, surchargeMinor: event.finalPriceMinor - event.basePriceMinor, active: false }];
+  const formOptions =
+    event.retentionOptionId === null || options.some((o) => o.id === event.retentionOptionId)
+      ? options
+      : [
+          ...options,
+          {
+            id: event.retentionOptionId,
+            months: event.retentionMonths,
+            surchargeMinor: event.finalPriceMinor - (event.basePriceMinor ?? 0),
+            active: false,
+          },
+        ];
 
   const title = event.name ?? t("admin.anonymizedEvent");
 
@@ -59,12 +68,18 @@ export default async function AdminEventPage({ params }: { params: Promise<{ eve
           {t("admin.detail.priceLine", {
             price: formatMoney(event.finalPriceMinor),
             months: tp("plural.months", event.retentionMonths),
-            date: formatDateTime(event.purgeAt),
+            date: event.purgeAt === null ? t("admin.noDate") : formatDateTime(event.purgeAt),
           })}
         </p>
       </section>
 
-      {event.status === "active" && event.name !== null && event.organizerEmail !== null && (
+      {event.status === "active" &&
+        event.name !== null &&
+        event.organizerEmail !== null &&
+        event.uploadStartsAt !== null &&
+        event.uploadEndsAt !== null &&
+        event.basePriceMinor !== null &&
+        event.retentionOptionId !== null && (
         <section aria-labelledby="edit-title" className="flex flex-col gap-4">
           <h2 id="edit-title" className="text-lg font-semibold">
             {t("admin.detail.edit")}

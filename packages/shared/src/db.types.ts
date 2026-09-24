@@ -115,6 +115,57 @@ export type Database = {
           },
         ]
       }
+      auth_requests: {
+        Row: {
+          created_at: string
+          email: string
+          event_id: string | null
+          expires_at: string
+          failed_attempts: number
+          id: string
+          purpose: Database["public"]["Enums"]["auth_request_purpose"]
+          status: Database["public"]["Enums"]["auth_request_status"]
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          event_id?: string | null
+          expires_at?: string
+          failed_attempts?: number
+          id?: string
+          purpose: Database["public"]["Enums"]["auth_request_purpose"]
+          status?: Database["public"]["Enums"]["auth_request_status"]
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          event_id?: string | null
+          expires_at?: string
+          failed_attempts?: number
+          id?: string
+          purpose?: Database["public"]["Enums"]["auth_request_purpose"]
+          status?: Database["public"]["Enums"]["auth_request_status"]
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auth_requests_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "auth_requests_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "organizer_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_retention_changes: {
         Row: {
           actor_kind: Database["public"]["Enums"]["retention_actor"]
@@ -785,9 +836,37 @@ export type Database = {
       admin_event_token: { Args: { p_event_id: string }; Returns: string }
       allow_event_write: { Args: never; Returns: undefined }
       anonymize_expired_events: { Args: { p_now?: string }; Returns: number }
+      assert_current_legal_versions: {
+        Args: { p_privacy_version: string; p_terms_version: string }
+        Returns: undefined
+      }
+      assert_event_input: {
+        Args: { p_event_date: string; p_name: string }
+        Returns: undefined
+      }
+      auth_mail_allowed: {
+        Args: { p_email: string; p_ip_hash: string; p_ip_limit: number }
+        Returns: boolean
+      }
+      auth_request_email: { Args: { p_request_id: string }; Returns: string }
+      auth_request_preview: {
+        Args: { p_request_id: string }
+        Returns: {
+          event_name: string
+          purpose: Database["public"]["Enums"]["auth_request_purpose"]
+        }[]
+      }
       check_rate_limit: {
         Args: { p_key: string; p_limit: number; p_window: string }
         Returns: boolean
+      }
+      complete_auth_request: {
+        Args: { p_request_id: string }
+        Returns: {
+          event_id: string
+          outcome: string
+          purpose: Database["public"]["Enums"]["auth_request_purpose"]
+        }[]
       }
       complete_event_expiry: {
         Args: { p_event_id: string }
@@ -880,6 +959,15 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       is_platform_admin_user: { Args: never; Returns: boolean }
+      new_auth_request: {
+        Args: {
+          p_email: string
+          p_event_id: string
+          p_purpose: Database["public"]["Enums"]["auth_request_purpose"]
+        }
+        Returns: string
+      }
+      organizer_event_token: { Args: { p_event_id: string }; Returns: string }
       organizer_owns_active_event: {
         Args: { p_object_name: string }
         Returns: boolean
@@ -894,16 +982,42 @@ export type Database = {
         }[]
       }
       orphan_organizer_user_id: { Args: { p_email: string }; Returns: string }
+      purge_auth_requests: { Args: { p_now?: string }; Returns: number }
+      purge_unconfirmed_events: { Args: { p_now?: string }; Returns: number }
       raise_app_error: {
         Args: { p_code: string; p_detail?: Json }
         Returns: undefined
       }
       rate_limit_retry_after: { Args: { p_window: string }; Returns: number }
       reconcile_deletions: { Args: never; Returns: number }
+      register_failed_code: {
+        Args: { p_request_id: string }
+        Returns: Database["public"]["Enums"]["auth_request_status"]
+      }
       request_archive: { Args: { p_event_id: string }; Returns: string }
       request_event_deletion: {
         Args: { p_confirm_name: string; p_event_id: string }
         Returns: undefined
+      }
+      request_login: {
+        Args: { p_email: string; p_ip_hash?: string; p_ip_limit?: number }
+        Returns: string
+      }
+      request_self_service_event: {
+        Args: {
+          p_email: string
+          p_event_date: string
+          p_ip_hash?: string
+          p_ip_limit?: number
+          p_name: string
+          p_privacy_version: string
+          p_terms_version: string
+        }
+        Returns: string
+      }
+      resend_auth_request: {
+        Args: { p_ip_hash?: string; p_ip_limit?: number; p_request_id: string }
+        Returns: string
       }
       reserve_upload: {
         Args: {
@@ -946,7 +1060,7 @@ export type Database = {
       }
       transition_event: {
         Args: {
-          p_actor: string
+          p_actor?: string
           p_event_id: string
           p_external_ref?: string
           p_note?: string
@@ -963,6 +1077,8 @@ export type Database = {
     }
     Enums: {
       archive_status: "pending" | "building" | "ready" | "failed" | "expired"
+      auth_request_purpose: "create" | "login"
+      auth_request_status: "pending" | "used" | "invalidated"
       event_origin: "admin" | "self_service"
       event_status:
         | "unconfirmed"
@@ -1116,6 +1232,8 @@ export const Constants = {
   public: {
     Enums: {
       archive_status: ["pending", "building", "ready", "failed", "expired"],
+      auth_request_purpose: ["create", "login"],
+      auth_request_status: ["pending", "used", "invalidated"],
       event_origin: ["admin", "self_service"],
       event_status: [
         "unconfirmed",

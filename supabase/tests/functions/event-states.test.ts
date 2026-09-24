@@ -99,7 +99,6 @@ describe("transition_event (FR-022, FR-024)", () => {
       p_event_id: eventId,
       p_to: "suspended",
       p_source: "system",
-      p_actor: null,
     });
     expect(error).toBeNull();
     const [grant] = await sql<{ anon: boolean; auth: boolean }>(

@@ -123,7 +123,7 @@ create function public.transition_event(
   p_event_id uuid,
   p_to public.event_status,
   p_source public.status_change_source,
-  p_actor uuid,
+  p_actor uuid default null,
   p_reason text default null,
   p_external_ref text default null,
   p_note text default null

@@ -1,4 +1,7 @@
-<h2>Autentificare</h2>
-<p>Folosește linkul de mai jos pentru a te autentifica. Linkul poate fi folosit o singură dată și expiră într-o oră.</p>
-<p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next={{ .RedirectTo }}">Intră în cont</a></p>
-<p>Dacă nu ai cerut acest email, îl poți ignora.</p>
+<h2>Autentificare Memories</h2>
+<p>Ai cerut autentificarea în contul tău Memories.</p>
+<p>Codul tău: <strong style="font-size: 24px; letter-spacing: 4px">{{ .Token }}</strong></p>
+<p>Sau deschide pagina de confirmare și apasă butonul „Confirmă”:</p>
+<p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}">Intră în cont</a></p>
+<p>Codul și linkul sunt valabile 15 minute și pot fi folosite o singură dată.</p>
+<p>Dacă nu tu ai cerut acest email, îl poți ignora.</p>

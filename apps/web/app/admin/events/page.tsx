@@ -55,7 +55,7 @@ export default async function AdminEventsPage() {
                   </td>
                   <td className="p-2">{formatMoney(e.finalPriceMinor)}</td>
                   <td className="p-2">{tp("plural.months", e.retentionMonths)}</td>
-                  <td className="p-2">{formatDate(e.purgeAt)}</td>
+                  <td className="p-2">{e.purgeAt === null ? t("admin.noDate") : formatDate(e.purgeAt)}</td>
                 </tr>
               ))}
             </tbody>

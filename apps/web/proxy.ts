@@ -36,10 +36,14 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   response.headers.set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload");
   response.headers.set("X-Content-Type-Options", "nosniff");
   response.headers.set("Permissions-Policy", "camera=(self), microphone=(), geolocation=()");
+  const path = request.nextUrl.pathname;
+  // Paginile de confirmare au tokenuri în URL (002, research R2): fără referrer și fără cache.
+  const hasTokenInUrl = path === "/auth/confirm" || path === "/auth/code";
   response.headers.set(
     "Referrer-Policy",
-    request.nextUrl.pathname.startsWith("/e/") ? "no-referrer" : "strict-origin-when-cross-origin",
+    path.startsWith("/e/") || hasTokenInUrl ? "no-referrer" : "strict-origin-when-cross-origin",
   );
+  if (hasTokenInUrl) response.headers.set("Cache-Control", "no-store");
   return response;
 }
 

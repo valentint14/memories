@@ -60,7 +60,8 @@ export async function createEvent(input: EventInput): Promise<ActionResult<Saved
       eventId: row.id,
       uploadUrl: await uploadUrlOf(row.id),
       finalPriceMinor: row.final_price_minor ?? 0,
-      purgeAt: row.purge_at,
+      // Evenimentele create de administrator sunt active, deci au mereu data ștergerii.
+      purgeAt: row.purge_at ?? "",
     };
   });
 }
@@ -85,7 +86,8 @@ export async function updateEvent(eventId: string, input: EventInput): Promise<A
       eventId: row.id,
       uploadUrl: await uploadUrlOf(row.id),
       finalPriceMinor: row.final_price_minor ?? 0,
-      purgeAt: row.purge_at,
+      // Evenimentele create de administrator sunt active, deci au mereu data ștergerii.
+      purgeAt: row.purge_at ?? "",
     };
   });
 }

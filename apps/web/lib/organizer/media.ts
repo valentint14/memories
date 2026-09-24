@@ -2,7 +2,7 @@ import "server-only";
 import { SIGNED_URL_TTL_SECONDS } from "@memories/shared";
 import { ActionError, throwIfDbError } from "../actions/result";
 import { serverSupabase } from "../supabase/server";
-import type { TypedClient } from "../supabase/types";
+import type { Database, TypedClient } from "../supabase/types";
 
 export const PAGE_SIZE = 60;
 
@@ -19,15 +19,26 @@ export interface GalleryItem {
   durationMs: number | null;
 }
 
+export type EventStatus = Database["public"]["Enums"]["event_status"];
+
 export interface OrganizerEvent {
   id: string;
   name: string | null;
   eventDate: string;
-  status: "active" | "expiring" | "expired" | "deleting";
+  status: EventStatus;
+  origin: "admin" | "self_service";
   finalPriceMinor: number | null;
   retentionMonths: number;
-  purgeAt: string;
+  /** Data ștergerii fișierelor; null până la activare (002/FR-025). */
+  purgeAt: string | null;
+  /** Data ștergerii unui eveniment neactivat (002/FR-019). */
+  pendingPurgeAt: string | null;
   expiredAt: string | null;
+}
+
+/** Stările în care organizatorul își vede galeria (002/FR-028a: și când e suspendat). */
+export function galleryAvailable(status: EventStatus): boolean {
+  return status === "active" || status === "suspended";
 }
 
 /** Evenimentul organizatorului curent (RLS: doar evenimentele sale) sau null. */
@@ -36,19 +47,21 @@ export async function getOrganizerEvent(eventId: string, client?: TypedClient): 
   const supabase = client ?? (await serverSupabase());
   const { data, error } = await supabase
     .from("organizer_events")
-    .select("id, name, event_date, status, final_price_minor, retention_months, purge_at, expired_at")
+    .select("id, name, event_date, status, origin, final_price_minor, retention_months, purge_at, pending_purge_at, expired_at")
     .eq("id", eventId)
     .maybeSingle();
   throwIfDbError(error);
-  if (!data?.id || !data.event_date || !data.status || !data.purge_at || data.retention_months === null) return null;
+  if (!data?.id || !data.event_date || !data.status || !data.origin || data.retention_months === null) return null;
   return {
     id: data.id,
     name: data.name,
     eventDate: data.event_date,
     status: data.status,
+    origin: data.origin,
     finalPriceMinor: data.final_price_minor,
     retentionMonths: data.retention_months,
     purgeAt: data.purge_at,
+    pendingPurgeAt: data.pending_purge_at,
     expiredAt: data.expired_at,
   };
 }
@@ -58,7 +71,7 @@ export async function requireActiveEvent(eventId: string): Promise<TypedClient> 
   const supabase = await serverSupabase();
   const event = await getOrganizerEvent(eventId, supabase);
   if (!event) throw new ActionError("FORBIDDEN");
-  if (event.status !== "active") throw new ActionError("EVENT_EXPIRED");
+  if (!galleryAvailable(event.status)) throw new ActionError("EVENT_EXPIRED");
   return supabase;
 }
 

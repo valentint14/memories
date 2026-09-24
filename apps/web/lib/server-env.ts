@@ -6,8 +6,8 @@ function required(name: string): string {
   return value;
 }
 
-/** Secretul de test Cloudflare Turnstile care acceptă mereu tokenul de test (research R3). */
-export const TURNSTILE_TEST_SECRET = "1x0000000000000000000000000000000AA";
+/** Secretele de test Cloudflare Turnstile (trec, eșuează, token folosit) — research R3. */
+export const TURNSTILE_TEST_SECRET = /^[123]x0{31}AA$/;
 
 /** Secrete disponibile doar pe server (constituția, principiul III). */
 export const serverEnv = {
@@ -29,7 +29,7 @@ export const serverEnv = {
    */
   get turnstileOffline(): boolean {
     if (process.env.TURNSTILE_OFFLINE !== "1") return false;
-    if (process.env.TURNSTILE_SECRET_KEY !== TURNSTILE_TEST_SECRET) {
+    if (!TURNSTILE_TEST_SECRET.test(process.env.TURNSTILE_SECRET_KEY ?? "")) {
       throw new Error("TURNSTILE_OFFLINE=1 este permis doar cu secretul de test Turnstile");
     }
     return true;
