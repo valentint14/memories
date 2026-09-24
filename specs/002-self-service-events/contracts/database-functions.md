@@ -29,8 +29,9 @@ Execuție: `service_role`. `failed_attempts + 1`; la 5 → `invalidated` și job
 Execuție: `authenticated` (după `verifyOtp`). Verifică: `pending`, neexpirată, `email =
 auth.jwt()->>'email'`. Pentru `create`:
 - dacă adresa are deja numărul maxim de evenimente `awaiting_activation`, evenimentul rămâne
-  `unconfirmed` (se va șterge), iar funcția întoarce `AWAITING_LIMIT_REACHED`; pagina explică
-  limita (US2, scenariul 3);
+  `unconfirmed` (se va șterge), cererea se marchează `used` (autentificarea reușește), iar
+  funcția întoarce `AWAITING_LIMIT_REACHED`; utilizatorul ajunge la `/events`, cu mesajul
+  despre limită (spec, cazul limită corespunzător);
 - altfel `transition_event(event, 'awaiting_activation', 'organizer', auth.uid())`, calculează
   `pending_purge_at` și setează `user_id` pe acceptări.
 
@@ -66,8 +67,14 @@ Pentru `active`: doar istoric `active → active` cu nota „activare repetată�
 
 ### `suspend_event(p_event_id uuid, p_reason text) → void` / `reactivate_event(p_event_id uuid, p_reason text) → void`
 
-Execuție: administrator (aal2). `reason` obligatoriu (`REASON_REQUIRED`). Suspendarea
-expiră arhivele `pending`/`building` (nu și pe cele `ready`, care rămân descărcabile).
+Execuție: administrator (aal2). `reason` obligatoriu (`REASON_REQUIRED`). Arhivele nu se
+modifică: organizatorul poate descărca și cere arhive și în timpul suspendării (FR-028a).
+
+### `admin_update_pending_event(p_event_id uuid, p_name text, p_event_date date) → void`
+
+Execuție: administrator (aal2). Doar pentru `awaiting_activation`; aceleași validări și
+recalculări ca `organizer_update_event` (FR-028). Pentru celelalte stări, administratorul
+folosește editarea din 001.
 
 ## Organizator
 

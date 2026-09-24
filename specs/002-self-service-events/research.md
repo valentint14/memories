@@ -96,7 +96,11 @@ tokenul.
   `remoteip` = IP-ul clientului.
 - **Endpointul public Supabase Auth**: CAPTCHA-ul integrat al Auth, activat cu furnizorul
   `turnstile` (`[auth.captcha]` în `config.toml` local; setarea echivalentă în dashboard pentru
-  producție). Nu afectează fluxurile aplicației, care folosesc doar API-ul administrativ.
+  producție). Fluxurile aplicației folosesc API-ul administrativ pentru emitere (fără CAPTCHA) și
+  `verifyOtp` pentru confirmare. **De confirmat prin probă (T002), înainte de activare**:
+  `/verify` nu cere CAPTCHA. Dacă îl cere, CAPTCHA-ul Auth rămâne dezactivat, iar endpointul
+  public e protejat doar de limitele Auth și de `enable_signup = false` (doar adresele
+  existente pot primi emailuri, în limitele de frecvență per adresă ale Auth).
 - **Fără dependență nouă**: scriptul `https://challenges.cloudflare.com/turnstile/v0/api.js` se
   încarcă cu nonce-ul CSP existent printr-o componentă proprie mică (`TurnstileField`). CSP-ul
   adaugă `https://challenges.cloudflare.com` la `script-src` și `frame-src`.

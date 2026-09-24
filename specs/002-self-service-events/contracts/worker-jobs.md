@@ -55,8 +55,10 @@ rămași fără evenimente după ștergerea automată a celor neactivate.
 ## Șabloane de email
 
 Locație: `apps/worker/src/email/templates/`. Fiecare șablon e o funcție pură care întoarce
-`{ subject, text, html }`. Textele sunt în română și au teste de tip snapshot (conținut) și de
-escapare HTML (numele evenimentului e text introdus de utilizator).
+`{ subject, text, html }`. Textele nu se scriu în șabloane: vin din
+`apps/worker/src/email/messages/ro.ts` (structură de localizare pregătită pentru engleză,
+constituția VIII), cu interpolare de parametri. Au teste de conținut și de escapare HTML (numele
+evenimentului e text introdus de utilizator).
 
 | Șablon | Subiect | Conținut obligatoriu |
 | --- | --- | --- |

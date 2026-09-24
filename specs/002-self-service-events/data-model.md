@@ -14,7 +14,7 @@ activ (principiul III). Sumele sunt în bani (1 leu = 100 bani), iar momentele s
 | `event_origin` | `admin`, `self_service` | nou |
 | `status_change_source` | `organizer`, `admin`, `system`, `payment` | nou (FR-024) |
 | `auth_request_purpose` | `create`, `login` | nou |
-| `auth_request_status` | `pending`, `used`, `expired`, `invalidated` | nou |
+| `auth_request_status` | `pending`, `used`, `invalidated` | nou; expirarea se deduce din `expires_at` |
 | `legal_document_kind` | `terms`, `privacy` | nou |
 | `notice_threshold` | + `activation_7d` | valoare nouă (FR-019) |
 
@@ -29,7 +29,8 @@ activ (principiul III). Sumele sunt în bani (1 leu = 100 bani), iar momentele s
   (șters)                        (șters)                   data ștergerii (001)  │
                                                                       ▼          ▼
                                                             expiring ──► expired
- ștergere de către organizator/admin: orice stare vizibilă ──► deleting ──► (șters sau rând de facturare)
+ ștergere de către organizator/admin: activ / suspendat / expirat ──► deleting ──► (rând de facturare)
+                                      în așteptarea activării ──► (șters direct)
 ```
 
 `event_status_transitions` (date de referință, doar citire):
@@ -43,11 +44,13 @@ activ (principiul III). Sumele sunt în bani (1 leu = 100 bani), iar momentele s
 | `active` | `expiring` | job de expirare (001) |
 | `suspended` | `expiring` | job de expirare (001) |
 | `expiring` | `expired` | worker (001) |
-| `awaiting_activation`, `active`, `suspended`, `expired` | `deleting` | ștergere de către organizator sau administrator |
+| `active`, `suspended`, `expired` | `deleting` | ștergere de către organizator sau administrator (evenimentele activate cel puțin o dată) |
 | `active` | `active` | activare repetată (doar istoric, FR-026) |
 
-Ștergerea completă a unui eveniment `unconfirmed` sau `awaiting_activation` nu e o tranziție:
-rândul dispare (R6), iar pentru cele `awaiting_activation` se scrie un rând în `app_audit_log`.
+Ștergerea completă a unui eveniment `unconfirmed` sau `awaiting_activation` (automată sau
+cerută de organizator / administrator) nu e o tranziție: rândul dispare (R6, R11), fiindcă
+evenimentul nu are fișiere și nici date de facturare. Pentru cele `awaiting_activation` se scrie
+un rând în `app_audit_log`.
 
 ## Tabele noi
 
@@ -120,8 +123,9 @@ golesc.
 | `created_at` | timestamptz | |
 
 O cerere nouă pentru aceeași adresă marchează cererile `pending` anterioare ca `invalidated`
-(în concordanță cu tokenul Auth, care se înlocuiește). RLS: fără acces pentru clienți; doar
-funcțiile server. Rândurile `used`/`expired`/`invalidated` se șterg după 7 zile (cron).
+(în concordanță cu tokenul Auth, care se înlocuiește). O cerere e utilizabilă doar dacă
+`status = 'pending' and expires_at > now()`. RLS: fără acces pentru clienți; doar funcțiile
+server. Cererile `used`/`invalidated` și cele expirate se șterg după 7 zile (cron).
 
 ### `legal_documents` (FR-039)
 
@@ -179,6 +183,11 @@ acces pentru clienți; administratorul citește.
 | `pending_purge_at` | timestamptz null | doar pentru `awaiting_activation`: sfârșitul zilei `event_date + 30` (ora României) (FR-019) |
 | `status_before_suspension` | — | nu e nevoie: singura tranziție din `suspended` este spre `active` |
 
+Evenimentele create de administrator (`origin = 'admin'`, inserate prin politica
+`events_admin_insert` din 001) primesc la inserare, printr-un trigger, `package_id = complete`
+(dacă lipsește), `activated_at = now()` și rândul de istoric `null → active` (sursa `admin`,
+autorul `auth.uid()`), fără a trece prin `activate_event` (FR-023, FR-024).
+
 Constrângeri relaxate: `base_price_minor`, `retention_option_id`, `upload_starts_at`,
 `upload_ends_at` și `purge_at` devin `null` permis doar când
 `status in ('unconfirmed', 'awaiting_activation')` (check). Triggerul de retenție din 001 se
@@ -212,6 +221,7 @@ Semnăturile complete sunt în [contracts/database-functions.md](./contracts/dat
 | `transition_event` | intern (`security definer`) | singura cale de schimbare a stării + istoric |
 | `activate_event` | administrator; ulterior plăți | activare idempotentă (FR-025, FR-026) |
 | `suspend_event` / `reactivate_event` | administrator | FR-028, cu motiv obligatoriu |
+| `admin_update_pending_event` | administrator | numele și data unui eveniment `awaiting_activation` (FR-028) |
 | `request_activation` | organizator | FR-018a |
 | `organizer_update_event` | organizator | FR-033, FR-034 |
 | `request_event_deletion` | administrator **și organizator** | extinsă pentru FR-035 |

@@ -251,6 +251,10 @@ linkul invitaților devine invalid, iar fișierele nu mai sunt accesibile.
   uneia nu le confirmă pe celelalte, iar cele neconfirmate se șterg după 24 de ore.
 - Vizitatorul confirmă după ce evenimentul neconfirmat a fost șters (după 24 de ore): linkul și
   codul au expirat deja; i se cere să creeze din nou evenimentul.
+- Vizitatorul confirmă un eveniment nou, dar adresa lui are deja numărul maxim de evenimente în
+  așteptarea activării: este autentificat și vede lista evenimentelor, cu un mesaj care explică
+  limita și cum se activează un eveniment existent; evenimentul nou nu se creează (rămâne
+  neconfirmat și se șterge după 24 de ore).
 - Linkul din email este deschis automat de un scaner de securitate al furnizorului de email:
   deschiderea nu confirmă nimic, fiindcă e nevoie de apăsarea butonului.
 - Se introduce greșit codul de mai multe ori: după 5 încercări greșite codul este invalidat și
@@ -374,7 +378,9 @@ linkul invitaților devine invalid, iar fișierele nu mai sunt accesibile.
   așteptarea activării (confirmare); în așteptarea activării → activ (activarea pachetului
   complet); activ → suspendat; suspendat → activ (reactivare); activ sau suspendat → expirat (la
   data ștergerii automate). Un eveniment neconfirmat (FR-004) sau în așteptarea activării
-  (FR-019) nu expiră, ci se șterge complet. Orice altă tranziție TREBUIE refuzată.
+  (FR-019) nu expiră, ci se șterge complet. Expirarea și ștergerea trec prin etapele interne din
+  001 („în expirare”, „în ștergere”), care nu sunt stări vizibile utilizatorilor. Orice altă
+  tranziție TREBUIE refuzată.
 - **FR-023**: Evenimentele create de administrator TREBUIE să înceapă direct în starea activ, cu
   pachetul complet, ca în 001.
 - **FR-024**: Fiecare schimbare de stare TREBUIE înregistrată, fără posibilitate de modificare
@@ -398,7 +404,10 @@ linkul invitaților devine invalid, iar fișierele nu mai sunt accesibile.
   ocupat și data ștergerii, cu filtrare după stare și după „activare solicitată”.
 - **FR-028**: Administratorul TREBUIE să poată activa pachetul complet și suspenda sau reactiva
   un eveniment, cu un motiv obligatoriu (1–500 de caractere). Fiecare acțiune TREBUIE să ceară
-  confirmare și TREBUIE înregistrată conform FR-024, împreună cu motivul.
+  confirmare și TREBUIE înregistrată conform FR-024, împreună cu motivul. Pentru un eveniment
+  în așteptarea activării, administratorul poate modifica doar numele și data (ca
+  organizatorul); prețul, limitele și perioada de upload se stabilesc la activare, din pachetul
+  complet.
 - **FR-028a**: Pentru un eveniment suspendat, organizatorul TREBUIE să vadă un mesaj de
   suspendare și TREBUIE să poată în continuare vizualiza, descărca (individual și arhivă) și
   șterge fișierele. Actualizarea în timp real a galeriei (001, US7) nu este disponibilă, iar
@@ -517,6 +526,8 @@ linkul invitaților devine invalid, iar fișierele nu mai sunt accesibile.
   momentul înregistrate.
 - **SC-013**: 100% dintre evenimentele neactivate sunt șterse în cel mult 24 de ore după
   termenul din FR-019, iar fiecare organizator afectat a primit exact un email de avertizare.
+- **SC-014**: Emailul de confirmare sau de autentificare ajunge la destinatar în cel mult 30 de
+  secunde de la trimiterea formularului, în cel puțin 95% din cazurile testate.
 
 ## Assumptions
 

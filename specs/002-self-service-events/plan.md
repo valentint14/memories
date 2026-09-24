@@ -53,7 +53,7 @@ cheile de test Cloudflare.
 
 **Performance Goals**:
 - creare + confirmare + descărcarea codului QR în < 3 min pentru un utilizator nou (SC-001);
-- emailul ajunge în Mailpit/Inbox în < 30 s de la trimitere (coada are latența din 001, < 5 s);
+- emailul ajunge în Mailpit/Inbox în < 30 s de la trimitere (SC-014; coada are latența din 001, < 5 s);
 - diferența medie de timp de răspuns între adrese existente și inexistente < 100 ms (SC-004);
 - LCP pentru `/` < 2,5 s pe 4G (aceeași țintă ca pagina invitatului).
 
@@ -75,7 +75,7 @@ SQL noi sau modificate, 4 joburi de worker noi.
 | Principiu | Verificare | Stare |
 | --- | --- | --- |
 | I. Fără fricțiune pentru invitați | Pagina invitatului rămâne fără cont; doar mesaje noi pentru evenimentele neactivate sau suspendate; bugetul LCP se menține (testul de LCP din 001 rulează neschimbat). | ✅ |
-| II. GDPR | Datele rămân în UE (Postgres, Storage). Evenimentele și utilizatorii neconfirmați se șterg în 24 h, cele neactivate la termen. Acceptarea termenilor e înregistrată cu versiunea. Cloudflare Turnstile e procesator nou, fără stocare de date ale aplicației: DPA + mențiune în politica de confidențialitate (R3). Fiecare eveniment are o regulă de ștergere automată în orice stare. | ✅ |
+| II. GDPR | Datele rămân în UE (Postgres, Storage). Evenimentele și utilizatorii neconfirmați se șterg în 24 h, cele neactivate la termen. Acceptarea termenilor e înregistrată cu versiunea. Cloudflare Turnstile e procesator nou, fără stocare de date ale aplicației: DPA + mențiune în politica de confidențialitate (R3). Fiecare eveniment are o regulă de ștergere automată în orice stare. Politica de retenție configurabilă (opțiunea din catalog) se aplică de la activare, când evenimentul poate primi fișiere. Înainte de activare, evenimentul nu are media, iar ștergerea automată are termene fixe (24 h neconfirmat, 30 de zile după dată neactivat). Aceasta este o interpretare explicită a principiului, nu o abatere. | ✅ |
 | III. Securitate implicită | Tokenul public al evenimentului, aleator (001). RLS pe toate tabelele noi. Crearea și schimbările de stare doar prin funcții `security definer` validate pe server. Rate limiting per adresă și per IP. Turnstile. Tokenul de autentificare nu e consumat de scanere. Secretele doar pe server. Ștergerea de către organizator curăță Storage ca în 001. | ✅ |
 | IV. Pipeline media scalabil | Neschimbat; uploadul se deschide doar după activare. | ✅ |
 | V. Timp real fiabil | Neschimbat pentru evenimentele active; dezactivat intenționat pentru cele suspendate (FR-028a). | ✅ |
@@ -150,6 +150,7 @@ apps/web/
 apps/worker/src/
 ├── jobs/{auth-email,auth-rotate,admin-activation-notice}.ts
 ├── email/templates/{confirmare,autentificare,activare-solicitata,stergere-neactivat}.ts
+├── email/messages/ro.ts                     # textele emailurilor (constituția VIII)
 └── tests/                                    # joburile noi, pe Mailpit
 
 packages/shared/src/

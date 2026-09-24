@@ -85,6 +85,7 @@ aceleași limite de frecvență; răspuns neutru.
 | `activateEvent({ eventId, reason })` | `activate_event(..., source => 'admin')` |
 | `suspendEvent({ eventId, reason })` | `suspend_event` |
 | `reactivateEvent({ eventId, reason })` | `reactivate_event` |
+| `updatePendingEvent({ eventId, name, eventDate })` | `admin_update_pending_event` (formularul de editare din 001 arată doar numele și data pentru `awaiting_activation`) |
 | `updatePackage({ priceMinor, maxFilesPerGuest, maxPhotoBytes, maxVideoBytes, retentionOptionId })` | update pe `packages` (RLS admin) |
 | `updateSelfServiceSettings({ maxAwaitingEventsPerOrganizer })` | update pe `self_service_settings` |
 
@@ -109,4 +110,5 @@ aceleași limite de frecvență; răspuns neutru.
 | --- | --- | --- |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | web (public) | local/CI: `1x00000000000000000000BB` |
 | `TURNSTILE_SECRET_KEY` | web (server), Supabase Auth | local/CI: `1x0000000000000000000000000000000AA` |
+| `RATE_LIMIT_IP_PER_HOUR` | web (server) | implicit 20 (FR-036); ridicat doar în testul de timp de răspuns |
 | `ADMIN_NOTIFY_EMAILS` | worker | destinatarii cererilor de activare (implicit: adresele din `platform_admins`) |
