@@ -9,10 +9,33 @@
 **Input**: User description: "Crearea evenimentelor în regim self-service de către organizatori, pe baza adresei de email, fără parolă. Oricine își poate crea singur un eveniment în regim de probă; administratorul păstrează controlul asupra activării pachetului complet, iar crearea de către administrator rămâne disponibilă. Modelul de pachete și stările evenimentului (neconfirmat, probă, activ, suspendat, expirat) trebuie să permită ulterior activarea automată de către un sistem de plăți, cu istoricul fiecărei schimbări de stare și al sursei ei."
 
 **Relația cu funcționalitatea 001** ([spec 001](../001-event-qr-upload/spec.md)): această
-funcționalitate înlocuiește regula „nu există înregistrare self-service” (001/FR-006) și
-presupunerea că organizatorul nu poate modifica datele evenimentului. Restul comportamentului din
-001 (upload invitați, galerie, descărcare, ștergerea fișierelor, retenție, anonimizare) se aplică
-neschimbat și evenimentelor create self-service, în limitele pachetului lor.
+funcționalitate înlocuiește regula „nu există înregistrare self-service” (001/FR-006),
+restricția ca organizatorul să nu poată șterge evenimentul (001/FR-006b) și presupunerea că
+organizatorul nu poate modifica datele evenimentului. După activare, un eveniment
+creat self-service se comportă exact ca unul creat de administrator (upload invitați, galerie,
+descărcare, ștergerea fișierelor, retenție, anonimizare).
+
+## Clarifications
+
+### Session 2026-09-24
+
+- Q: Care să fie limitele inițiale ale regimului de probă? → A: Nu există regim de probă. Un
+  eveniment creat self-service ajunge, după confirmarea emailului, în starea „în așteptarea
+  activării”: organizatorul îl vede, îl poate edita și descarcă codul QR, dar invitații nu pot
+  încărca fișiere până la activarea pachetului complet (de administrator acum, prin plată online
+  ulterior). Starea „probă” din descrierea inițială este înlocuită de „în așteptarea activării”.
+- Q: Ce se întâmplă cu un eveniment care rămâne în așteptarea activării și nu este activat
+  niciodată? → A: Se șterge automat la 30 de zile după data evenimentului; organizatorul
+  primește un email de avertizare cu 7 zile înainte.
+- Q: Ce mai poate face organizatorul cu fișierele unui eveniment suspendat de administrator?
+  → A: Uploadurile se opresc; organizatorul poate doar descărca și șterge fișiere, fără galerie
+  live și fără prelungirea retenției.
+- Q: Poate organizatorul să șteargă singur și evenimentele create sau activate de
+  administrator? → A: Da, pentru toate evenimentele lui (neactivate, active, suspendate), cu
+  confirmare prin tastarea numelui; datele de facturare se păstrează.
+- Q: Cum află administratorul că un organizator vrea să își activeze evenimentul? → A: Buton
+  „Solicită activarea”: administratorul primește un email, iar evenimentul apare marcat în
+  lista lui; organizatorul vede că cererea a fost trimisă.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -27,8 +50,8 @@ citit pe alt dispozitiv. După confirmare, vizitatorul devine organizator autent
 direct la evenimentul nou creat, cu codul QR gata de descărcat.
 
 **Why this priority**: este bucla de achiziție a produsului: fără ea, fiecare client depinde de
-administrator. Livrată singură, permite deja unui client nou să folosească aplicația de la cap
-la coadă în regim de probă.
+administrator pentru a începe. Livrată singură, permite unui client nou să își pregătească
+evenimentul și codul QR fără intervenția administratorului.
 
 **Independent Test**: se completează formularul de pe pagina principală cu o adresă nouă, se
 confirmă o dată prin link și o dată prin cod pe alt dispozitiv; se verifică autentificarea,
@@ -42,8 +65,8 @@ ajungerea la eveniment și descărcarea codului QR.
 2. **Given** emailul de confirmare, **When** vizitatorul deschide linkul, **Then** vede o pagină
    de confirmare cu un buton, iar evenimentul nu este confirmat până nu apasă butonul.
 3. **Given** pagina de confirmare deschisă din link, **When** vizitatorul apasă butonul,
-   **Then** este autentificat ca organizator și ajunge la evenimentul nou creat, cu codul QR
-   disponibil pentru descărcare.
+   **Then** este autentificat ca organizator și ajunge la evenimentul nou creat, aflat în
+   așteptarea activării, cu codul QR disponibil pentru descărcare.
 4. **Given** vizitatorul a început pe laptop și citește emailul pe telefon, **When** introduce
    codul din email în pagina rămasă deschisă pe laptop, **Then** este autentificat pe laptop și
    ajunge la eveniment.
@@ -75,118 +98,125 @@ email nou.
 1. **Given** o adresă cu evenimente create de administrator și self-service, **When**
    organizatorul se autentifică, **Then** vede toate evenimentele adresei, cu starea fiecăruia.
 2. **Given** un organizator autentificat, **When** creează un eveniment nou din cont, **Then**
-   evenimentul este creat direct în regim de probă, fără email de confirmare.
-3. **Given** un organizator care a atins limita de evenimente în probă active simultan, **When**
-   încearcă să creeze încă unul, **Then** primește un mesaj care explică limita și modul de
-   activare a pachetului complet pentru un eveniment existent.
+   evenimentul este creat direct în așteptarea activării, fără email de confirmare.
+3. **Given** un organizator care a atins limita de evenimente în așteptarea activării, **When**
+   încearcă să creeze încă unul, **Then** primește un mesaj care explică limita și cum se
+   activează un eveniment existent.
 4. **Given** un organizator autentificat care trimite formularul de pe pagina principală,
    **When** îl trimite, **Then** evenimentul se creează direct în contul lui, fără email de
    confirmare.
 
 ---
 
-### User Story 3 - Evenimentul în regim de probă, cu limite vizibile (Priority: P1)
+### User Story 3 - Evenimentul în așteptarea activării (Priority: P1)
 
-Un eveniment creat self-service începe în regim de probă: toate funcțiile sunt disponibile
-(upload invitați, galerie, descărcare, ștergere), dar cu un număr maxim de fișiere pe eveniment
-și o durată de păstrare mai scurtă. Organizatorul vede clar limitele, consumul curent și cum
-activează pachetul complet.
+Un eveniment creat self-service și confirmat este „în așteptarea activării”. Organizatorul îl
+vede în cont, îi poate modifica numele și data și poate descărca codul QR, ca să îl pregătească
+din timp (invitații, afișe, mese). Pagina evenimentului arată clar că invitații nu pot încărca
+fișiere până la activarea pachetului complet, prețul pachetului și cum se face activarea. După
+activare, evenimentul funcționează complet, cu același cod QR.
 
-**Why this priority**: regimul de probă face posibilă crearea liberă fără pierderi pentru
-platformă; fără el, US1 ar oferi gratuit pachetul complet.
+**Why this priority**: fără această stare, crearea liberă ar oferi gratuit stocare și procesare;
+cu ea, organizatorul își pregătește evenimentul, iar platforma nu consumă resurse până la plată.
 
-**Independent Test**: un eveniment nou creat self-service afișează limitele și consumul;
-atingerea limitei de fișiere oprește uploadurile noi.
+**Independent Test**: un eveniment nou creat self-service afișează starea, prețul și
+instrucțiunile de activare; un invitat nu poate încărca; după activare de către administrator,
+același cod QR permite uploadul.
 
 **Acceptance Scenarios**:
 
-1. **Given** un eveniment în probă, **When** organizatorul îl deschide, **Then** vede numărul
-   de fișiere încărcate din maximul permis, data ștergerii automate și instrucțiunile de
-   activare a pachetului complet.
-2. **Given** un eveniment în probă aproape de limita de fișiere (cel puțin 80% consumat),
-   **When** organizatorul îl deschide, **Then** vede o avertizare vizibilă.
-3. **Given** un eveniment în probă activat de administrator la pachetul complet, **When**
-   organizatorul îl redeschide, **Then** limitele afișate sunt cele ale pachetului complet, iar
-   fișierele deja încărcate rămân neschimbate.
+1. **Given** un eveniment în așteptarea activării, **When** organizatorul îl deschide, **Then**
+   vede starea, codul QR pentru descărcare, prețul pachetului complet, instrucțiunile de
+   activare și data la care evenimentul se șterge dacă nu este activat, iar galeria este goală,
+   cu explicația că invitații vor putea încărca după activare.
+2. **Given** un eveniment în așteptarea activării, **When** administratorul activează pachetul
+   complet, **Then** organizatorul vede evenimentul activ, cu data ștergerii automate și prețul
+   final, iar invitații pot încărca folosind același cod QR.
+3. **Given** un eveniment în așteptarea activării, **When** organizatorul apasă „Solicită
+   activarea”, **Then** administratorul primește un email cu datele evenimentului, evenimentul
+   apare marcat „activare solicitată” în lista administratorului, iar organizatorul vede că
+   cererea a fost trimisă și nu o poate retrimite în următoarele 24 de ore.
+4. **Given** un eveniment neactivat la 23 de zile după data lui, **When** sistemul verifică
+   termenele, **Then** organizatorul primește un singur email de avertizare că evenimentul se
+   șterge peste 7 zile, iar la 30 de zile după dată evenimentul este șters definitiv.
 
 ---
 
 ### User Story 4 - Administratorul gestionează evenimentele self-service (Priority: P2)
 
-Administratorul vede lista evenimentelor create self-service, cu emailul organizatorului, starea,
-consumul curent (fișiere, spațiu) și data ștergerii. Poate activa pachetul complet, prelungi
-perioada de probă sau suspenda (și reactiva) un eveniment. Fiecare schimbare de stare se
+Administratorul vede lista evenimentelor create self-service, cu emailul organizatorului, starea
+și, pentru cele active, consumul curent (fișiere, spațiu) și data ștergerii. Poate activa
+pachetul complet și poate suspenda (și reactiva) un eveniment. Fiecare schimbare de stare se
 păstrează în istoric, cu sursa ei.
 
-**Why this priority**: este mecanismul prin care proba devine venit; până la plata online, doar
-administratorul poate face asta.
+**Why this priority**: este mecanismul prin care un eveniment creat self-service devine venit;
+până la plata online, doar administratorul poate face asta.
 
-**Independent Test**: administratorul activează, prelungește și suspendă evenimente de test și
+**Independent Test**: administratorul activează, suspendă și reactivează evenimente de test și
 verifică istoricul fiecăruia.
 
 **Acceptance Scenarios**:
 
 1. **Given** evenimente self-service în diferite stări, **When** administratorul deschide
-   lista, **Then** vede pentru fiecare emailul organizatorului, starea, consumul și data
-   ștergerii, și poate filtra după stare.
-2. **Given** un eveniment în probă, **When** administratorul activează pachetul complet,
-   **Then** evenimentul trece în starea activ, primește limitele pachetului complet și prețul
-   pachetului, iar istoricul arată schimbarea, autorul și momentul.
-3. **Given** un eveniment în probă, **When** administratorul prelungește proba cu un număr de
-   zile, **Then** data ștergerii automate se mută cu acel număr de zile, iar schimbarea apare în
-   istoric.
-4. **Given** un eveniment în probă sau activ, **When** administratorul îl suspendă cu un motiv,
-   **Then** invitații nu mai pot încărca, organizatorul vede că evenimentul este suspendat, iar
-   administratorul îl poate reactiva în starea anterioară.
-5. **Given** administratorul, **When** vede lista, **Then** nu poate vedea sau descărca
+   lista, **Then** vede pentru fiecare emailul organizatorului, starea, data creării și, pentru
+   evenimentele active, consumul și data ștergerii, și poate filtra după stare.
+2. **Given** un eveniment în așteptarea activării, **When** administratorul activează pachetul
+   complet, **Then** evenimentul devine activ, primește limitele și prețul pachetului complet și
+   data ștergerii automate, iar istoricul arată schimbarea, autorul și momentul.
+3. **Given** un eveniment activ, **When** administratorul îl suspendă cu un motiv, **Then**
+   invitații nu mai pot încărca, organizatorul vede că evenimentul este suspendat și poate doar
+   vizualiza, descărca și șterge fișierele, iar administratorul îl poate reactiva.
+4. **Given** administratorul, **When** vede lista, **Then** nu poate vedea sau descărca
    fișierele media (001/FR-007 rămâne valabil).
 
 ---
 
-### User Story 5 - Administratorul configurează pachetele (Priority: P2)
+### User Story 5 - Administratorul configurează pachetul complet (Priority: P2)
 
-Administratorul stabilește, fără modificări de cod, limitele regimului de probă și ale
-pachetului complet: numărul maxim de fișiere pe eveniment, durata de păstrare, prețul pachetului
-complet și numărul maxim de evenimente în probă active simultan per organizator.
+Administratorul stabilește, fără modificări de cod, condițiile pachetului complet (prețul,
+numărul maxim de fișiere per invitat, durata de păstrare inclusă) și numărul maxim de evenimente
+în așteptarea activării per organizator.
 
-**Why this priority**: limitele potrivite se descoperă din utilizare; fără configurare, fiecare
-ajustare ar cere o versiune nouă a aplicației.
+**Why this priority**: prețul și limitele potrivite se ajustează din utilizare; fără
+configurare, fiecare ajustare ar cere o versiune nouă a aplicației.
 
-**Independent Test**: administratorul schimbă limita de fișiere a probei; un eveniment nou în
-probă o aplică, iar unul existent își păstrează limita de la creare.
+**Independent Test**: administratorul schimbă prețul pachetului; un eveniment activat ulterior
+primește noul preț, iar unul deja activ îl păstrează pe cel vechi.
 
 **Acceptance Scenarios**:
 
-1. **Given** administratorul în ecranul pachetelor, **When** modifică limitele probei și
-   salvează, **Then** evenimentele create ulterior folosesc noile limite.
-2. **Given** evenimente existente în probă sau active, **When** administratorul modifică
-   limitele pachetelor, **Then** limitele acelor evenimente nu se schimbă.
+1. **Given** administratorul în ecranul pachetului, **When** modifică prețul sau limitele și
+   salvează, **Then** evenimentele activate ulterior folosesc noile valori, iar evenimentele în
+   așteptarea activării afișează noul preț.
+2. **Given** evenimente deja active, **When** administratorul modifică pachetul, **Then**
+   limitele și prețul acelor evenimente nu se schimbă.
 3. **Given** valori invalide (zero, negative, peste plafoanele platformei), **When**
    administratorul salvează, **Then** salvarea este refuzată cu mesaje explicite.
 
 ---
 
-### User Story 6 - Invitatul primește un mesaj clar când nu mai poate încărca (Priority: P2)
+### User Story 6 - Invitatul primește un mesaj clar când nu poate încărca (Priority: P2)
 
-Un invitat care scanează codul QR al unui eveniment suspendat sau care a atins limita de fișiere
-a probei vede un mesaj clar și politicos, nu o eroare.
+Un invitat care scanează codul QR al unui eveniment încă neactivat sau suspendat vede un mesaj
+clar și politicos, nu o eroare.
 
-**Why this priority**: invitații sunt la eveniment, în fața altor oameni; o eroare tehnică
-afectează imaginea organizatorului și a produsului.
+**Why this priority**: codul QR poate fi tipărit și distribuit înainte de activare; invitații
+sunt la eveniment, în fața altor oameni, iar o eroare tehnică afectează imaginea
+organizatorului și a produsului.
 
-**Independent Test**: se atinge limita unui eveniment de probă și se suspendă alt eveniment;
-pagina invitatului arată mesajele potrivite.
+**Independent Test**: se deschide pagina de upload pentru un eveniment neactivat și pentru unul
+suspendat; ambele afișează mesajele potrivite și refuză uploadul.
 
 **Acceptance Scenarios**:
 
-1. **Given** un eveniment în probă care a atins limita de fișiere, **When** un invitat deschide
-   pagina de upload, **Then** vede un mesaj că evenimentul nu mai acceptă fișiere noi și o
-   recomandare să ia legătura cu organizatorul.
-2. **Given** un invitat care încarcă mai multe fișiere și limita se atinge în timpul
-   încărcării, **When** fișierele rămase sunt refuzate, **Then** fișierele deja încărcate sunt
-   confirmate, iar cele refuzate sunt marcate cu același mesaj politicos.
-3. **Given** un eveniment suspendat, **When** un invitat deschide pagina de upload, **Then**
+1. **Given** un eveniment în așteptarea activării, **When** un invitat deschide pagina de
+   upload, **Then** vede numele evenimentului și un mesaj că încărcarea fișierelor nu este încă
+   deschisă, cu recomandarea de a reveni mai târziu sau de a lua legătura cu organizatorul.
+2. **Given** un eveniment suspendat, **When** un invitat deschide pagina de upload, **Then**
    vede un mesaj că evenimentul nu primește momentan fișiere, fără detalii despre motiv.
+3. **Given** un invitat care încarcă fișiere când evenimentul este suspendat, **When** fișierele
+   rămase sunt refuzate, **Then** fișierele deja încărcate sunt confirmate, iar cele refuzate
+   sunt marcate cu același mesaj politicos.
 
 ---
 
@@ -219,7 +249,7 @@ linkul invitaților devine invalid, iar fișierele nu mai sunt accesibile.
 - Vizitatorul trimite formularul de mai multe ori pentru același eveniment înainte de
   confirmare: fiecare trimitere creează o cerere separată, în limita de emailuri; confirmarea
   uneia nu le confirmă pe celelalte, iar cele neconfirmate se șterg după 24 de ore.
-- Vizitatorul confirmă după ce evenimentul neconfirmat a fost șters (după 24 de ore): link-ul și
+- Vizitatorul confirmă după ce evenimentul neconfirmat a fost șters (după 24 de ore): linkul și
   codul au expirat deja; i se cere să creeze din nou evenimentul.
 - Linkul din email este deschis automat de un scaner de securitate al furnizorului de email:
   deschiderea nu confirmă nimic, fiindcă e nevoie de apăsarea butonului.
@@ -229,13 +259,16 @@ linkul invitaților devine invalid, iar fișierele nu mai sunt accesibile.
 - Adresa de email are majuscule sau spații la capete: adresa este normalizată, astfel încât
   „Ana@Exemplu.ro ” și „ana@exemplu.ro” reprezintă același organizator.
 - Data evenimentului este în trecut: este refuzată; data poate fi cel mult cu 2 ani în viitor.
-- Organizatorul schimbă data unui eveniment în probă: perioada de upload și data ștergerii se
-  recalculează după noua dată, dar data ștergerii nu poate fi mutată mai devreme decât momentul
-  modificării.
+- Administratorul activează un eveniment a cărui dată a trecut deja: perioada de upload începe
+  la activare și se încheie la sfârșitul zilei următoare activării, astfel încât invitații au
+  cel puțin o zi pentru încărcare.
+- Organizatorul mută data unui eveniment neactivat după ce a primit emailul de avertizare:
+  data ștergerii se recalculează, iar un nou email de avertizare se trimite o singură dată,
+  cu 7 zile înainte de noul termen.
+- Administratorul activează un eveniment în ultima zi dinaintea ștergerii automate: activarea
+  are prioritate, iar evenimentul nu mai este șters.
 - Organizatorul schimbă data unui eveniment activ după ce perioada de upload s-a încheiat: data
   ștergerii nu se modifică (retenția rămâne calculată ca în 001/FR-040).
-- Administratorul activează pachetul complet pentru un eveniment care a atins limita de fișiere
-  a probei: invitații pot încărca din nou imediat, fără alt pas.
 - Un organizator cu evenimente create de administrator creează primul eveniment self-service:
   i se cere acceptarea termenilor (dacă nu a acceptat versiunea curentă), fără email de
   confirmare dacă este deja autentificat.
@@ -269,7 +302,8 @@ linkul invitaților devine invalid, iar fișierele nu mai sunt accesibile.
   nici în listele organizatorului) și TREBUIE șters automat, împreună cu datele formularului,
   dacă nu este confirmat în 24 de ore de la creare.
 - **FR-005**: Un organizator deja autentificat TREBUIE să poată crea evenimente noi (din cont
-  sau de pe pagina principală) fără email de confirmare; evenimentul începe direct în probă.
+  sau de pe pagina principală) fără email de confirmare; evenimentul începe direct în
+  așteptarea activării.
 
 **Confirmarea și autentificarea**
 
@@ -283,9 +317,9 @@ linkul invitaților devine invalid, iar fișierele nu mai sunt accesibile.
   chiar dacă emailul este citit pe alt dispozitiv. După 5 coduri greșite, codul curent TREBUIE
   invalidat.
 - **FR-009**: La confirmare, sistemul TREBUIE să creeze contul de organizator pentru adresă
-  (dacă nu există), să treacă evenimentul în starea „probă”, să autentifice utilizatorul pe
-  dispozitivul pe care a confirmat și să îl ducă direct la pagina evenimentului, cu codul QR
-  disponibil pentru descărcare (PNG și SVG, ca în 001/FR-005).
+  (dacă nu există), să treacă evenimentul în starea „în așteptarea activării”, să autentifice
+  utilizatorul pe dispozitivul pe care a confirmat și să îl ducă direct la pagina evenimentului,
+  cu codul QR disponibil pentru descărcare (PNG și SVG, ca în 001/FR-005).
 - **FR-010**: Autentificarea organizatorului care revine TREBUIE să folosească același mecanism:
   email cu link (care deschide o pagină cu buton) și cod numeric, cu aceleași reguli de
   expirare și unică folosință. Aceasta înlocuiește linkul din 001/FR-008.
@@ -298,39 +332,49 @@ linkul invitaților devine invalid, iar fișierele nu mai sunt accesibile.
   conțină numele produsului, scopul emailului, codul, linkul și mențiunea că pot fi ignorate
   dacă destinatarul nu a făcut cererea.
 
-**Pachete și regimul de probă**
+**Pachetul complet și activarea**
 
-- **FR-014**: Sistemul TREBUIE să definească două pachete: „probă” și „complet”. Fiecare pachet
-  are: număr maxim de fișiere pe eveniment, număr maxim de fișiere per invitat, durata de
-  păstrare și, pentru pachetul complet, prețul și opțiunile de retenție disponibile (catalogul
-  din 001/FR-038).
-- **FR-015**: Administratorul TREBUIE să poată modifica limitele și prețul pachetelor, precum și
-  numărul maxim de evenimente în probă active simultan per organizator, fără modificări de cod.
-  Modificările se aplică doar evenimentelor create sau activate ulterior.
-- **FR-016**: Fiecare eveniment TREBUIE să păstreze pachetul și limitele aplicate la momentul
-  creării sau al ultimei activări, independent de modificările ulterioare ale pachetelor.
-- **FR-017**: Un eveniment în probă TREBUIE să ofere toate funcțiile din 001 (upload invitați,
-  galerie în timp real, descărcare individuală și arhivă, ștergere), în limitele pachetului de
-  probă.
-- **FR-018**: Pagina evenimentului în probă TREBUIE să afișeze: numărul de fișiere încărcate din
-  maximul permis, data ștergerii automate și instrucțiunile de activare a pachetului complet
-  (prețul și modul de contact al administratorului). La un consum de cel puțin 80% TREBUIE
-  afișată o avertizare vizibilă.
-- **FR-019**: Pentru evenimentele în probă, sistemul TREBUIE să refuze pe server orice fișier
-  care ar depăși numărul maxim de fișiere pe eveniment; fișierele deja acceptate nu sunt
-  afectate.
-- **FR-020**: Pentru evenimentele în probă, organizatorul NU TREBUIE să poată prelungi singur
-  retenția (001/FR-041 se aplică doar evenimentelor active).
-- **FR-021**: Un organizator NU TREBUIE să poată avea simultan mai multe evenimente în probă
-  decât limita configurată (implicit 2). Evenimentele neconfirmate nu se numără.
+- **FR-014**: Sistemul TREBUIE să definească pachetul complet, cu: preț, număr maxim de fișiere
+  per invitat, durata de păstrare inclusă și opțiunile de retenție disponibile pentru
+  prelungire (catalogul din 001/FR-038). Modelul TREBUIE să permită adăugarea ulterioară a altor
+  pachete fără a schimba stările sau istoricul.
+- **FR-015**: Administratorul TREBUIE să poată modifica prețul și limitele pachetului complet,
+  precum și numărul maxim de evenimente în așteptarea activării per organizator, fără
+  modificări de cod. Modificările se aplică doar evenimentelor activate ulterior.
+- **FR-016**: Fiecare eveniment activat TREBUIE să păstreze pachetul, prețul și limitele
+  aplicate la momentul activării, independent de modificările ulterioare ale pachetului.
+- **FR-017**: Un eveniment în așteptarea activării TREBUIE să permită organizatorului: să îl
+  vadă, să îi modifice numele și data, să descarce codul QR și să îl șteargă. Invitații NU
+  TREBUIE să poată încărca fișiere; refuzul se aplică pe server.
+- **FR-018**: Pagina unui eveniment în așteptarea activării TREBUIE să afișeze starea, prețul
+  curent al pachetului complet, ce include (durata de păstrare, limita de fișiere per invitat)
+  și un buton „Solicită activarea”.
+- **FR-018a**: La apăsarea butonului „Solicită activarea”, sistemul TREBUIE să înregistreze
+  cererea (momentul), să trimită administratorilor un email în română cu numele și data
+  evenimentului, emailul organizatorului și un link către evenimentul din administrare, și să
+  afișeze organizatorului că cererea a fost trimisă, cu data ei. O nouă cerere pentru același
+  eveniment este posibilă doar după 24 de ore. Cererea nu schimbă starea evenimentului.
+- **FR-019**: Un eveniment în așteptarea activării TREBUIE șters automat și definitiv la 30 de
+  zile după data evenimentului (sfârșitul zilei, ora României), dacă nu a fost activat până
+  atunci. Organizatorul TREBUIE să primească un singur email de avertizare, cu 7 zile înainte,
+  cu data ștergerii și modul de activare; pagina evenimentului afișează aceeași dată. Schimbarea
+  datei evenimentului recalculează data ștergerii. La activare, această regulă nu se mai aplică,
+  iar data ștergerii fișierelor se stabilește conform FR-025. Dacă organizatorul nu mai are alte
+  evenimente, datele lui de organizator se șterg odată cu evenimentul.
+- **FR-020**: Organizatorul NU TREBUIE să poată prelungi retenția (001/FR-041) decât pentru
+  evenimentele active.
+- **FR-021**: Un organizator NU TREBUIE să poată avea simultan mai multe evenimente în
+  așteptarea activării decât limita configurată (implicit 2). Evenimentele neconfirmate nu se
+  numără.
 
 **Stările evenimentului și istoricul**
 
-- **FR-022**: Fiecare eveniment TREBUIE să aibă exact una dintre stările: neconfirmat, probă,
-  activ, suspendat, expirat. Tranzițiile permise sunt: neconfirmat → probă (confirmare);
-  probă → activ (activarea pachetului complet); probă sau activ → suspendat; suspendat →
-  starea dinaintea suspendării (reactivare); probă, activ sau suspendat → expirat (la data
-  ștergerii automate). Orice altă tranziție TREBUIE refuzată.
+- **FR-022**: Fiecare eveniment TREBUIE să aibă exact una dintre stările: neconfirmat, în
+  așteptarea activării, activ, suspendat, expirat. Tranzițiile permise sunt: neconfirmat → în
+  așteptarea activării (confirmare); în așteptarea activării → activ (activarea pachetului
+  complet); activ → suspendat; suspendat → activ (reactivare); activ sau suspendat → expirat (la
+  data ștergerii automate). Un eveniment neconfirmat (FR-004) sau în așteptarea activării
+  (FR-019) nu expiră, ci se șterge complet. Orice altă tranziție TREBUIE refuzată.
 - **FR-023**: Evenimentele create de administrator TREBUIE să înceapă direct în starea activ, cu
   pachetul complet, ca în 001.
 - **FR-024**: Fiecare schimbare de stare TREBUIE înregistrată, fără posibilitate de modificare
@@ -339,8 +383,9 @@ linkul invitaților devine invalid, iar fișierele nu mai sunt accesibile.
   referință externă opțională (de ex. referința unei plăți).
 - **FR-025**: Activarea pachetului complet TREBUIE să poată fi declanșată de administrator și,
   într-o funcționalitate ulterioară, automat de un sistem de plăți, prin aceeași operație și cu
-  aceleași efecte: starea devine activ, se aplică limitele și prețul pachetului complet, iar
-  data ștergerii se recalculează după durata de păstrare a pachetului complet (001/FR-040).
+  aceleași efecte: starea devine activ, se aplică limitele și prețul pachetului complet,
+  perioada de upload începe, iar data ștergerii se calculează după durata de păstrare a
+  pachetului (001/FR-040).
 - **FR-026**: Activarea TREBUIE să fie idempotentă: o a doua activare a aceluiași eveniment
   (de ex. o notificare de plată repetată) NU TREBUIE să schimbe din nou prețul sau data ștergerii
   și TREBUIE înregistrată ca atare.
@@ -348,11 +393,17 @@ linkul invitaților devine invalid, iar fișierele nu mai sunt accesibile.
 **Administrare**
 
 - **FR-027**: Administratorul TREBUIE să vadă lista evenimentelor create self-service, cu:
-  numele, data, emailul organizatorului, starea, numărul de fișiere, spațiul ocupat, data creării
-  și data ștergerii, cu filtrare după stare.
-- **FR-028**: Administratorul TREBUIE să poată activa pachetul complet, prelungi perioada de
-  probă cu un număr de zile (1–90) și suspenda sau reactiva un eveniment, cu un motiv opțional.
-  Fiecare acțiune TREBUIE să ceară confirmare și TREBUIE înregistrată conform FR-024.
+  numele, data, emailul organizatorului, starea, data creării, data ultimei cereri de activare
+  (dacă există) și, pentru evenimentele active sau suspendate, numărul de fișiere, spațiul
+  ocupat și data ștergerii, cu filtrare după stare și după „activare solicitată”.
+- **FR-028**: Administratorul TREBUIE să poată activa pachetul complet și suspenda sau reactiva
+  un eveniment, cu un motiv opțional. Fiecare acțiune TREBUIE să ceară confirmare și TREBUIE
+  înregistrată conform FR-024.
+- **FR-028a**: Pentru un eveniment suspendat, organizatorul TREBUIE să vadă un mesaj de
+  suspendare și TREBUIE să poată în continuare vizualiza, descărca (individual și arhivă) și
+  șterge fișierele. Actualizarea în timp real a galeriei (001, US7) nu este disponibilă, iar
+  organizatorul NU TREBUIE să poată prelungi retenția sau modifica numele și data evenimentului
+  până la reactivare. Ștergerea definitivă a întregului eveniment rămâne disponibilă.
 - **FR-029**: Administratorul TREBUIE să vadă istoricul stărilor fiecărui eveniment.
 - **FR-030**: Crearea evenimentelor de către administrator (001/FR-001) TREBUIE să rămână
   disponibilă, iar evenimentele create astfel apar organizatorului conform FR-012.
@@ -361,22 +412,27 @@ linkul invitaților devine invalid, iar fișierele nu mai sunt accesibile.
 
 - **FR-031**: Pentru un eveniment suspendat, pagina de upload TREBUIE să afișeze un mesaj
   politicos că evenimentul nu primește momentan fișiere, fără a dezvălui motivul, și să refuze
-  pe server orice upload.
-- **FR-032**: Pentru un eveniment în probă care a atins limita de fișiere, pagina de upload
-  TREBUIE să afișeze un mesaj politicos că evenimentul nu mai acceptă fișiere noi, cu
-  recomandarea de a lua legătura cu organizatorul; fișierele refuzate în timpul unei încărcări
-  în curs TREBUIE marcate cu același mesaj.
+  pe server orice upload; fișierele refuzate în timpul unei încărcări în curs TREBUIE marcate cu
+  același mesaj.
+- **FR-032**: Pentru un eveniment în așteptarea activării, pagina de upload TREBUIE să afișeze
+  numele evenimentului și un mesaj politicos că încărcarea nu este încă deschisă, cu
+  recomandarea de a reveni mai târziu sau de a lua legătura cu organizatorul.
 
 **Modificare și ștergere de către organizator**
 
 - **FR-033**: Organizatorul TREBUIE să poată modifica numele și data oricăruia dintre
-  evenimentele sale care nu este expirat, cu aceleași validări ca la creare. Linkul public și
+  evenimentele sale care nu este expirat sau suspendat (FR-028a), cu aceleași validări ca la creare. Linkul public și
   codul QR NU TREBUIE să se schimbe.
 - **FR-034**: Pentru evenimentele create self-service, perioada de upload TREBUIE să înceapă la
-  confirmare și să se încheie la sfârșitul zilei următoare datei evenimentului (ora României);
-  la schimbarea datei, perioada se recalculează.
-- **FR-035**: Organizatorul TREBUIE să poată șterge definitiv oricare dintre evenimentele sale,
-  după confirmare prin tastarea numelui evenimentului, cu aceleași efecte ca 001/FR-006b.
+  activare și să se încheie la sfârșitul zilei următoare datei evenimentului (ora României), dar
+  nu mai devreme de sfârșitul zilei următoare activării; la schimbarea datei, perioada se
+  recalculează.
+- **FR-035**: Organizatorul TREBUIE să poată șterge definitiv oricare dintre evenimentele sale
+  (în așteptarea activării, active sau suspendate, indiferent dacă au fost create de el sau de
+  administrator), după confirmare prin tastarea numelui evenimentului, cu aceleași efecte ca
+  001/FR-006b. Aceasta înlocuiește restricția din 001/FR-006b („organizatorul nu poate șterge
+  evenimentul”). Ștergerea TREBUIE înregistrată în istoricul evenimentului, cu sursa
+  „organizator”.
   Pentru evenimentele care au avut pachetul complet activat, datele necesare facturării se
   păstrează până la anonimizare (001/FR-047).
 
@@ -403,18 +459,20 @@ linkul invitaților devine invalid, iar fișierele nu mai sunt accesibile.
 
 **Calitate**
 
-- **FR-042**: Toate ecranele noi (pagina principală, confirmare, cod, administrare pachete și
+- **FR-042**: Toate ecranele noi (pagina principală, confirmare, cod, administrare pachet și
   evenimente self-service) TREBUIE să fie în limba română, mobile-first și conforme WCAG 2.2 AA.
 
 ### Key Entities
 
-- **Pachet**: set de limite și condiții comerciale: tip (probă sau complet), număr maxim de
-  fișiere pe eveniment, număr maxim de fișiere per invitat, durată de păstrare, preț (pentru
-  pachetul complet). Configurabil de administrator.
-- **Setări self-service**: numărul maxim de evenimente în probă active simultan per organizator.
+- **Pachet**: condițiile comerciale ale unui eveniment activ: preț, număr maxim de fișiere per
+  invitat, durata de păstrare inclusă. În această funcționalitate există un singur pachet
+  (complet), configurabil de administrator.
+- **Setări self-service**: numărul maxim de evenimente în așteptarea activării per organizator.
+- **Cerere de activare**: eveniment, momentul cererii; ultima cerere se afișează organizatorului
+  și administratorului. Nu este o schimbare de stare.
 - **Eveniment** (extins față de 001): în plus, sursa creării (administrator sau self-service),
-  stare (neconfirmat, probă, activ, suspendat, expirat), pachetul și limitele aplicate (copie la
-  momentul creării sau activării), starea dinaintea unei suspendări. Stările tehnice din 001 („în
+  stare (neconfirmat, în așteptarea activării, activ, suspendat, expirat), pachetul, prețul și
+  limitele aplicate la activare (copie la momentul activării). Stările tehnice din 001 („în
   expirare”, „în ștergere”) rămân etape interne ale expirării și ștergerii.
 - **Schimbare de stare**: istoricul imuabil al unui eveniment: stare anterioară și nouă, moment,
   sursă (organizator, administrator, sistem automat, sistem de plăți), autor, motiv sau
@@ -449,30 +507,29 @@ linkul invitaților devine invalid, iar fișierele nu mai sunt accesibile.
   testele automatizate.
 - **SC-008**: Emailurile de confirmare ajung în inbox (nu în spam sau promoții) în testele pe
   cel puțin trei furnizori de email larg folosiți în România.
-- **SC-009**: 100% dintre fișierele care ar depăși limita probei sunt refuzate, iar invitatul
-  vede mesajul politicos, nu o eroare tehnică.
+- **SC-009**: 0 fișiere acceptate pentru evenimente în așteptarea activării sau suspendate, iar
+  invitatul vede mesajul politicos, nu o eroare tehnică, în 100% din cazurile testate.
 - **SC-010**: 100% dintre schimbările de stare au o intrare în istoric cu sursa și momentul; o
   activare repetată nu modifică prețul sau data ștergerii.
 - **SC-011**: Administratorul activează pachetul complet pentru un eveniment în sub 1 minut,
-  iar invitații pot încărca din nou imediat după activare.
+  iar invitații pot încărca imediat după activare, cu același cod QR.
 - **SC-012**: 100% dintre evenimentele create includ acceptarea termenilor, cu versiunea și
   momentul înregistrate.
+- **SC-013**: 100% dintre evenimentele neactivate sunt șterse în cel mult 24 de ore după
+  termenul din FR-019, iar fiecare organizator afectat a primit exact un email de avertizare.
 
 ## Assumptions
 
-- Plata online nu este în scop; „modul de activare a pachetului complet” afișat organizatorului
-  înseamnă prețul pachetului și contactul administratorului (email). Activarea o face
-  administratorul, după încasarea în afara aplicației (ca în 001).
-- Valorile inițiale ale pachetelor (modificabile de administrator): proba permite 100 de
-  fișiere pe eveniment, 20 de fișiere per invitat și păstrare 7 zile după sfârșitul perioadei de
-  upload; pachetul complet păstrează valorile din 001 (fișiere per invitat conform
-  evenimentului, fără limită pe eveniment, 3 luni incluse, catalogul de retenție pentru
-  prelungire).
-- Prelungirea probei mută data ștergerii automate; nu schimbă limitele de fișiere.
-- Dimensiunile maxime per fișier pentru evenimentele self-service sunt plafoanele platformei
-  (001/FR-001a); organizatorul nu le poate modifica.
-- Suspendarea oprește doar uploadurile; organizatorul își păstrează accesul la fișiere
-  (vizualizare, descărcare, ștergere), pentru ca datele lui să rămână accesibile.
+- Nu există regim de probă sau utilizare gratuită: invitații pot încărca doar după activarea
+  pachetului complet (vezi Clarifications).
+- Plata online nu este în scop; după cererea de activare (FR-018a), administratorul ia
+  legătura cu organizatorul, încasează în afara aplicației (ca în 001) și activează evenimentul.
+  Emailul către administratori merge la adresele de administrator preconfigurate (001/FR-006a).
+- Valorile inițiale ale pachetului complet (modificabile de administrator) sunt cele din 001:
+  preț de bază configurat de administrator, plafoanele de dimensiune per fișier (001/FR-001a),
+  3 luni de păstrare incluse și catalogul de retenție pentru prelungire.
+- Suspendarea este o măsură temporară; pentru abuzuri grave, administratorul folosește
+  ștergerea definitivă a evenimentului (001/FR-006b).
 - Textele termenilor și ale politicii de confidențialitate sunt furnizate de proprietarul
   platformei; publicarea unei versiuni noi se face printr-o versiune nouă a aplicației, nu din
   interfața de administrare.
@@ -482,7 +539,7 @@ linkul invitaților devine invalid, iar fișierele nu mai sunt accesibile.
   minute.
 - Autentificarea administratorului (link pe email și al doilea factor, 001/FR-006a) rămâne
   neschimbată, dar primește același tip de email (link către pagină cu buton și cod).
-- Evenimentele create de administrator nu au limită pe numărul de evenimente per organizator și
-  nu trec prin probă.
+- Evenimentele create de administrator nu intră în limita de evenimente în așteptarea
+  activării și sunt active de la creare.
 - Accesul mai multor organizatori la același eveniment, autentificarea prin Google sau alți
   furnizori și plata online rămân în afara scopului.
