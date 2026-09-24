@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { ArchivePanel } from "@/components/gallery/ArchivePanel";
 import { GalleryGrid } from "@/components/gallery/GalleryGrid";
 import { formatDate, t } from "@/lib/i18n";
-import { getOrganizerEvent, listGallery } from "@/lib/organizer/media";
+import { latestArchive } from "@/lib/organizer/archive";
+import { countReadyFiles, getOrganizerEvent, listGallery } from "@/lib/organizer/media";
 
 export const metadata: Metadata = { title: "Galerie" };
 
@@ -24,13 +26,18 @@ export default async function EventGalleryPage({ params }: { params: Promise<{ e
     );
   }
 
-  const first = await listGallery(eventId);
+  const [first, archive, readyFiles] = await Promise.all([
+    listGallery(eventId),
+    latestArchive(eventId),
+    countReadyFiles(eventId),
+  ]);
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold">{event.name}</h1>
         <p className="text-muted">{formatDate(event.eventDate)}</p>
       </header>
+      <ArchivePanel eventId={eventId} readyFiles={readyFiles} initial={archive} />
       <GalleryGrid eventId={eventId} initialItems={first.items} initialCursor={first.nextCursor} />
     </div>
   );

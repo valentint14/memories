@@ -1,3 +1,5 @@
+import { buildArchive } from "./build-archive.ts";
+import { deleteArchive } from "./delete-archive.ts";
 import { deleteOrganizerUser } from "./delete-organizer-user.ts";
 import { processMedia } from "./process.ts";
 import { purgeEvent } from "./purge-event.ts";
@@ -15,8 +17,8 @@ function notImplemented<T extends JobMessage>(type: T["type"]): JobHandler<T> {
 
 export const registry: Registry = {
   process: processMedia,
-  build_archive: notImplemented("build_archive"),
-  delete_archive: notImplemented("delete_archive"),
+  build_archive: buildArchive,
+  delete_archive: deleteArchive,
   purge_media: purgeMedia,
   purge_event: purgeEvent,
   expire_event: notImplemented("expire_event"),

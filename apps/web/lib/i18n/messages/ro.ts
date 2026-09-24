@@ -161,6 +161,17 @@ export const ro = {
   "gallery.next": "Următorul",
   "gallery.download": "Descarcă originalul",
 
+  // Arhivă
+  "archive.title": "Descarcă toate fișierele",
+  "archive.downloadAll": "Descarcă tot",
+  "archive.again": "Pregătește o arhivă nouă",
+  "archive.empty": "Nu există încă fișiere de descărcat.",
+  "archive.preparing": "Se pregătește arhiva… Te anunțăm aici când e gata; poți rămâne pe pagină.",
+  "archive.download": "Descarcă arhiva ({files})",
+  "archive.validUntil": "Linkul arhivei e valabil până la {date}.",
+  "archive.failed": "Arhiva nu a putut fi creată. Încearcă din nou.",
+  "archive.expired": "Arhiva anterioară nu mai este disponibilă (a expirat sau s-au șters fișiere). Cere o arhivă nouă.",
+
   // Pagina invitatului
   "guest.intro": "Adaugă pozele și filmările tale de la eveniment. Nu ai nevoie de cont sau de aplicație.",
   "guest.nameLabel": "Numele tău (opțional)",
@@ -192,6 +203,11 @@ export const ro = {
   "plural.files": { one: "{count} fișier", few: "{count} fișiere", other: "{count} de fișiere" },
   "plural.months": { one: "{count} lună", few: "{count} luni", other: "{count} de luni" },
   "plural.filesUploaded": { one: "{count} fișier încărcat", few: "{count} fișiere încărcate", other: "{count} de fișiere încărcate" },
+  "plural.archiveSkipped": {
+    one: "{count} fișier nu este inclus (în procesare sau neprocesabil).",
+    few: "{count} fișiere nu sunt incluse (în procesare sau neprocesabile).",
+    other: "{count} de fișiere nu sunt incluse (în procesare sau neprocesabile).",
+  },
   "plural.filesFailed": { one: "{count} fișier nu s-a încărcat", few: "{count} fișiere nu s-au încărcat", other: "{count} de fișiere nu s-au încărcat" },
 } as const satisfies Record<string, string | PluralMessage>;
 

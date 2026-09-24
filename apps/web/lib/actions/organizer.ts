@@ -1,6 +1,8 @@
 "use server";
 
+import { archiveEntryName } from "@memories/shared";
 import { z } from "zod";
+import { archiveUrl, latestArchive, requestArchiveJob, type ArchiveState } from "../organizer/archive";
 import { listGallery, mediaUrls, type GalleryItem, type MediaCursor, type MediaUrls } from "../organizer/media";
 import { runAction, type ActionResult } from "./result";
 
@@ -27,10 +29,31 @@ export async function listMedia(
   );
 }
 
-/** Numele fișierului descărcat: numele original curățat de caractere periculoase. */
-function safeDownloadName(row: { original_path: string; id: string }): string {
-  const ext = row.original_path.split(".").pop() ?? "bin";
-  return `fisier-${row.id.slice(0, 8)}.${ext}`;
+/** Numele fișierului descărcat, ca în arhivă (research.md R9). */
+function safeDownloadName(row: { original_path: string; guest_name: string | null; uploaded_at: string | null; id: string }): string {
+  return archiveEntryName({
+    uploadedAt: row.uploaded_at ?? new Date().toISOString(),
+    guestName: row.guest_name,
+    id: row.id,
+    extension: row.original_path.split(".").pop() ?? "bin",
+  });
+}
+
+/** Cere arhiva ZIP a evenimentului; reutilizează jobul activ (FR-030). */
+export async function requestArchive(eventId: string): Promise<ActionResult<ArchiveState>> {
+  return runAction(z.object({ eventId: z.uuid() }), { eventId }, (input) => requestArchiveJob(input.eventId));
+}
+
+/** Link semnat pentru arhiva gata (`NOT_READY`, `ARCHIVE_EXPIRED`). */
+export async function getArchiveUrl(
+  archiveJobId: string,
+): Promise<ActionResult<{ url: string; fileCount: number; skippedCount: number; expiresAt: string }>> {
+  return runAction(z.object({ archiveJobId: z.uuid() }), { archiveJobId }, (input) => archiveUrl(input.archiveJobId));
+}
+
+/** Starea curentă a arhivei (rezervă când Realtime nu e disponibil). */
+export async function getLatestArchive(eventId: string): Promise<ActionResult<ArchiveState | null>> {
+  return runAction(z.object({ eventId: z.uuid() }), { eventId }, (input) => latestArchive(input.eventId));
 }
 
 /** URL-uri semnate de 15 min pentru vizualizare și descărcare (FR-028, FR-029, FR-034). */

@@ -526,6 +526,7 @@ export type Database = {
         Returns: boolean
       }
       event_organizer_email: { Args: { p_event_id: string }; Returns: string }
+      expire_archives: { Args: never; Returns: number }
       guest_open_event: {
         Args: { p_token: string }
         Returns: {
@@ -584,6 +585,7 @@ export type Database = {
         Returns: undefined
       }
       rate_limit_retry_after: { Args: { p_window: string }; Returns: number }
+      request_archive: { Args: { p_event_id: string }; Returns: string }
       request_event_deletion: {
         Args: { p_confirm_name: string; p_event_id: string }
         Returns: undefined
