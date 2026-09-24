@@ -131,12 +131,33 @@ engleză evită o rescriere ulterioară a interfeței.
 
 - Fiecare funcționalitate urmează fluxul Spec Kit: specificație → plan → task-uri →
   implementare.
+- Fiecare specificație nouă (`/speckit-specify`) TREBUIE să aibă propriul branch Git, creat din
+  `main` actualizat înainte de scrierea specificației și denumit identic cu directorul
+  funcționalității (ex. `001-event-qr-upload`). Toate artefactele funcționalității (spec, plan,
+  task-uri, cod, teste) se comit pe acest branch și ajung în `main` doar prin pull request.
+- Commit-urile directe pe `main` sunt interzise, cu excepția configurării inițiale a
+  repository-ului.
 - Fiecare plan TREBUIE să conțină o verificare explicită a conformității cu principiile I–VIII
   și cu constrângerile tehnologice; orice abatere se documentează și se justifică în plan.
 - Porți obligatorii înainte de merge: type-check trecut, teste Vitest trecute, teste Playwright
   trecute (inclusiv viewport mobil), buget LCP respectat pentru pagina de upload.
 - Review-ul de cod TREBUIE să verifice în mod explicit: RLS pe tabelele noi, absența
   secretelor în client, ștergerea din stocare și validarea pe server.
+- La finalul fiecărei rulări `/speckit-implement` TREBUIE creat (sau actualizat, la rulări
+  ulterioare pe aceeași funcționalitate) raportul de implementare
+  `specs/<NNN-funcționalitate>/raport-implementare.md`, comis pe branch-ul funcționalității.
+  Raportul TREBUIE să descrie:
+  - **Ce s-a realizat**: poveștile de utilizator și cerințele (FR/SC) acoperite, starea
+    sarcinilor din `tasks.md` (finalizate / rămase, cu motivul) și fișierele sau modulele
+    principale create;
+  - **Cum s-a realizat**: arhitectura efectiv implementată, deciziile tehnice luate la
+    implementare și orice abatere de la spec, plan sau research, cu justificarea ei;
+  - **Verificare**: testele rulate și rezultatele lor (cu cifre), inclusiv măsurătorile de
+    performanță relevante;
+  - **Limitări și pași următori**: ce nu a putut fi verificat (și de ce), riscurile cunoscute
+    și acțiunile rămase înainte de producție.
+- Pull request-ul unei funcționalități TREBUIE să includă raportul de implementare; lipsa lui
+  blochează merge-ul.
 
 ## Guvernanță
 
@@ -154,4 +175,4 @@ engleză evită o rescriere ulterioară a interfeței.
 - Conformitatea se verifică la fiecare plan (poarta „Constitution Check”) și la fiecare review
   de cod; neconformitățile nejustificate blochează merge-ul.
 
-**Version**: 1.0.0 | **Ratified**: 2026-09-23 | **Last Amended**: 2026-09-23
+**Version**: 1.2.0 | **Ratified**: 2026-09-23 | **Last Amended**: 2026-09-24

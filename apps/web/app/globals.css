@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-50: #f5f3ff;
+  --color-brand-100: #ede9fe;
+  --color-brand-600: #5b21b6;
+  --color-brand-700: #4c1d95;
+  --color-ink: #1f2937;
+  --color-muted: #4b5563;
+  --color-danger: #b91c1c;
+  --color-success: #15803d;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+html {
+  color: var(--color-ink);
+  background: #ffffff;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* WCAG 2.2: focus vizibil pentru navigarea din tastatură. */
+:focus-visible {
+  outline: 3px solid var(--color-brand-600);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

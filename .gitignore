@@ -17,3 +17,11 @@ test-results/
 # Sistem
 .DS_Store
 Thumbs.db
+
+# Build TypeScript și unelte
+dist/
+*.tsbuildinfo
+*.log
+supabase/.branches/
+supabase/.temp/
+fixtures/media/big-50mb.jpg
