@@ -131,6 +131,12 @@ engleză evită o rescriere ulterioară a interfeței.
 
 - Fiecare funcționalitate urmează fluxul Spec Kit: specificație → plan → task-uri →
   implementare.
+- Fiecare specificație nouă (`/speckit-specify`) TREBUIE să aibă propriul branch Git, creat din
+  `main` actualizat înainte de scrierea specificației și denumit identic cu directorul
+  funcționalității (ex. `001-event-qr-upload`). Toate artefactele funcționalității (spec, plan,
+  task-uri, cod, teste) se comit pe acest branch și ajung în `main` doar prin pull request.
+- Commit-urile directe pe `main` sunt interzise, cu excepția configurării inițiale a
+  repository-ului.
 - Fiecare plan TREBUIE să conțină o verificare explicită a conformității cu principiile I–VIII
   și cu constrângerile tehnologice; orice abatere se documentează și se justifică în plan.
 - Porți obligatorii înainte de merge: type-check trecut, teste Vitest trecute, teste Playwright
@@ -154,4 +160,4 @@ engleză evită o rescriere ulterioară a interfeței.
 - Conformitatea se verifică la fiecare plan (poarta „Constitution Check”) și la fiecare review
   de cod; neconformitățile nejustificate blochează merge-ul.
 
-**Version**: 1.0.0 | **Ratified**: 2026-09-23 | **Last Amended**: 2026-09-23
+**Version**: 1.1.0 | **Ratified**: 2026-09-23 | **Last Amended**: 2026-09-24
