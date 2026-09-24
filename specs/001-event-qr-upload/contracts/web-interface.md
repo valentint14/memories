@@ -32,9 +32,10 @@ Server Actions întorc `{ ok: true, data } | { ok: false, error: ErrorCode, retr
 - Erori: `EVENT_NOT_FOUND`, `UPLOAD_NOT_STARTED`, `UPLOAD_ENDED`, `RATE_LIMITED`,
   `NAME_TOO_LONG`.
 
-### `reserveUpload(token, file: { name, type, size })`
+### `reserveUpload(token, file: { name, type, size }, replaceMediaId?)`
 - Necesită cookie de sesiune. Apelează `reserve_upload`, apoi `createSignedUploadUrl` în
-  `incoming`.
+  `incoming`. `replaceMediaId` reia o rezervare nefinalizată a aceleiași sesiuni (reselectare
+  după reîncărcarea paginii, FR-016a), fără a consuma din nou limita de fișiere.
 - Răspuns: `{ mediaId, bucket: "incoming", path, signedToken, tusEndpoint, remainingFiles }`.
 - Erori: `EVENT_NOT_FOUND`, `UPLOAD_NOT_STARTED`, `UPLOAD_ENDED`, `FILE_LIMIT_REACHED`
   (cu `limit`), `FILE_TOO_LARGE` (cu `maxBytes`), `FILE_TYPE_NOT_ALLOWED`, `RATE_LIMITED`,
@@ -46,7 +47,8 @@ Server Actions întorc `{ ok: true, data } | { ok: false, error: ErrorCode, retr
   paginii pentru reselectare (FR-016a). Nu întoarce niciodată fișiere ale altor sesiuni (FR-022).
 
 ### Upload TUS (client → Supabase Storage, fără server-ul aplicației)
-- `tus-js-client`, endpoint `{SUPABASE_URL}/storage/v1/upload/resumable`, header
+- `tus-js-client`, endpoint `{SUPABASE_URL}/storage/v1/upload/resumable/sign` (varianta pentru
+  token semnat — verificat la implementare; `/upload/resumable` răspunde 403 fără JWT), header
   `x-signature: {signedToken}`, `chunkSize = 6 MiB` (obligatoriu Supabase), metadata
   `bucketName`, `objectName = path`, `contentType`, `cacheControl = 3600`.
 - `retryDelays = [0, 1000, 3000, 5000, 10000, 20000, 30000]`, reluare automată la evenimentul

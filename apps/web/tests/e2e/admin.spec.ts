@@ -1,7 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { TOTP } from "otpauth";
+import { loginWithMagicLink as login } from "./support/auth";
 import { createAdmin, randomEmail } from "./support/db";
-import { extractLink, waitForEmail } from "./support/mailpit";
+import { gotoHydrated, uniqueName, waitForHydration } from "./support/page";
 
 // US1 — administratorul creează un eveniment și obține codul QR (quickstart 1–3, 15, 17).
 test.describe.configure({ mode: "serial" });
@@ -9,16 +10,8 @@ test.describe.configure({ mode: "serial" });
 let totp: TOTP;
 let adminEmail: string;
 
-async function login(page: Page, email: string): Promise<void> {
-  const since = new Date();
-  await page.goto("/login");
-  await page.getByLabel("Adresa de email").fill(email);
-  await page.getByRole("button", { name: "Trimite linkul" }).click();
-  await expect(page.getByRole("status")).toBeVisible();
-  await page.goto(extractLink(await waitForEmail(email, { since }), "/auth/confirm"));
-}
-
 async function verifyCode(page: Page): Promise<void> {
+  await waitForHydration(page);
   await page.getByLabel("Codul din aplicație").fill(totp.generate());
   await page.getByRole("button", { name: "Verifică" }).click();
   await expect(page).toHaveURL(/\/admin\/events$/);
@@ -31,7 +24,7 @@ function inputDateTime(offsetMs: number): string {
 }
 
 async function createEvent(page: Page, name: string): Promise<string> {
-  await page.goto("/admin/events/new");
+  await gotoHydrated(page, "/admin/events/new");
   await page.getByLabel("Numele evenimentului").fill(name);
   await page.getByLabel("Data evenimentului").fill(new Date().toISOString().slice(0, 10));
   await page.getByLabel("Emailul organizatorului").fill(randomEmail("org"));
@@ -66,7 +59,8 @@ test("creează evenimentul, arată prețul, data ștergerii și descarcă QR-ul"
   await expect(page).toHaveURL(/\/auth\/mfa/);
   await verifyCode(page);
 
-  const url1 = await createEvent(page, "Nunta Ioana și Radu");
+  const firstName = uniqueName("Nunta Ioana și Radu");
+  const url1 = await createEvent(page, firstName);
   const eventUrl = page.url();
 
   const png = await page.request.get(`${eventUrl}/qr.png`);
@@ -82,7 +76,7 @@ test("creează evenimentul, arată prețul, data ștergerii și descarcă QR-ul"
   expect(await svg.text()).toMatch(/^<svg[\s\S]*<\/svg>\s*$/);
 
   // Linkurile a două evenimente nu pot fi deduse unul din altul (FR-004).
-  const url2 = await createEvent(page, "Botezul lui Luca");
+  const url2 = await createEvent(page, uniqueName("Botezul lui Luca"));
   const token1 = url1.split("/e/")[1] ?? "";
   const token2 = url2.split("/e/")[1] ?? "";
   expect(token1).not.toBe(token2);
@@ -90,7 +84,7 @@ test("creează evenimentul, arată prețul, data ștergerii și descarcă QR-ul"
 
   // Lista arată prețul final, retenția și data ștergerii.
   await page.goto("/admin/events");
-  const row = page.getByRole("row", { name: /Nunta Ioana și Radu/ });
+  const row = page.getByRole("row", { name: new RegExp(firstName) });
   await expect(row).toContainText("299,00");
   await expect(row).toContainText("3 luni");
   await expect(row).toContainText("0 fișiere");
@@ -99,7 +93,7 @@ test("creează evenimentul, arată prețul, data ștergerii și descarcă QR-ul"
 test("validarea formularului arată erorile lângă câmpuri (FR-002)", async ({ page }) => {
   await login(page, adminEmail);
   await verifyCode(page);
-  await page.goto("/admin/events/new");
+  await gotoHydrated(page, "/admin/events/new");
   await page.getByLabel("Numele evenimentului").fill("Test");
   await page.getByLabel("Emailul organizatorului").fill("nu-e-email");
   await page.getByLabel("Începutul încărcărilor").fill(inputDateTime(86_400_000));
@@ -112,15 +106,16 @@ test("validarea formularului arată erorile lângă câmpuri (FR-002)", async ({
 test("ștergerea evenimentului cere numele și invalidează linkul (FR-006b)", async ({ page }) => {
   await login(page, adminEmail);
   await verifyCode(page);
-  const uploadUrl = await createEvent(page, "Aniversare 30");
+  const name = uniqueName("Aniversare 30");
+  const uploadUrl = await createEvent(page, name);
 
   await page.getByRole("button", { name: "Șterge evenimentul" }).click();
   const dialog = page.getByRole("alertdialog");
   const confirm = dialog.getByRole("button", { name: "Șterge definitiv" });
   await expect(confirm).toBeDisabled();
-  await dialog.getByLabel("Tastează numele evenimentului").fill("Aniversare 3");
+  await dialog.getByLabel("Tastează numele evenimentului").fill(name.slice(0, -1));
   await expect(confirm).toBeDisabled();
-  await dialog.getByLabel("Tastează numele evenimentului").fill("Aniversare 30");
+  await dialog.getByLabel("Tastează numele evenimentului").fill(name);
   await confirm.click();
   await expect(page).toHaveURL(/\/admin\/events$/);
 

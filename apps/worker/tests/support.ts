@@ -31,7 +31,7 @@ export async function createEvent(opts: {
      values ('Eveniment worker', current_date, $1, $2, $3, 29900,
        (select id from public.retention_options where months = $4))
      returning id, purge_at`,
-    [opts.organizerEmail, new Date(end.getTime() - 3_600_000), end, opts.months ?? 3],
+    [opts.organizerEmail, new Date(Math.min(Date.now(), end.getTime()) - 3_600_000), end, opts.months ?? 3],
   );
   const row = rows[0];
   if (!row) throw new Error("eveniment necreat");

@@ -1,6 +1,7 @@
 "use server";
 
 import { createHash } from "node:crypto";
+import type { ErrorCode } from "@memories/shared";
 import { z } from "zod";
 import { adminSupabase } from "../supabase/admin";
 import { serverSupabase } from "../supabase/server";
@@ -40,6 +41,21 @@ export async function requestMagicLink(input: { email: string; next?: string }):
     });
     return null;
   });
+}
+
+export type LoginFormState = { status: "idle" } | { status: "sent" } | { status: "error"; error: ErrorCode };
+
+/** Varianta pentru `<form action>` (useActionState): funcționează și fără JavaScript hidratat. */
+export async function requestMagicLinkForm(_prev: LoginFormState, formData: FormData): Promise<LoginFormState> {
+  const email = formData.get("email");
+  const next = formData.get("next");
+  const result = await requestMagicLink({
+    email: typeof email === "string" ? email : "",
+    ...(typeof next === "string" && next !== "" ? { next } : {}),
+  });
+  if (result.ok) return { status: "sent" };
+  // O adresă invalidă primește același răspuns neutru; doar limitarea e comunicată.
+  return result.error === "RATE_LIMITED" ? { status: "error", error: "RATE_LIMITED" } : { status: "sent" };
 }
 
 const totpCodeSchema = z.object({

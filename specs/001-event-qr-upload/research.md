@@ -324,9 +324,16 @@ nejustificată pentru o singură limbă).
 
 **Decizie** (în Postgres, tabel `rate_limit_counters` cu fereastră fixă, verificat în funcții
 SQL `SECURITY DEFINER`):
-- `startGuestSession`: max 20 sesiuni noi/min per eveniment + max 5/min per hash(IP, sare
+- `startGuestSession`: max 300 sesiuni noi/min per eveniment + max 300/min per hash(IP, sare
   zilnică) — IP-ul nu se stochează în clar.
-- `reserveUpload`: max 30 rezervări/min per sesiune, max 600/min per eveniment.
+- `reserveUpload`: max 30 rezervări/min per sesiune, max 2000/min per eveniment.
+- **Revizuit la implementare (2026-09-24)**: valorile inițiale (20 sesiuni/min per eveniment,
+  5/min per IP, 600 rezervări/min per eveniment) ar fi blocat chiar scenariul din SC-006 —
+  200 de invitați pe Wi-Fi-ul sălii (același IP) care scanează codul în același minut, cu câte
+  5 fișiere. Limitele per IP și per eveniment opresc acum doar abuzul evident; limita per
+  sesiune (30/min) rămâne protecția principală.
+- Reselectarea după reîncărcarea paginii (FR-016a) reia rezervarea nefinalizată
+  (`p_replace_media_id`), fără să consume din nou limita de fișiere.
 - Login magic link: limitele native Supabase Auth + max 5/oră per adresă în Server Action.
 - Depășire → mesaj clar în română („Prea multe încercări, reîncearcă în X secunde”).
 

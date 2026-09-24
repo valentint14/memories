@@ -23,7 +23,8 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     "base-uri 'self'",
     "form-action 'self'",
     "frame-ancestors 'none'",
-    "upgrade-insecure-requests",
+    // Local, Supabase rulează pe HTTP: upgrade-ul ar strica uploadurile.
+    ...(supabaseUrl.startsWith("https://") ? ["upgrade-insecure-requests"] : []),
   ].join("; ");
 
   const requestHeaders = new Headers(request.headers);

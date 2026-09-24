@@ -140,12 +140,38 @@ export const ro = {
   "admin.delete.confirm": "Șterge definitiv",
   "admin.delete.anonymizedConfirm": "șterge",
 
+  // Pagina invitatului
+  "guest.intro": "Adaugă pozele și filmările tale de la eveniment. Nu ai nevoie de cont sau de aplicație.",
+  "guest.nameLabel": "Numele tău (opțional)",
+  "guest.pick": "Alege poze și video",
+  "guest.camera": "Fă o poză",
+  "guest.filesList": "Fișierele tale",
+  "guest.notStarted": "Încărcarea pozelor începe pe {date}. Revino atunci pe acest link.",
+  "guest.privacyTitle": "Cum folosim datele tale",
+  "guest.privacyWho": "Pozele și filmările pe care le încarci sunt văzute doar de organizatorul evenimentului. Ceilalți invitați nu le pot vedea. Numele este opțional.",
+  "guest.privacyLocation": "Eliminăm automat din fișiere locația (coordonatele GPS) înainte ca organizatorul să le vadă.",
+  "guest.privacyRetention": "Fișierele se șterg automat pe {date}, dacă organizatorul nu prelungește păstrarea. După ștergere, copiile de siguranță dispar în cel mult 7 zile.",
+  "guest.privacyProcessors": "Datele sunt găzduite în Uniunea Europeană, la furnizori cu acorduri de prelucrare a datelor (Supabase, Vercel, Resend, Sentry).",
+
   // Upload
   "upload.limitReached": "Ai atins limita de {limit} fișiere pentru acest eveniment.",
+  "upload.tooLarge": "Fișierul este prea mare (maximum {max}).",
+  "upload.failed": "Încărcarea nu a reușit.",
+  "upload.sessionFailed": "Nu am putut porni încărcarea. Reîncarcă pagina.",
+  "upload.retry": "Reîncearcă",
+  "upload.status.queued": "În așteptare",
+  "upload.status.reserving": "Se pregătește…",
+  "upload.status.uploading": "Se încarcă… {percent}%",
+  "upload.status.paused": "În pauză din cauza rețelei; se reia automat.",
+  "upload.status.done": "Încărcat",
+  "upload.status.rejected": "Respins",
+  "upload.status.failed": "Nu s-a încărcat",
 
   // Plurale
   "plural.files": { one: "{count} fișier", few: "{count} fișiere", other: "{count} de fișiere" },
   "plural.months": { one: "{count} lună", few: "{count} luni", other: "{count} de luni" },
+  "plural.filesUploaded": { one: "{count} fișier încărcat", few: "{count} fișiere încărcate", other: "{count} de fișiere încărcate" },
+  "plural.filesFailed": { one: "{count} fișier nu s-a încărcat", few: "{count} fișiere nu s-au încărcat", other: "{count} de fișiere nu s-au încărcat" },
 } as const satisfies Record<string, string | PluralMessage>;
 
 export type Messages = { [K in keyof typeof ro]: (typeof ro)[K] extends PluralMessage ? PluralMessage : string };

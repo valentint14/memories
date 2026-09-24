@@ -526,6 +526,52 @@ export type Database = {
         Returns: boolean
       }
       event_organizer_email: { Args: { p_event_id: string }; Returns: string }
+      guest_open_event: {
+        Args: { p_token: string }
+        Returns: {
+          anonymized_at: string | null
+          base_price_minor: number
+          created_at: string
+          event_date: string
+          expired_at: string | null
+          final_price_minor: number | null
+          id: string
+          max_files_per_guest: number
+          max_photo_bytes: number
+          max_video_bytes: number
+          name: string | null
+          organizer_email: string | null
+          public_token: string
+          purge_at: string
+          retention_months: number
+          retention_option_id: string
+          retention_surcharge_minor: number
+          status: Database["public"]["Enums"]["event_status"]
+          updated_at: string
+          upload_ends_at: string
+          upload_starts_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "events"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      guest_rate_limit: {
+        Args: { p_key: string; p_limit: number }
+        Returns: undefined
+      }
+      guest_remaining: { Args: { p_session_id: string }; Returns: number }
+      guest_uploads: {
+        Args: { p_session_id: string }
+        Returns: {
+          media_id: string
+          name: string
+          remaining: number
+          status: Database["public"]["Enums"]["media_status"]
+        }[]
+      }
       is_admin: { Args: never; Returns: boolean }
       is_platform_admin_user: { Args: never; Returns: boolean }
       organizer_owns_active_event: {
@@ -540,6 +586,38 @@ export type Database = {
       rate_limit_retry_after: { Args: { p_window: string }; Returns: number }
       request_event_deletion: {
         Args: { p_confirm_name: string; p_event_id: string }
+        Returns: undefined
+      }
+      reserve_upload: {
+        Args: {
+          p_bytes: number
+          p_filename: string
+          p_mime: string
+          p_replace_media_id?: string
+          p_session_id: string
+          p_token: string
+        }
+        Returns: {
+          media_id: string
+          path: string
+          remaining: number
+        }[]
+      }
+      resolve_event_for_guest: {
+        Args: { p_token: string }
+        Returns: {
+          event_id: string
+          name: string
+          state: string
+          upload_starts_at: string
+        }[]
+      }
+      start_guest_session: {
+        Args: { p_display_name?: string; p_ip_hash: string; p_token: string }
+        Returns: string
+      }
+      update_guest_name: {
+        Args: { p_display_name?: string; p_session_id: string; p_token: string }
         Returns: undefined
       }
     }

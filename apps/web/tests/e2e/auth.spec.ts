@@ -19,7 +19,7 @@ test.describe("autentificare prin magic link (FR-008)", () => {
     await page.context().clearCookies();
     await page.goto(link);
     await expect(page).toHaveURL(/\/login\?error=link/);
-    await expect(page.getByRole("alert")).toContainText("a expirat sau a fost deja folosit");
+    await expect(page.getByRole("alert").filter({ hasText: "a expirat sau a fost deja folosit" })).toBeVisible();
   });
 
   test("o adresă fără acces primește același mesaj ca una validă", async ({ page }) => {
