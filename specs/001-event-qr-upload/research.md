@@ -41,7 +41,7 @@ verificate în registrul npm și pe nodejs.org la 2026-09-24.
 | server-only | 0.0.1 | MIT; pachet-marker al echipei React, fără cod la runtime; nemodificat din 2022 pentru că nu are ce întreține; face build-ul să eșueze dacă un modul server ajunge în client (principiul III) |
 | @axe-core/playwright | 4.13.0 | MPL-2.0 (doar devDependency, nedistribuit); release 2026-09; verificări WCAG 2.2 AA în e2e (principiul VIII) |
 | k6 | 2.3.0 (binar, imaginea `grafana/k6:2.3.0`) | AGPL-3.0, rulat doar ca unealtă de test pe preview, nu e dependență a aplicației și nu se distribuie; release 2026-09-21 |
-| node-gyp / node-addon-api | 13.0.2 / 8.9.2 | MIT; doar la build-ul imaginii worker, pentru compilarea `sharp` pe libvips-ul sistemului (R5) |
+| ~~node-gyp / node-addon-api~~ | — | eliminate la implementare: `sharp` nu se mai compilează (R5 revizuit) |
 
 Excluse explicit: `@lhci/cli` (ultimul release 0.15.1 din 2025-06 — mentenanță insuficientă;
 LCP-ul se măsoară cu Playwright, vezi R16); `fluent-ffmpeg` (marcat „no longer supported” pe npm) → worker-ul apelează
@@ -150,18 +150,27 @@ client (interzis); legare prin `user_id` în `events` (complică schimbarea emai
 **Fapt**: binarele precompilate `sharp` includ libheif doar pentru AVIF; decodarea HEIC (HEVC)
 lipsește din motive de licențiere a brevetelor HEVC.
 
-**Decizie**: imaginea Docker a worker-ului (Debian 13 „trixie”) instalează `libvips-dev`,
-`libheif1` + `libheif-plugin-libde265` și `ffmpeg`, iar `sharp` se compilează la instalare pe
-libvips-ul global (detectat prin `pkg-config`, cu `node-addon-api` + `node-gyp` ca dependențe
-de build). Un test de fum în CI decodează un fișier HEIC real din `fixtures/` în imaginea
-construită și eșuează build-ul dacă `sharp.format.heif.input.fileSuffix` nu include `.heic`.
+**Decizie (revizuită la implementare, 2026-09-24)**: imaginea Docker a worker-ului (Debian 13
+„trixie”) instalează `libheif-examples` + `libheif-plugin-libde265` (libheif 1.19) și `ffmpeg`.
+Pozele HEIC/HEIF se decodează cu `heif-dec` într-un PNG temporar fără pierderi, iar `sharp`
+(binarul precompilat) produce din el variantele WebP, ca pentru orice altă poză. Originalul HEIC
+curățat de metadate rămâne pentru descărcare. Testul de fum din CI decodează
+`fixtures/media/iphone.heic` în imaginea construită și eșuează dacă `heif-dec` lipsește sau
+decodarea nu produce o imagine validă.
 
-**Justificare**: păstrează o singură bibliotecă pentru toate pozele; libde265 e LGPL (legat
-dinamic, compatibil).
+**De ce s-a schimbat**: decizia inițială (compilarea `sharp` pe libvips-ul sistemului) nu e
+realizabilă: `sharp` 0.35.4 cere libvips ≥ 8.18.6, iar Debian 13 livrează libvips 8.16.1.
+Compilarea libvips 8.18 din surse în imagine ar adăuga un lanț de build fragil (meson, zeci de
+biblioteci) doar pentru HEIC.
 
-**Alternative**: `heic-convert` / libheif WASM (5–10× mai lent, memorie mare pentru poze de
-50 MB); `ffmpeg` pentru HEIC (suport inconsistent pentru grile de tile-uri HEIC); conversie în
-browser (costă baterie și încalcă „fără fricțiune”).
+**Justificare**: `heif-dec` e decodorul de referință al libheif (suportă grilele de tile-uri ale
+iPhone-ului); libde265 e LGPL, legat dinamic; imaginea nu mai are nevoie de unelte de
+compilare. Cost: un proces și un fișier temporar în plus per poză HEIC (~1 s pentru 12 MP).
+
+**Alternative**: compilarea libvips 8.18 din surse (build lung și fragil); `sharp` mai vechi
+compatibil cu libvips 8.16 (versiuni depășite); `heic-convert` / libheif WASM (5–10× mai lent,
+memorie mare pentru poze de 50 MB); `ffmpeg` pentru HEIC (suport inconsistent pentru grile de
+tile-uri); conversie în browser (costă baterie și încalcă „fără fricțiune”).
 
 ---
 

@@ -1,0 +1,12 @@
+* text=auto eol=lf
+
+# Media de test: binare, niciodată convertite
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.heic binary
+*.heif binary
+*.webp binary
+*.mov binary
+*.mp4 binary
+*.zip binary
