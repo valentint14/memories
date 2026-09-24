@@ -1,10 +1,18 @@
 "use server";
 
 import { archiveEntryName } from "@memories/shared";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { archiveUrl, latestArchive, requestArchiveJob, type ArchiveState } from "../organizer/archive";
-import { listGallery, mediaUrls, type GalleryItem, type MediaCursor, type MediaUrls } from "../organizer/media";
-import { runAction, type ActionResult } from "./result";
+import {
+  listGallery,
+  mediaUrls,
+  requireActiveEvent,
+  type GalleryItem,
+  type MediaCursor,
+  type MediaUrls,
+} from "../organizer/media";
+import { runAction, throwIfDbError, type ActionResult } from "./result";
 
 const cursorSchema = z.object({ uploadedAt: z.iso.datetime({ offset: true }), id: z.uuid() });
 
@@ -27,6 +35,35 @@ export async function listMedia(
         ...(input.updatedSince ? { updatedSince: input.updatedSince } : {}),
       }),
   );
+}
+
+const deleteSchema = z.object({ eventId: z.uuid(), mediaIds: z.array(z.uuid()).min(1).max(500) });
+
+/**
+ * Ștergere definitivă (FR-031, FR-032): rândurile devin `deleting`, obiectele se șterg imediat
+ * prin Storage API cu sesiunea organizatorului, apoi rândurile dispar. Dacă Storage eșuează,
+ * rândurile rămân `deleting` (invizibile) și worker-ul le curăță la reconciliere.
+ */
+export async function deleteMedia(
+  eventId: string,
+  mediaIds: string[],
+): Promise<ActionResult<{ deleted: string[]; failed: string[] }>> {
+  return runAction(deleteSchema, { eventId, mediaIds }, async (input) => {
+    const supabase = await requireActiveEvent(input.eventId);
+    const { data, error } = await supabase.rpc("delete_media", { p_event_id: input.eventId, p_media_ids: input.mediaIds });
+    throwIfDbError(error);
+    const marked = data ?? [];
+    const paths = marked.flatMap((m) => m.paths);
+    if (paths.length > 0) {
+      const removed = await supabase.storage.from("media").remove(paths);
+      if (!removed.error) {
+        await supabase.rpc("finalize_media_deletion", { p_media_ids: marked.map((m) => m.media_id) });
+      }
+    }
+    revalidatePath(`/events/${input.eventId}`);
+    const deleted = marked.map((m) => m.media_id);
+    return { deleted, failed: input.mediaIds.filter((id) => !deleted.includes(id)) };
+  });
 }
 
 /** Numele fișierului descărcat, ca în arhivă (research.md R9). */

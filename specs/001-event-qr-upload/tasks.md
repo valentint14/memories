@@ -239,16 +239,16 @@ timestamp cerut de Supabase CLI (`supabase/migrations/2026092500NNNN_<nume>.sql`
 
 ### Tests for User Story 5 (scrise înainte, trebuie să eșueze) ⚠️
 
-- [ ] T101 [P] [US5] Scrie `supabase/tests/functions/delete-media.test.ts`: `delete_media` verifică proprietatea, marchează `deleting`, expiră arhivele evenimentului și întoarce toate căile (original, display, thumb, poster, playback); `finalize_media_deletion` șterge doar rândurile `deleting`; `reconcile_deletions` pune în coadă rândurile `deleting` mai vechi de 5 min
-- [ ] T102 [P] [US5] Scrie `apps/web/tests/e2e/delete.spec.ts`: selecție a 3 fișiere → dialogul arată numărul și avertizarea de ireversibilitate → confirmare → fișierele dispar; după 60 s URL-urile semnate copiate înainte dau 404 pentru toate variantele; arhiva existentă e invalidată și noua arhivă nu conține fișierele șterse
+- [X] T101 [P] [US5] Scrie `supabase/tests/functions/delete-media.test.ts`: `delete_media` verifică proprietatea, marchează `deleting`, expiră arhivele evenimentului și întoarce toate căile (original, display, thumb, poster, playback); `finalize_media_deletion` șterge doar rândurile `deleting`; `reconcile_deletions` pune în coadă rândurile `deleting` mai vechi de 5 min
+- [X] T102 [P] [US5] Scrie `apps/web/tests/e2e/delete.spec.ts`: selecție a 3 fișiere → dialogul arată numărul și avertizarea de ireversibilitate → confirmare → fișierele dispar; după 60 s URL-urile semnate copiate înainte dau 404 pentru toate variantele; arhiva existentă e invalidată și noua arhivă nu conține fișierele șterse
 
 ### Implementation for User Story 5
 
-- [ ] T103 [US5] Migrația `supabase/migrations/20260925001300_delete_media.sql`: `delete_media(event_id, media_ids[])`, `finalize_media_deletion(media_ids[])` și jobul pg_cron `reconcile_deletions` (la 10 min → job `purge_media`)
-- [ ] T104 [US5] Adaugă în `apps/web/lib/actions/organizer.ts` `deleteMedia(eventId, mediaIds[])` (1–500 id-uri): `delete_media` → `storage.remove()` cu clientul organizatorului pe toate căile → `finalize_media_deletion`; întoarce `{ deleted, failed }` (eșecurile rămân `deleting` pentru reconciliere)
-- [ ] T105 [P] [US5] Implementează jobul `apps/worker/src/jobs/purge-media.ts` (șterge prin service role căile rândurilor `deleting`, apoi rândurile; idempotent)
-- [ ] T106 [US5] Adaugă selecția multiplă în `apps/web/components/gallery/GalleryGrid.tsx` (`selectionMode="multiple"`, bară de acțiuni) și creează `apps/web/components/gallery/ConfirmDeleteDialog.tsx` (react-aria `AlertDialog` cu numărul de fișiere și avertizarea „ireversibil”)
-- [ ] T107 [US5] Adaugă cheile de text pentru ștergere în `apps/web/lib/i18n/messages/ro.ts`
+- [X] T103 [US5] Migrația `supabase/migrations/20260925001300_delete_media.sql`: `delete_media(event_id, media_ids[])`, `finalize_media_deletion(media_ids[])` și jobul pg_cron `reconcile_deletions` (la 10 min → job `purge_media`)
+- [X] T104 [US5] Adaugă în `apps/web/lib/actions/organizer.ts` `deleteMedia(eventId, mediaIds[])` (1–500 id-uri): `delete_media` → `storage.remove()` cu clientul organizatorului pe toate căile → `finalize_media_deletion`; întoarce `{ deleted, failed }` (eșecurile rămân `deleting` pentru reconciliere)
+- [X] T105 [P] [US5] Implementează jobul `apps/worker/src/jobs/purge-media.ts` (șterge prin service role căile rândurilor `deleting`, apoi rândurile; idempotent)
+- [X] T106 [US5] Adaugă selecția multiplă în `apps/web/components/gallery/GalleryGrid.tsx` (`selectionMode="multiple"`, bară de acțiuni) și creează `apps/web/components/gallery/ConfirmDeleteDialog.tsx` (react-aria `AlertDialog` cu numărul de fișiere și avertizarea „ireversibil”)
+- [X] T107 [US5] Adaugă cheile de text pentru ștergere în `apps/web/lib/i18n/messages/ro.ts`
 
 **Checkpoint**: US5 funcționează independent; SC-011 verificat
 

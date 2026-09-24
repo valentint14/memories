@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Button, GridList, GridListItem } from "react-aria-components";
-import { listMedia } from "@/lib/actions/organizer";
+import { Button, CheckboxButton, CheckboxField, GridList, GridListItem, type Selection } from "react-aria-components";
+import { deleteMedia, listMedia } from "@/lib/actions/organizer";
 import { t } from "@/lib/i18n";
 import type { GalleryItem, MediaCursor } from "@/lib/organizer/media";
+import { ConfirmDeleteDialog } from "./ConfirmDeleteDialog";
 import { MediaViewer } from "./MediaViewer";
 
 function GenericThumb({ label }: { label: string }) {
@@ -33,6 +34,12 @@ export function GalleryGrid({
   const [cursor, setCursor] = useState(initialCursor);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [loading, startLoading] = useTransition();
+  const [selected, setSelected] = useState<Selection>(new Set());
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleting, startDeleting] = useTransition();
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const selectedIds = selected === "all" ? items.map((i) => i.id) : items.filter((i) => selected.has(i.id)).map((i) => i.id);
 
   if (items.length === 0) {
     return <p className="text-muted">{t("gallery.empty")}</p>;
@@ -40,10 +47,41 @@ export function GalleryGrid({
 
   return (
     <>
+      <div className="flex min-h-11 flex-wrap items-center gap-3" aria-live="polite">
+        {selectedIds.length > 0 && (
+          <>
+            <Button
+              onPress={() => {
+                setConfirmOpen(true);
+              }}
+              className="min-h-11 rounded-lg bg-danger px-4 font-semibold text-white"
+            >
+              {t("delete.selection", { count: selectedIds.length })}
+            </Button>
+            <Button
+              onPress={() => {
+                setSelected(new Set());
+              }}
+              className="min-h-11 rounded-lg border border-gray-400 px-4"
+            >
+              {t("delete.clearSelection")}
+            </Button>
+          </>
+        )}
+        {deleteError !== null && (
+          <p role="alert" className="text-danger">
+            {deleteError}
+          </p>
+        )}
+      </div>
+
       <GridList
         aria-label={t("gallery.label")}
         layout="grid"
         items={items}
+        selectionMode="multiple"
+        selectedKeys={selected}
+        onSelectionChange={setSelected}
         onAction={(key) => {
           setOpenIndex(items.findIndex((i) => i.id === key));
         }}
@@ -75,6 +113,22 @@ export function GalleryGrid({
                   {t("gallery.processing")}
                 </span>
               )}
+              <CheckboxField
+                slot="selection"
+                aria-label={t("delete.select", { name: label })}
+                className="absolute right-1 top-1"
+              >
+                <CheckboxButton className="flex h-11 w-11 cursor-pointer items-center justify-center">
+                  {({ isSelected }) => (
+                    <span
+                      aria-hidden="true"
+                      className={`flex h-6 w-6 items-center justify-center rounded border-2 ${isSelected ? "border-brand-600 bg-brand-600 text-white" : "border-gray-500 bg-white/90"}`}
+                    >
+                      {isSelected ? "✓" : ""}
+                    </span>
+                  )}
+                </CheckboxButton>
+              </CheckboxField>
             </GridListItem>
           );
         }}
@@ -97,6 +151,31 @@ export function GalleryGrid({
           {t("gallery.loadMore")}
         </Button>
       )}
+
+      <ConfirmDeleteDialog
+        count={selectedIds.length}
+        isOpen={confirmOpen}
+        pending={deleting}
+        onCancel={() => {
+          setConfirmOpen(false);
+        }}
+        onConfirm={() => {
+          setDeleteError(null);
+          startDeleting(async () => {
+            const result = await deleteMedia(eventId, selectedIds);
+            setConfirmOpen(false);
+            if (!result.ok) {
+              setDeleteError(t(`errors.${result.error}`));
+              return;
+            }
+            const gone = new Set(result.data.deleted);
+            setItems((prev) => prev.filter((i) => !gone.has(i.id)));
+            setSelected(new Set());
+            // Panoul de arhivă își reîncarcă starea (arhiva a fost invalidată).
+            window.dispatchEvent(new CustomEvent("gallery:changed"));
+          });
+        }}
+      />
 
       <MediaViewer
         items={items}

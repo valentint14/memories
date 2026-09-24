@@ -3,7 +3,7 @@ export type JobMessage =
   | { type: "process"; media_id: string }
   | { type: "build_archive"; archive_job_id: string }
   | { type: "delete_archive"; archive_job_id: string }
-  | { type: "purge_media"; media_ids: string[] }
+  | { type: "purge_media"; media_ids: string[]; event_id?: string }
   | { type: "purge_event"; event_id: string }
   | { type: "expire_event"; event_id: string }
   | { type: "delete_organizer_user"; user_id: string }

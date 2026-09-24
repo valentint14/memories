@@ -161,6 +161,14 @@ export const ro = {
   "gallery.next": "Următorul",
   "gallery.download": "Descarcă originalul",
 
+  // Ștergere
+  "delete.select": "Selectează fișierul de la {name}",
+  "delete.selection": "Șterge selecția ({count})",
+  "delete.clearSelection": "Anulează selecția",
+  "delete.title": "Ștergi definitiv {files}?",
+  "delete.warning": "Ștergerea este ireversibilă: fișierele, miniaturile și versiunile de redare dispar definitiv, iar linkurile trimise anterior nu vor mai funcționa.",
+  "delete.confirm": "Șterge definitiv",
+
   // Arhivă
   "archive.title": "Descarcă toate fișierele",
   "archive.downloadAll": "Descarcă tot",

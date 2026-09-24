@@ -53,6 +53,15 @@ export function ArchivePanel({
     };
   }, [eventId, refresh]);
 
+  // O ștergere de fișiere din galerie invalidează arhiva.
+  useEffect(() => {
+    const onChange = () => void refresh();
+    window.addEventListener("gallery:changed", onChange);
+    return () => {
+      window.removeEventListener("gallery:changed", onChange);
+    };
+  }, [refresh]);
+
   // Rezervă: cât timp arhiva se pregătește, verificăm și periodic.
   const inProgress = archive?.status === "pending" || archive?.status === "building";
   useEffect(() => {
