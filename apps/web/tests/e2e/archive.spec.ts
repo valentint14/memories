@@ -61,11 +61,16 @@ test.afterAll(async () => {
 test("descarcă un fișier la calitatea originală (FR-029)", async () => {
   await page.goto(`/events/${eventId}`);
   await page.getByRole("row").first().click();
-  const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("link", { name: "Descarcă originalul" }).click();
-  const download = await downloadPromise;
-  expect(download.suggestedFilename()).toMatch(/^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_Ana_[0-9a-f]{8}\.jpg$/);
-  const bytes = await readFile(await download.path());
+  // Se verifică răspunsul linkului semnat, nu evenimentul de download al browserului: WebKit pe
+  // Linux (emulare iPhone) nu emite evenimentul pentru un link cross-origin cu `attachment`.
+  const href = await page.getByRole("link", { name: "Descarcă originalul" }).getAttribute("href");
+  expect(href).toContain("token=");
+  const response = await page.request.get(href ?? "");
+  expect(response.status()).toBe(200);
+  const disposition = response.headers()["content-disposition"] ?? "";
+  expect(disposition).toContain("attachment");
+  expect(decodeURIComponent(disposition)).toMatch(/\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_Ana_[0-9a-f]{8}\.jpg/);
+  const bytes = await response.body();
   expect(bytes.subarray(0, 2).toString("hex")).toBe("ffd8");
 });
 
