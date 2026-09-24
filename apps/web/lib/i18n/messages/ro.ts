@@ -244,6 +244,7 @@ export const ro = {
   "plural.files": { one: "{count} fișier", few: "{count} fișiere", other: "{count} de fișiere" },
   "plural.months": { one: "{count} lună", few: "{count} luni", other: "{count} de luni" },
   "plural.filesUploaded": { one: "{count} fișier încărcat", few: "{count} fișiere încărcate", other: "{count} de fișiere încărcate" },
+  "plural.newFiles": { one: "{count} fișier nou în galerie", few: "{count} fișiere noi în galerie", other: "{count} de fișiere noi în galerie" },
   "plural.filesAlreadyUploaded": {
     one: "Ai încărcat deja {count} fișier.",
     few: "Ai încărcat deja {count} fișiere.",

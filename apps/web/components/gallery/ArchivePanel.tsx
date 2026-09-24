@@ -5,6 +5,7 @@ import { Button } from "react-aria-components";
 import { getArchiveUrl, getLatestArchive, requestArchive } from "@/lib/actions/organizer";
 import { formatDateTime, t, tp } from "@/lib/i18n";
 import type { ArchiveState } from "@/lib/organizer/archive";
+import { authorizeRealtime } from "@/lib/realtime/auth";
 import { browserSupabase } from "@/lib/supabase/browser";
 
 interface ReadyArchive {
@@ -46,9 +47,13 @@ export function ArchivePanel({
         "postgres_changes",
         { event: "*", schema: "public", table: "archive_jobs", filter: `event_id=eq.${eventId}` },
         () => void refresh(),
-      )
-      .subscribe();
+      );
+    let cancelled = false;
+    void authorizeRealtime(supabase).then(() => {
+      if (!cancelled) channel.subscribe();
+    });
     return () => {
+      cancelled = true;
       void supabase.removeChannel(channel);
     };
   }, [eventId, refresh]);

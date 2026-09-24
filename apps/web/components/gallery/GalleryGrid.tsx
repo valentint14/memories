@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { Button, CheckboxButton, CheckboxField, GridList, GridListItem, type Selection } from "react-aria-components";
 import { deleteMedia, listMedia } from "@/lib/actions/organizer";
-import { t } from "@/lib/i18n";
+import { latestUpdatedAt, mergeGallery } from "@/lib/gallery/merge";
+import { t, tp } from "@/lib/i18n";
 import type { GalleryItem, MediaCursor } from "@/lib/organizer/media";
+import { useEventChannel } from "@/lib/realtime/useEventChannel";
 import { ConfirmDeleteDialog } from "./ConfirmDeleteDialog";
 import { MediaViewer } from "./MediaViewer";
 
@@ -39,14 +41,51 @@ export function GalleryGrid({
   const [deleting, startDeleting] = useTransition();
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
+  const [announcement, setAnnouncement] = useState("");
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+
+  // Galerie live (FR-033, SC-007): schimbările vin prin Realtime; diferența se cere de la server,
+  // cu URL-uri semnate pentru miniaturi, și se integrează fără duplicate.
+  const liveStatus = useEventChannel(eventId, {
+    onResync: () => {
+      const since = latestUpdatedAt(itemsRef.current);
+      void listMedia(eventId, undefined, since ?? undefined).then((result) => {
+        if (!result.ok || result.data.items.length === 0) return;
+        const known = new Set(itemsRef.current.map((i) => i.id));
+        const fresh = result.data.items.filter((i) => !known.has(i.id)).length;
+        setItems((prev) => mergeGallery(prev, result.data.items, []));
+        if (fresh > 0) setAnnouncement(tp("plural.newFiles", fresh));
+      });
+    },
+    onDelete: (id) => {
+      setItems((prev) => mergeGallery(prev, [], [id]));
+    },
+  });
+
   const selectedIds = selected === "all" ? items.map((i) => i.id) : items.filter((i) => selected.has(i.id)).map((i) => i.id);
 
+  const liveRegion = (
+    <>
+      <span data-live={liveStatus} hidden />
+      <p role="status" className="sr-only">
+        {announcement}
+      </p>
+    </>
+  );
+
   if (items.length === 0) {
-    return <p className="text-muted">{t("gallery.empty")}</p>;
+    return (
+      <>
+        {liveRegion}
+        <p className="text-muted">{t("gallery.empty")}</p>
+      </>
+    );
   }
 
   return (
     <>
+      {liveRegion}
       <div className="flex min-h-11 flex-wrap items-center gap-3" aria-live="polite">
         {selectedIds.length > 0 && (
           <>

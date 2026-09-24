@@ -318,14 +318,14 @@ timestamp cerut de Supabase CLI (`supabase/migrations/2026092500NNNN_<nume>.sql`
 
 ### Tests for User Story 7 (scrise înainte, trebuie să eșueze) ⚠️
 
-- [ ] T132 [P] [US7] Scrie `apps/web/tests/unit/gallery-merge.test.ts`: reducer-ul de galerie aplică INSERT/UPDATE/DELETE, păstrează ordinea după `(uploaded_at, id)`, nu produce duplicate când resincronizarea întoarce elemente deja primite prin Realtime
-- [ ] T133 [P] [US7] Scrie `apps/web/tests/e2e/gallery-live.spec.ts`: organizatorul are galeria deschisă, un al doilea context încarcă o poză → apare în ≤ 10 s, în poziția corectă; un video apare „în procesare” și devine redabil fără reîncărcare; organizatorul trece offline, se încarcă 2 fișiere, revine online → ambele apar o singură dată
+- [X] T132 [P] [US7] Scrie `apps/web/tests/unit/gallery-merge.test.ts`: reducer-ul de galerie aplică INSERT/UPDATE/DELETE, păstrează ordinea după `(uploaded_at, id)`, nu produce duplicate când resincronizarea întoarce elemente deja primite prin Realtime
+- [X] T133 [P] [US7] Scrie `apps/web/tests/e2e/gallery-live.spec.ts`: organizatorul are galeria deschisă, un al doilea context încarcă o poză → apare în ≤ 10 s, în poziția corectă; un video apare „în procesare” și devine redabil fără reîncărcare; organizatorul trece offline, se încarcă 2 fișiere, revine online → ambele apar o singură dată
 
 ### Implementation for User Story 7
 
-- [ ] T134 [P] [US7] Creează `apps/web/lib/gallery/merge.ts` (reducer pur: upsert după `id`, eliminare la DELETE sau la stare invizibilă, sortare după `(uploaded_at, id)`)
-- [ ] T135 [US7] Creează `apps/web/lib/realtime/useEventChannel.ts`: canal `event:{eventId}`, `postgres_changes` pe `public.media_items` cu filtrul `event_id=eq.{eventId}`; la fiecare `SUBSCRIBED` apelează `listMedia(eventId, undefined, lastUpdatedAt)` și aplică diferența prin `merge.ts` (FR-033); miniaturile noi primesc URL-uri semnate la cerere
-- [ ] T136 [US7] Integrează `useEventChannel` în `apps/web/components/gallery/GalleryGrid.tsx` (anunț `aria-live="polite"` pentru fișierele noi, fără a muta focusul)
+- [X] T134 [P] [US7] Creează `apps/web/lib/gallery/merge.ts` (reducer pur: upsert după `id`, eliminare la DELETE sau la stare invizibilă, sortare după `(uploaded_at, id)`)
+- [X] T135 [US7] Creează `apps/web/lib/realtime/useEventChannel.ts`: canal `event:{eventId}`, `postgres_changes` pe `public.media_items` cu filtrul `event_id=eq.{eventId}`; la fiecare `SUBSCRIBED` apelează `listMedia(eventId, undefined, lastUpdatedAt)` și aplică diferența prin `merge.ts` (FR-033); miniaturile noi primesc URL-uri semnate la cerere
+- [X] T136 [US7] Integrează `useEventChannel` în `apps/web/components/gallery/GalleryGrid.tsx` (anunț `aria-live="polite"` pentru fișierele noi, fără a muta focusul)
 
 **Checkpoint**: toate poveștile funcționează independent
 
