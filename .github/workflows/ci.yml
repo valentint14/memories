@@ -29,13 +29,14 @@ jobs:
         run: pnpm lint
       - name: Typecheck
         run: pnpm typecheck
-      - name: Unit tests
-        run: pnpm test:unit
 
       - name: Supabase local
         run: pnpm db:start
       - name: Env din Supabase local
         run: node scripts/ci-env.mjs >> "$GITHUB_ENV"
+      # După mediu: testul „fără secrete în client” face `next build`, care cere variabilele Supabase.
+      - name: Unit tests
+        run: pnpm test:unit
       - name: DB tests (RLS + funcții SQL)
         run: pnpm test:db
 
