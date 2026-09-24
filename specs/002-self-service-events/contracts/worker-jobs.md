@@ -7,7 +7,7 @@ vin prin aceeași coadă `media_jobs`, cu același format de mesaj
 ## `auth_email`
 
 ```json
-{ "type": "auth_email", "requestId": "uuid", "email": "ana@exemplu.ro", "purpose": "create" | "login" }
+{ "type": "auth_email", "request_id": "uuid", "email": "ana@exemplu.ro", "purpose": "create" | "login" }
 ```
 
 1. Cererea trebuie să existe și să fie `pending`, altfel jobul se încheie fără efect
@@ -21,7 +21,7 @@ vin prin aceeași coadă `media_jobs`, cu același format de mesaj
 
 Reîncercare: la eroare SMTP sau Auth, backoff-ul din 001. La reîncercare, se generează un
 token nou (cel vechi e invalidat automat), deci emailul trimis e mereu cel valid. Loguri: doar
-`requestId` și rezultatul, fără adresă, cod sau token.
+`request_id` și rezultatul, fără adresă, cod sau token.
 
 ## `auth_rotate`
 
@@ -35,12 +35,12 @@ Dacă utilizatorul nu există, nu face nimic.
 ## `admin_activation_notice`
 
 ```json
-{ "type": "admin_activation_notice", "eventId": "uuid" }
+{ "type": "admin_activation_notice", "event_id": "uuid" }
 ```
 
 Email către administratori (`ADMIN_NOTIFY_EMAILS`, altfel adresele din `platform_admins`) cu
 numele și data evenimentului, emailul organizatorului, momentul cererii și linkul
-`{APP_URL}/admin/events/{eventId}` (FR-018a).
+`{APP_URL}/admin/events/{event_id}` (FR-018a).
 
 ## `retention_notice` (extins)
 
