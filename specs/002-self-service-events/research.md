@@ -97,10 +97,10 @@ tokenul.
 - **Endpointul public Supabase Auth**: CAPTCHA-ul integrat al Auth, activat cu furnizorul
   `turnstile` (`[auth.captcha]` în `config.toml` local; setarea echivalentă în dashboard pentru
   producție). Fluxurile aplicației folosesc API-ul administrativ pentru emitere (fără CAPTCHA) și
-  `verifyOtp` pentru confirmare. **De confirmat prin probă (T002), înainte de activare**:
-  `/verify` nu cere CAPTCHA. Dacă îl cere, CAPTCHA-ul Auth rămâne dezactivat, iar endpointul
-  public e protejat doar de limitele Auth și de `enable_signup = false` (doar adresele
-  existente pot primi emailuri, în limitele de frecvență per adresă ale Auth).
+  `verifyOtp` pentru confirmare. **Probă locală (T002, 2026-09-24)**, cu CAPTCHA-ul Auth
+  activ: `verifyOtp` reușește fără `captchaToken` (cod și `token_hash`); `signInWithOtp` fără
+  token e refuzat („captcha protection: request disallowed”), iar cu tokenul de test e acceptat.
+  Secretul de test se încarcă din `supabase/.env` (comis; cheie publică de test Cloudflare).
 - **Fără dependență nouă**: scriptul `https://challenges.cloudflare.com/turnstile/v0/api.js` se
   încarcă cu nonce-ul CSP existent printr-o componentă proprie mică (`TurnstileField`). CSP-ul
   adaugă `https://challenges.cloudflare.com` la `script-src` și `frame-src`.

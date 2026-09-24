@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { buildCsp } from "./lib/security/csp";
 
 /**
  * Reîmprospătează sesiunea Supabase și aplică headerele de securitate cu nonce CSP per cerere
@@ -8,24 +9,7 @@ import { NextResponse, type NextRequest } from "next/server";
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-  const supabaseWs = supabaseUrl.replace(/^http/, "ws");
-  const isDev = process.env.NODE_ENV === "development";
-
-  const csp = [
-    "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
-    "style-src 'self' 'unsafe-inline'",
-    `img-src 'self' blob: data: ${supabaseUrl}`,
-    `media-src 'self' blob: ${supabaseUrl}`,
-    `connect-src 'self' ${supabaseUrl} ${supabaseWs}`,
-    "font-src 'self'",
-    "object-src 'none'",
-    "base-uri 'self'",
-    "form-action 'self'",
-    "frame-ancestors 'none'",
-    // Local, Supabase rulează pe HTTP: upgrade-ul ar strica uploadurile.
-    ...(supabaseUrl.startsWith("https://") ? ["upgrade-insecure-requests"] : []),
-  ].join("; ");
+  const csp = buildCsp({ nonce, supabaseUrl, isDev: process.env.NODE_ENV === "development" });
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);

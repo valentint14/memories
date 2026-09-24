@@ -7,7 +7,10 @@ export type JobMessage =
   | { type: "purge_event"; event_id: string }
   | { type: "expire_event"; event_id: string }
   | { type: "delete_organizer_user"; user_id: string }
-  | { type: "retention_notice"; event_id: string; threshold: "30d" | "7d" | "1d"; purge_at: string };
+  | { type: "retention_notice"; event_id: string; threshold: "30d" | "7d" | "1d" | "activation_7d"; purge_at: string }
+  | { type: "auth_email"; request_id: string; email: string; purpose: "create" | "login" }
+  | { type: "auth_rotate"; email: string }
+  | { type: "admin_activation_notice"; event_id: string };
 
 export type JobType = JobMessage["type"];
 
