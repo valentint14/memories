@@ -137,6 +137,16 @@ export class UploadQueue {
         transfer.start();
       }
     }
+    // Fișierele care au eșuat din cauza rețelei se reiau automat la revenirea conexiunii.
+    for (const item of this.items) {
+      if (item.status === "failed" && item.message?.key === "upload.failed" && !this.transfers.has(item.id)) {
+        this.retry(item.id);
+      }
+    }
+  }
+
+  hasActiveUploads(): boolean {
+    return this.items.some((i) => i.status === "queued" || i.status === "reserving" || i.status === "uploading" || i.status === "paused");
   }
 
   summary(): { done: number; failed: number; inProgress: number } {
@@ -199,12 +209,19 @@ export class UploadQueue {
       return;
     }
 
-    if (!(await this.ensureSession())) {
-      this.update(id, { status: "failed", message: { key: "upload.sessionFailed" } });
+    let reserved: Awaited<ReturnType<QueueDeps["reserve"]>>;
+    try {
+      if (!(await this.ensureSession())) {
+        this.update(id, { status: "failed", message: { key: "upload.sessionFailed" } });
+        return;
+      }
+      reserved = await this.deps.reserve({ name: file.name, type, size: file.size }, this.replaces.get(id));
+    } catch {
+      // Apelul către server a eșuat (ex. rețeaua a căzut): fișierul se poate reîncerca.
+      this.session = null;
+      this.update(id, { status: "failed", message: { key: "upload.failed" } });
       return;
     }
-
-    const reserved = await this.deps.reserve({ name: file.name, type, size: file.size }, this.replaces.get(id));
     if (!reserved.ok) {
       const limit = reserved.detail?.limit;
       const maxBytes = reserved.detail?.maxBytes;
@@ -220,6 +237,8 @@ export class UploadQueue {
       return;
     }
 
+    // O reîncercare manuală reia aceeași rezervare (nu consumă din nou limita de fișiere).
+    this.replaces.set(id, reserved.data.mediaId);
     this.update(id, { status: "uploading", progress: 0 });
     await new Promise<void>((resolve) => {
       void this.deps

@@ -1,10 +1,13 @@
 "use client";
 
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { reserveUpload, startGuestSession } from "@/lib/actions/guest";
 import { formatBytes, t } from "@/lib/i18n";
 import { UploadQueue, type QueueLimits } from "@/lib/upload/queue";
 import { FileRow } from "./FileRow";
+import { KeepOpenNotice } from "./KeepOpenNotice";
+import { NetworkBanner } from "./NetworkBanner";
+import { PendingAfterReload } from "./PendingAfterReload";
 import { UploadSummary } from "./UploadSummary";
 
 const ACCEPT = "image/*,video/*,.heic,.heif,.mov";
@@ -37,6 +40,26 @@ export function UploadClient({ token, limits }: { token: string; limits: QueueLi
   const items = useSyncExternalStore(queue.subscribe, queue.getSnapshot, queue.getSnapshot);
   // `items` se schimbă la fiecare actualizare a cozii, deci rezumatul e mereu la zi.
   const summary = queue.summary();
+  const [offline, setOffline] = useState(false);
+
+  // Pauză la pierderea rețelei, reluare automată la revenire (FR-016).
+  useEffect(() => {
+    setOffline(!navigator.onLine);
+    const onOffline = () => {
+      setOffline(true);
+      queue.pauseAll();
+    };
+    const onOnline = () => {
+      setOffline(false);
+      queue.resumeAll();
+    };
+    window.addEventListener("offline", onOffline);
+    window.addEventListener("online", onOnline);
+    return () => {
+      window.removeEventListener("offline", onOffline);
+      window.removeEventListener("online", onOnline);
+    };
+  }, [queue]);
 
   const onFiles = (files: FileList | null) => {
     if (files && files.length > 0) queue.add(Array.from(files));
@@ -59,6 +82,15 @@ export function UploadClient({ token, limits }: { token: string; limits: QueueLi
           className="min-h-11 rounded-lg border border-gray-400 px-3 text-base"
         />
       </div>
+
+      <PendingAfterReload
+        token={token}
+        onReselect={(files, replaceMediaIds) => {
+          queue.add(files, replaceMediaIds);
+        }}
+      />
+      <NetworkBanner offline={offline} />
+      <KeepOpenNotice active={queue.hasActiveUploads()} />
 
       {items.length > 0 && (
         <ul aria-label={t("guest.filesList")} className="flex flex-col gap-2">

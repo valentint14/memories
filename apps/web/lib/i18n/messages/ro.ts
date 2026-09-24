@@ -199,6 +199,11 @@ export const ro = {
   "upload.failed": "Încărcarea nu a reușit.",
   "upload.sessionFailed": "Nu am putut porni încărcarea. Reîncarcă pagina.",
   "upload.retry": "Reîncearcă",
+  "upload.offlineBanner": "Uploadul e în pauză din cauza rețelei și se va relua automat când revine conexiunea.",
+  "upload.keepOpen": "Te rugăm să ții pagina deschisă până se încarcă toate fișierele.",
+  "upload.previousTitle": "Încărcările tale anterioare",
+  "upload.pendingExplain": "Aceste fișiere nu s-au terminat de încărcat. Alege-le din nou din galerie; restul fișierelor au rămas încărcate.",
+  "upload.reselect": "Alege din nou fișierele neterminate",
   "upload.status.queued": "În așteptare",
   "upload.status.reserving": "Se pregătește…",
   "upload.status.uploading": "Se încarcă… {percent}%",
@@ -211,6 +216,11 @@ export const ro = {
   "plural.files": { one: "{count} fișier", few: "{count} fișiere", other: "{count} de fișiere" },
   "plural.months": { one: "{count} lună", few: "{count} luni", other: "{count} de luni" },
   "plural.filesUploaded": { one: "{count} fișier încărcat", few: "{count} fișiere încărcate", other: "{count} de fișiere încărcate" },
+  "plural.filesAlreadyUploaded": {
+    one: "Ai încărcat deja {count} fișier.",
+    few: "Ai încărcat deja {count} fișiere.",
+    other: "Ai încărcat deja {count} de fișiere.",
+  },
   "plural.archiveSkipped": {
     one: "{count} fișier nu este inclus (în procesare sau neprocesabil).",
     few: "{count} fișiere nu sunt incluse (în procesare sau neprocesabile).",

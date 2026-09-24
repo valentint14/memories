@@ -262,15 +262,15 @@ timestamp cerut de Supabase CLI (`supabase/migrations/2026092500NNNN_<nume>.sql`
 
 ### Tests for User Story 6 (scrise înainte, trebuie să eșueze) ⚠️
 
-- [ ] T108 [P] [US6] Scrie `apps/web/tests/e2e/resume.spec.ts`: `context.setOffline(true)` la ~50% dintr-un fișier de 50 MB → starea „în pauză din cauza rețelei”; `setOffline(false)` după 30 s → uploadul continuă fără retrimiterea chunk-urilor confirmate (verificat prin cererile PATCH TUS) și se finalizează; reîncărcarea paginii în timpul uploadului → fișierele finalizate rămân listate, iar cele nefinalizate apar după nume pentru reselectare; eșecuri repetate simulate → buton de reîncercare manuală pentru acel fișier
-- [ ] T109 [P] [US6] Scrie `apps/web/tests/unit/upload-queue.test.ts`: tranzițiile de stare ale cozii (`uploading` → `paused` la `offline` → `uploading` la `online`; `failed` după epuizarea `retryDelays`; reîncercare manuală)
+- [X] T108 [P] [US6] Scrie `apps/web/tests/e2e/resume.spec.ts`: `context.setOffline(true)` la ~50% dintr-un fișier de 50 MB → starea „în pauză din cauza rețelei”; `setOffline(false)` după 30 s → uploadul continuă fără retrimiterea chunk-urilor confirmate (verificat prin cererile PATCH TUS) și se finalizează; reîncărcarea paginii în timpul uploadului → fișierele finalizate rămân listate, iar cele nefinalizate apar după nume pentru reselectare; eșecuri repetate simulate → buton de reîncercare manuală pentru acel fișier
+- [X] T109 [P] [US6] Scrie `apps/web/tests/unit/upload-queue.test.ts`: tranzițiile de stare ale cozii (`uploading` → `paused` la `offline` → `uploading` la `online`; `failed` după epuizarea `retryDelays`; reîncercare manuală)
 
 ### Implementation for User Story 6
 
-- [ ] T110 [US6] Extinde `apps/web/lib/upload/queue.ts`: `retryDelays = [0, 1000, 3000, 5000, 10000, 20000, 30000]`, starea `paused` la evenimentul `offline` și reluare `upload.start()` la `online`, starea `failed` cu `retry()` manual, fără `urlStorage` persistent între reîncărcări (clarificarea Q5)
-- [ ] T111 [P] [US6] Creează `apps/web/components/upload/NetworkBanner.tsx` (mesaj `aria-live="polite"` „Uploadul e în pauză din cauza rețelei și se va relua automat”) și `apps/web/components/upload/KeepOpenNotice.tsx` (rugămintea vizibilă de a ține pagina deschisă, plus avertizare `beforeunload` cât timp există uploaduri active — FR-016b)
-- [ ] T112 [US6] Creează `apps/web/components/upload/PendingAfterReload.tsx`: la montare apelează `getMyUploads(token)`; afișează fișierele încărcate și lista fișierelor nefinalizate (după nume), cu reselectare doar pentru acestea; integrează-l în `apps/web/components/upload/UploadClient.tsx` (FR-016a)
-- [ ] T113 [US6] Adaugă butonul de reîncercare manuală în `apps/web/components/upload/FileRow.tsx` și cheile de text în `apps/web/lib/i18n/messages/ro.ts`
+- [X] T110 [US6] Extinde `apps/web/lib/upload/queue.ts`: `retryDelays = [0, 1000, 3000, 5000, 10000, 20000, 30000]`, starea `paused` la evenimentul `offline` și reluare `upload.start()` la `online`, starea `failed` cu `retry()` manual, fără `urlStorage` persistent între reîncărcări (clarificarea Q5)
+- [X] T111 [P] [US6] Creează `apps/web/components/upload/NetworkBanner.tsx` (mesaj `aria-live="polite"` „Uploadul e în pauză din cauza rețelei și se va relua automat”) și `apps/web/components/upload/KeepOpenNotice.tsx` (rugămintea vizibilă de a ține pagina deschisă, plus avertizare `beforeunload` cât timp există uploaduri active — FR-016b)
+- [X] T112 [US6] Creează `apps/web/components/upload/PendingAfterReload.tsx`: la montare apelează `getMyUploads(token)`; afișează fișierele încărcate și lista fișierelor nefinalizate (după nume), cu reselectare doar pentru acestea; integrează-l în `apps/web/components/upload/UploadClient.tsx` (FR-016a)
+- [X] T113 [US6] Adaugă butonul de reîncercare manuală în `apps/web/components/upload/FileRow.tsx` și cheile de text în `apps/web/lib/i18n/messages/ro.ts`
 
 **Checkpoint**: US6 funcționează independent; SC-005 verificat
 
