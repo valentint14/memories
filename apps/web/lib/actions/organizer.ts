@@ -12,6 +12,7 @@ import {
   type MediaCursor,
   type MediaUrls,
 } from "../organizer/media";
+import { extendEventRetention, retentionQuote, type RetentionOptionQuote } from "../organizer/retention";
 import { runAction, throwIfDbError, type ActionResult } from "./result";
 
 const cursorSchema = z.object({ uploadedAt: z.iso.datetime({ offset: true }), id: z.uuid() });
@@ -63,6 +64,34 @@ export async function deleteMedia(
     revalidatePath(`/events/${input.eventId}`);
     const deleted = marked.map((m) => m.media_id);
     return { deleted, failed: input.mediaIds.filter((id) => !deleted.includes(id)) };
+  });
+}
+
+/** Oferta de prelungire a retenției (US8). */
+export async function getRetentionQuote(eventId: string): Promise<ActionResult<RetentionOptionQuote[]>> {
+  return runAction(z.object({ eventId: z.uuid() }), { eventId }, (input) => retentionQuote(input.eventId));
+}
+
+const extendSchema = z.object({
+  eventId: z.uuid(),
+  optionId: z.uuid(),
+  expectedFinalPriceMinor: z.number().int().nonnegative(),
+});
+
+/**
+ * Prelungirea retenției la prețul confirmat de organizator. Erori: FORBIDDEN, RETENTION_NOT_LONGER,
+ * RETENTION_EXPIRED, PRICE_CHANGED (catalog modificat între timp), OPTION_INACTIVE.
+ */
+export async function extendRetention(
+  eventId: string,
+  optionId: string,
+  expectedFinalPriceMinor: number,
+): Promise<ActionResult<{ finalPriceMinor: number; purgeAt: string }>> {
+  return runAction(extendSchema, { eventId, optionId, expectedFinalPriceMinor }, async (input) => {
+    const result = await extendEventRetention(input.eventId, input.optionId, input.expectedFinalPriceMinor);
+    revalidatePath(`/events/${input.eventId}`);
+    revalidatePath("/events");
+    return result;
   });
 }
 

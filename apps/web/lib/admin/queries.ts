@@ -116,6 +116,30 @@ export async function listActiveRetentionOptions(): Promise<RetentionOptionRow[]
   return (data ?? []).map((o) => ({ id: o.id, months: o.months, surchargeMinor: o.surcharge_minor, active: o.active }));
 }
 
+export interface CatalogOptionRow extends RetentionOptionRow {
+  usedBy: number;
+}
+
+/** Catalogul complet (inclusiv opțiunile inactive), cu numărul de evenimente care le folosesc. */
+export async function listRetentionCatalog(): Promise<CatalogOptionRow[]> {
+  const supabase = await requireAdmin();
+  const [options, events] = await Promise.all([
+    supabase.from("retention_options").select("id, months, surcharge_minor, active").order("months"),
+    supabase.from("events").select("retention_option_id"),
+  ]);
+  throwIfDbError(options.error);
+  throwIfDbError(events.error);
+  const usage = new Map<string, number>();
+  for (const e of events.data ?? []) usage.set(e.retention_option_id, (usage.get(e.retention_option_id) ?? 0) + 1);
+  return (options.data ?? []).map((o) => ({
+    id: o.id,
+    months: o.months,
+    surchargeMinor: o.surcharge_minor,
+    active: o.active,
+    usedBy: usage.get(o.id) ?? 0,
+  }));
+}
+
 export interface RetentionChangeRow {
   at: string;
   actorKind: "admin" | "organizer" | "system";

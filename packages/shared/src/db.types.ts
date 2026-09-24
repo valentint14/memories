@@ -521,9 +521,14 @@ export type Database = {
         }[]
       }
       admin_event_token: { Args: { p_event_id: string }; Returns: string }
+      anonymize_expired_events: { Args: { p_now?: string }; Returns: number }
       check_rate_limit: {
         Args: { p_key: string; p_limit: number; p_window: string }
         Returns: boolean
+      }
+      complete_event_expiry: {
+        Args: { p_event_id: string }
+        Returns: undefined
       }
       delete_media: {
         Args: { p_event_id: string; p_media_ids: string[] }
@@ -532,8 +537,21 @@ export type Database = {
           paths: string[]
         }[]
       }
+      enqueue_retention_notices: { Args: { p_now?: string }; Returns: number }
       event_organizer_email: { Args: { p_event_id: string }; Returns: string }
       expire_archives: { Args: never; Returns: number }
+      expire_due_events: { Args: { p_now?: string }; Returns: number }
+      extend_retention: {
+        Args: {
+          p_event_id: string
+          p_expected_final_price_minor: number
+          p_option_id: string
+        }
+        Returns: {
+          final_price_minor: number
+          purge_at: string
+        }[]
+      }
       finalize_media_deletion: {
         Args: { p_media_ids: string[] }
         Returns: number
@@ -624,6 +642,17 @@ export type Database = {
           name: string
           state: string
           upload_starts_at: string
+        }[]
+      }
+      retention_quote: {
+        Args: { p_event_id: string }
+        Returns: {
+          final_price_minor: number
+          months: number
+          option_id: string
+          purge_at: string
+          selectable: boolean
+          surcharge_minor: number
         }[]
       }
       start_guest_session: {
