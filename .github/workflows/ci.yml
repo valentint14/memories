@@ -18,8 +18,12 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version-file: .nvmrc
+          # Cache-ul automat ar cere pnpm înainte ca Corepack să-l activeze.
+          package-manager-cache: false
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
+        env:
+          COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
 
       - name: Lint
         run: pnpm lint
@@ -67,7 +71,7 @@ jobs:
           path: apps/web/playwright-report
       - name: Loguri worker
         if: failure()
-        run: docker logs worker
+        run: docker logs worker || echo "worker-ul nu a pornit"
 
   publish-worker:
     # Doar pe main, după ce toate verificările au trecut (apps/worker/deploy/scaleway-container.md).
