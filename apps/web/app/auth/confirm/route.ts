@@ -16,6 +16,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const next = safeNextPath(url.searchParams.get("next"));
   if (next) return NextResponse.redirect(new URL(next, url.origin));
 
+  // Adminii trec întâi prin al doilea factor; pagina MFA îi trimite mai departe dacă e deja validat.
   const { data: isAdminUser } = await supabase.rpc("is_platform_admin_user");
-  return NextResponse.redirect(new URL(isAdminUser === true ? "/admin/events" : "/events", url.origin));
+  return NextResponse.redirect(new URL(isAdminUser === true ? "/auth/mfa" : "/events", url.origin));
 }

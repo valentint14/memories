@@ -1,7 +1,7 @@
 import "server-only";
 import { serverEnv } from "../server-env";
 import { throwIfDbError } from "../actions/result";
-import { requireAdmin } from "./guard";
+import { requireAdminPage as requireAdmin } from "./guard";
 
 export interface AdminEventRow {
   id: string;

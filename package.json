@@ -8,7 +8,7 @@
   },
   "scripts": {
     "lint": "eslint .",
-    "typecheck": "node node_modules/typescript-7/bin/tsc -p packages/shared && node node_modules/typescript-7/bin/tsc -p apps/worker && node node_modules/typescript-7/bin/tsc -p apps/web && node node_modules/typescript-7/bin/tsc -p supabase/tests",
+    "typecheck": "node node_modules/typescript-7/bin/tsc -p packages/shared && node node_modules/typescript-7/bin/tsc -p apps/worker && node node_modules/typescript-7/bin/tsc -p apps/web && node node_modules/typescript-7/bin/tsc -p supabase/tests && node node_modules/typescript-7/bin/tsc -p tests",
     "test:unit": "vitest run --project shared --project web",
     "test:db": "vitest run --project db",
     "test:e2e": "pnpm --filter web test:e2e",

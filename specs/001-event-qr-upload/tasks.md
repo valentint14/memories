@@ -335,13 +335,13 @@ timestamp cerut de Supabase CLI (`supabase/migrations/2026092500NNNN_<nume>.sql`
 
 **Purpose**: porțile de calitate ale constituției, performanță, securitate, livrare
 
-- [ ] T137 [P] Scrie `apps/web/tests/e2e/a11y.spec.ts`: `@axe-core/playwright` fără încălcări WCAG 2.2 AA pe `/e/[token]` (toate stările), `/login`, `/auth/mfa`, `/events`, `/events/[eventId]` (galerie, vizualizator, dialoguri), `/admin/events`, `/admin/events/new`, `/admin/retention` (FR-037)
-- [ ] T138 [P] Scrie testul de încărcare `tests/load/guest-upload.k6.js`: 200 de sesiuni de invitat pe același eveniment și același IP, fiecare cu 5 rezervări + upload TUS de 3 MB; praguri: 0 erori, p95 `reserveUpload` < 1 s (SC-006) — rulat doar pe preview
-- [ ] T139 [P] Scrie `tests/perf/archive-1000.ts`: seed de 1.000 de fișiere sintetice (≈ 10 GB) pe preview, măsurarea timpului până la „Arhiva e gata” (≤ 15 min) și a primului octet după click (< 10 s), verificarea sumelor de control (SC-010)
-- [ ] T140 [P] Scrie `apps/web/tests/unit/sentry-scrub.test.ts`: `beforeSend` elimină emailuri, nume de invitați, tokenuri și căi de fișiere din evenimente de test
-- [ ] T141 [P] Scrie `apps/web/tests/unit/no-secrets-in-client.test.ts`: construiește aplicația și caută `SUPABASE_SERVICE_ROLE_KEY`, `IP_HASH_SECRET` și cheia service role în `.next/static/**` (principiul III)
-- [ ] T142 Creează configurația de livrare a worker-ului `apps/worker/deploy/scaleway-container.md` (Serverless Containers `fr-par`, `min-scale = 1`, 2 vCPU / 4 GB, variabilele din `.env.example`) și pasul de publicare a imaginii în `.github/workflows/ci.yml` doar pe `main`
-- [ ] T143 [P] Scrie `README.md` (root) cu pașii din [quickstart.md](./quickstart.md), mediile (local, preview, producție) și lista procesatorilor care necesită DPA (Vercel, Supabase, Resend, Sentry — research.md R15)
+- [X] T137 [P] Scrie `apps/web/tests/e2e/a11y.spec.ts`: `@axe-core/playwright` fără încălcări WCAG 2.2 AA pe `/e/[token]` (toate stările), `/login`, `/auth/mfa`, `/events`, `/events/[eventId]` (galerie, vizualizator, dialoguri), `/admin/events`, `/admin/events/new`, `/admin/retention` (FR-037)
+- [X] T138 [P] Scrie testul de încărcare `tests/load/guest-upload.k6.js`: 200 de sesiuni de invitat pe același eveniment și același IP, fiecare cu 5 rezervări + upload TUS de 3 MB; praguri: 0 erori, p95 `reserveUpload` < 1 s (SC-006) — rulat doar pe preview
+- [X] T139 [P] Scrie `tests/perf/archive-1000.ts`: seed de 1.000 de fișiere sintetice (≈ 10 GB) pe preview, măsurarea timpului până la „Arhiva e gata” (≤ 15 min) și a primului octet după click (< 10 s), verificarea sumelor de control (SC-010)
+- [X] T140 [P] Scrie `apps/web/tests/unit/sentry-scrub.test.ts`: `beforeSend` elimină emailuri, nume de invitați, tokenuri și căi de fișiere din evenimente de test
+- [X] T141 [P] Scrie `apps/web/tests/unit/no-secrets-in-client.test.ts`: construiește aplicația și caută `SUPABASE_SERVICE_ROLE_KEY`, `IP_HASH_SECRET` și cheia service role în `.next/static/**` (principiul III)
+- [X] T142 Creează configurația de livrare a worker-ului `apps/worker/deploy/scaleway-container.md` (Serverless Containers `fr-par`, `min-scale = 1`, 2 vCPU / 4 GB, variabilele din `.env.example`) și pasul de publicare a imaginii în `.github/workflows/ci.yml` doar pe `main`
+- [X] T143 [P] Scrie `README.md` (root) cu pașii din [quickstart.md](./quickstart.md), mediile (local, preview, producție) și lista procesatorilor care necesită DPA (Vercel, Supabase, Resend, Sentry — research.md R15)
 - [ ] T144 Rulează manual scenariile 1–22 din `specs/001-event-qr-upload/quickstart.md`, cronometrează crearea unui eveniment complet cu descărcarea QR (< 3 min, SC-001) și primul upload al unui invitat nou, fără ajutor, pe un telefon real (< 60 s de la scanare, SC-003) și bifează rezultatul fiecăruia în descrierea PR-ului; verifică explicit în review RLS pe toate tabelele noi, absența secretelor în client, ștergerea din Storage prin API și validarea pe server (constituția › porți de calitate)
 
 ---

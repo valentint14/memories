@@ -15,6 +15,8 @@ export default tseslint.config(
       "packages/shared/src/db.types.ts",
       "apps/web/next-env.d.ts",
       "supabase/**/*.sql",
+      // Rulează în runtime-ul k6 (globale __ENV/__VU, module k6/*), nu în Node.
+      "tests/load/**",
     ],
   },
   js.configs.recommended,

@@ -68,3 +68,19 @@ jobs:
       - name: Loguri worker
         if: failure()
         run: docker logs worker
+
+  publish-worker:
+    # Doar pe main, după ce toate verificările au trecut (apps/worker/deploy/scaleway-container.md).
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: checks
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - name: Autentificare în Scaleway Container Registry
+        run: echo "${{ secrets.SCW_SECRET_KEY }}" | docker login rg.fr-par.scw.cloud -u nologin --password-stdin
+      - name: Build și publicare imagine
+        run: |
+          IMAGE=rg.fr-par.scw.cloud/${{ secrets.SCW_REGISTRY_NAMESPACE }}/memories-worker
+          docker build -f apps/worker/Dockerfile -t "$IMAGE:${{ github.sha }}" -t "$IMAGE:latest" .
+          docker push "$IMAGE:${{ github.sha }}"
+          docker push "$IMAGE:latest"

@@ -269,6 +269,13 @@ actualizează la `ready`.
 **Justificare**: puțini abonați (un organizator); Broadcast from Database ar fi preferat doar
 pentru ecranul live (în afara scopului).
 
+**Constatare la implementare (2026-09-24)**: clientul din browser (`@supabase/ssr`) își încarcă
+sesiunea din cookies asincron. Un canal abonat înainte de încărcare rulează ca `anon`, iar
+Realtime respinge filtrul pe `event_id` (rolul `anon` nu are drept de citire pe coloană) cu
+„Unable to subscribe to changes”. Soluție: `supabase.realtime.setAuth(access_token)` înainte de
+`subscribe()` (`apps/web/lib/realtime/auth.ts`). Resincronizarea se face și la evenimentul
+`online` al browserului, nu doar la re-abonare.
+
 ---
 
 ## R11. Ștergere definitivă
@@ -385,6 +392,16 @@ UE; necesită DPA și listarea în nota de informare (FR-012).
   dependență nouă (Lighthouse CI a fost exclus, R1).
 - GitHub Actions: `lint` → `typecheck` → `test:unit` → `test:db` (Supabase local) →
   `test:e2e` → build imagine worker + test de fum HEIC; branch protection cere toate verificările.
+- **Limitări constatate la implementare**:
+  - Chromium din Playwright nu include codecul H.264: e2e verifică sursa `playback.mp4` și
+    posterul, iar codecul e verificat în testul worker-ului (ffprobe). Redarea efectivă se
+    confirmă manual pe browsere reale (quickstart 10).
+  - Testele media ale worker-ului rulează în imaginea Docker (au nevoie de `heif-dec`, ffmpeg,
+    ExifTool pe Linux); pe Windows rulează doar testele fără decodare HEIC.
+  - Reluarea după o cădere de rețea în mijlocul uploadului se testează doar pe Chromium (rețeaua
+    se încetinește prin CDP; local, uploadul e prea rapid pentru a fi întrerupt).
+  - Fixture-urile media sunt sintetice (ffmpeg/libheif); fișierele de pe telefoane reale se
+    verifică manual înainte de producție (fixtures/media/README.md).
 
 ---
 

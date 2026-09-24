@@ -53,7 +53,12 @@ if (process.argv.includes("--write")) {
     "apps/worker/.env",
     lines(["DATABASE_URL", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "S3_ENDPOINT", "S3_REGION", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY", "SMTP_HOST", "SMTP_PORT", "SMTP_FROM", "APP_URL"]),
   );
-  console.log("Scris: apps/web/.env.local, apps/worker/.env");
+  // Varianta pentru containerul worker-ului: Supabase local se vede prin host.docker.internal.
+  writeFileSync(
+    "apps/worker/.env.docker",
+    lines(["DATABASE_URL", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "S3_ENDPOINT", "S3_REGION", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY", "SMTP_HOST", "SMTP_PORT", "SMTP_FROM", "APP_URL"]).replaceAll("127.0.0.1", "host.docker.internal"),
+  );
+  console.log("Scris: apps/web/.env.local, apps/worker/.env, apps/worker/.env.docker");
 } else {
   process.stdout.write(lines(Object.keys(env)));
 }
