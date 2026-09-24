@@ -11,6 +11,8 @@ organizator. Administratorul creează evenimentele pentru clienți (fără înre
 fără plăți); invitații anonimi scanează un cod QR și încarcă poze/video; organizatorul se
 autentifică prin link pe email, vede, descarcă și șterge fișierele. În afara scopului: ecranul
 live, moderarea, ștergerea automată la expirare, plățile, brandingul personalizat."
+Completare 2026-09-24: "Fișierele pot fi șterse după o anumită perioadă pe care o configurează
+organizatorul; acest lucru va influența prețul final."
 
 ## Clarifications
 
@@ -20,6 +22,48 @@ live, moderarea, ștergerea automată la expirare, plățile, brandingul persona
   conținutul media este exclusiv al organizatorului, administratorul vede doar statistici
   agregate (număr de fișiere, spațiu ocupat).
 - Q: Câți organizatori poate avea un eveniment? → A: Exact o adresă de email per eveniment.
+
+### Session 2026-09-24
+
+- Q: Cum tratăm video-urile care nu se redau în toate browserele (ex. HEVC de pe iPhone)? → A:
+  Pentru fiecare video se generează o versiune de redare compatibilă cu toate browserele
+  moderne; originalul se păstrează pentru descărcare.
+- Q: Care este plafonul absolut al dimensiunii unui fișier? → A: Poze maximum 50 MB, video
+  maximum 1 GB.
+- Q: Cum se autentifică administratorul platformei? → A: Link de autentificare pe email, doar
+  pentru adresele de administrator preconfigurate, plus al doilea factor obligatoriu (cod
+  temporar dintr-o aplicație de autentificare).
+- Q: Cine poate șterge un eveniment întreg? → A: Doar administratorul, definitiv (fișiere, date,
+  link și cod QR), după confirmare prin tastarea numelui evenimentului.
+- Q: Ce se întâmplă cu un upload în curs dacă pagina se reîncarcă (ecran blocat, schimbare de
+  aplicație)? → A: Reluarea automată funcționează cât timp pagina nu se reîncarcă; după
+  reîncărcare, fișierele finalizate rămân, invitatul vede ce fișiere nu s-au finalizat și le
+  reselectează doar pe acelea; pagina îl roagă să o țină deschisă până la final.
+- Q: Extindere de scop: fișierele pot fi șterse automat după o perioadă configurată de
+  organizator, iar perioada influențează prețul final. Cum alege organizatorul perioada? → A:
+  Dintr-o listă de opțiuni predefinite de administrator; vede prețul rezultat înainte de
+  confirmare. Plata rămâne în afara aplicației (fără procesare de plăți); administratorul vede
+  prețul final pentru facturare.
+- Q: Poate organizatorul schimba perioada după ce a ales-o? → A: Doar prelungire, oricând
+  înainte de expirare; prețul crește corespunzător. Scurtarea nu este permisă organizatorului.
+- Q: Cum se calculează prețul final? → A: Preț de bază al evenimentului (stabilit de
+  administrator) plus suplimentul fix al opțiunii de retenție alese.
+- Q: Organizatorul este avertizat înainte de ștergerea automată? → A: Da, pe email, cu 30 de
+  zile, cu 7 zile și cu 1 zi înainte, cu link spre eveniment (descărcare și prelungire).
+  (Pragul de 30 de zile a fost adăugat după analiza pieței din 2026-09-24: concurenții anunță
+  cu 30 de zile înainte.)
+- Q: SC-010 (descărcarea arhivei începe în 10 s de la cerere) nu e realizabil cu arhiva
+  pregătită asincron. Cum se amendează? → A: Conform propunerii din research.md R9: arhiva
+  pentru 1.000 de fișiere e gata în ≤ 15 minute, organizatorul e anunțat în galerie fără
+  reîncărcare, iar descărcarea începe în < 10 s de la apăsarea linkului.
+- Q: Ce perioade de retenție se oferă și care e inclusă în prețul de bază? → A: 3 luni incluse
+  (supliment 0), plus 6 și 12 luni cu supliment; fără opțiune de 1 lună. Valorile
+  suplimentelor le stabilește administratorul.
+- Q: Cât timp se păstrează datele de facturare ale unui eveniment expirat? → A: 3 ani de la
+  expirare (termenul general de prescripție), apoi numele evenimentului și emailul
+  organizatorului se anonimizează automat; rămân doar prețurile, datele și durata retenției.
+- Q: Ce suplimente au opțiunile de 6 și 12 luni? → A: 6 luni +49 lei, 12 luni +99 lei (aliniat
+  cu prelungirea de 99 lei/an practicată pe piață); rămân modificabile de administrator.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -38,18 +82,30 @@ scanarea codului tipărit cu un telefon deschide pagina de upload a acelui eveni
 
 **Acceptance Scenarios**:
 
-1. **Given** administratorul este autentificat, **When** completează toate câmpurile obligatorii
+1. **Given** o adresă de administrator preconfigurată, **When** administratorul folosește
+   linkul de autentificare primit pe email, **Then** i se cere codul din aplicația de
+   autentificare și accesează zona de administrare doar după validarea acestuia.
+2. **Given** administratorul este autentificat, **When** completează toate câmpurile obligatorii
    și salvează, **Then** evenimentul este creat și i se afișează linkul public de upload și
    opțiunile de descărcare a codului QR.
-2. **Given** un eveniment creat, **When** administratorul descarcă codul QR, **Then** primește
+3. **Given** un eveniment creat, **When** administratorul descarcă codul QR, **Then** primește
    un fișier PNG de cel puțin 2000×2000 px și un fișier SVG, ambele codificând linkul de upload.
-3. **Given** formularul de creare, **When** administratorul introduce un email invalid, o
+4. **Given** formularul de creare, **When** administratorul introduce un email invalid, o
    perioadă de upload în care sfârșitul precede începutul sau limite nepozitive, **Then**
    salvarea este refuzată, cu mesaj explicit lângă câmpul greșit.
-4. **Given** două evenimente create, **When** se compară linkurile lor de upload, **Then**
+5. **Given** două evenimente create, **When** se compară linkurile lor de upload, **Then**
    niciunul nu poate fi dedus din celălalt.
-5. **Given** un eveniment cu fișiere încărcate, **When** administratorul îl deschide, **Then**
+6. **Given** un eveniment cu fișiere încărcate, **When** administratorul îl deschide, **Then**
    vede doar numărul de fișiere și spațiul ocupat, fără acces la conținutul fișierelor.
+7. **Given** un eveniment existent, **When** administratorul cere ștergerea lui și tastează
+   corect numele evenimentului, **Then** evenimentul, toate fișierele și datele asociate sunt
+   șterse definitiv, iar linkul de upload și codul QR afișează mesajul de eveniment inexistent.
+8. **Given** formularul de creare, **When** administratorul introduce prețul de bază și alege
+   opțiunea inițială de retenție, **Then** vede prețul final (bază + supliment) și data
+   estimată a ștergerii automate înainte de salvare.
+9. **Given** lista evenimentelor, **When** administratorul o deschide, **Then** vede pentru
+   fiecare eveniment prețul final curent, opțiunea de retenție, data ștergerii automate și
+   istoricul modificărilor de retenție.
 
 ---
 
@@ -141,8 +197,9 @@ faptul că arhiva conține toate cele 50 de fișiere, la calitatea originală.
 1. **Given** un fișier în galerie, **When** organizatorul îl descarcă, **Then** primește
    fișierul la calitatea originală, fără metadate de localizare.
 2. **Given** un eveniment cu fișiere, **When** organizatorul cere descărcarea tuturor, **Then**
-   primește o singură arhivă cu toate fișierele existente în acel moment, cu nume de fișiere
-   unice și ușor de identificat.
+   primește o singură arhivă cu toate fișierele procesate cu succes în acel moment, cu nume de
+   fișiere unice și ușor de identificat; dacă unele fișiere nu sunt incluse (încă în procesare
+   sau neprocesabile), i se afișează numărul lor și motivul.
 3. **Given** un eveniment fără fișiere, **When** organizatorul deschide galeria, **Then**
    opțiunea de descărcare în masă este indisponibilă, cu un mesaj explicativ.
 
@@ -192,6 +249,9 @@ restabilește; uploadul continuă de unde a rămas și se finalizează fără in
 3. **Given** un fișier care nu poate fi finalizat după reîncercări repetate, **When** acestea
    eșuează, **Then** invitatul vede ce fișier a eșuat și are o opțiune de reîncercare manuală
    pentru acel fișier.
+4. **Given** un upload în curs, **When** telefonul reîncarcă pagina (ecran blocat sau
+   schimbare de aplicație), **Then** fișierele finalizate rămân încărcate, iar invitatul vede
+   lista fișierelor nefinalizate și le poate reselecta doar pe acestea.
 
 ---
 
@@ -217,11 +277,50 @@ poza apare în galerie fără reîncărcarea paginii.
 
 ---
 
+### User Story 8 - Organizatorul alege cât timp se păstrează fișierele (Priority: P2)
+
+Organizatorul vede, pentru fiecare eveniment, data la care fișierele vor fi șterse automat,
+opțiunea de păstrare curentă și prețul final. Poate alege o perioadă mai lungă dintre
+opțiunile oferite; înainte de confirmare vede noul preț final și noua dată de ștergere. Cu 30
+de zile, cu 7 zile și cu 1 zi înainte de ștergere primește câte un email de avertizare. La termen, toate
+fișierele evenimentului sunt șterse automat și definitiv.
+
+**Why this priority**: retenția limitată este o obligație GDPR (constituția, principiul II)
+și o sursă de venit (perioadele mai lungi costă mai mult); galeria rămâne utilă și fără
+prelungire, deci poate urma după poveștile P1.
+
+**Independent Test**: se creează un eveniment cu opțiunea de 3 luni; organizatorul o
+prelungește la 6 luni și vede prețul crescut cu diferența de supliment; în mediul de test se
+simulează trecerea timpului până după data ștergerii (fără a modifica data ștergerii, pe care
+sistemul nu o acceptă în trecut); fișierele devin inaccesibile, iar evenimentul apare ca
+expirat.
+
+**Acceptance Scenarios**:
+
+1. **Given** organizatorul deschide un eveniment, **When** se uită la secțiunea de păstrare,
+   **Then** vede data ștergerii automate, opțiunea curentă și prețul final.
+2. **Given** opțiunea curentă de 3 luni, **When** organizatorul alege 12 luni, **Then** i se
+   cere confirmarea cu noul preț final și noua dată de ștergere, iar după confirmare acestea
+   se aplică imediat și sunt vizibile administratorului.
+3. **Given** opțiunea curentă, **When** organizatorul caută o opțiune mai scurtă sau egală,
+   **Then** aceasta nu este disponibilă pentru selectare.
+4. **Given** mai sunt 30 de zile (apoi 7 zile, apoi 1 zi) până la ștergere, **When** trece acest prag, **Then**
+   organizatorul primește un singur email de avertizare pentru pragul respectiv, cu data
+   ștergerii și linkul spre eveniment.
+5. **Given** data ștergerii a trecut, **When** organizatorul sau oricine folosește orice link
+   emis anterior (galerie, fișier, arhivă, upload), **Then** niciun fișier nu mai este
+   accesibil, iar evenimentul apare în lista organizatorului ca „expirat”.
+6. **Given** administratorul a modificat prețul unei opțiuni din catalog, **When**
+   organizatorul unui eveniment existent se uită la prețul final, **Then** acesta rămâne cel
+   stabilit la alegerea opțiunii; noul preț se aplică doar alegerilor ulterioare.
+
+---
+
 ### Edge Cases
 
-- Invitatul închide pagina sau browserul în timpul uploadului: fișierele deja finalizate rămân
-  încărcate; cele neterminate se pierd, iar la redeschiderea paginii invitatul vede câte fișiere
-  a încărcat deja.
+- Invitatul închide pagina, blochează ecranul sau schimbă aplicația, iar telefonul reîncarcă
+  pagina: fișierele deja finalizate rămân încărcate; la redeschidere invitatul vede ce s-a
+  încărcat și ce fișiere trebuie reselectate (FR-016a).
 - Perioada de upload se încheie în timp ce un invitat are un upload în curs: fișierele începute
   înainte de închiderea perioadei se pot finaliza într-o marjă de grație de 15 minute.
 - Același invitat trimite de două ori același fișier: ambele copii sunt acceptate și contează la
@@ -236,10 +335,25 @@ poza apare în galerie fără reîncărcarea paginii.
   identic cu cel pentru o adresă validă, pentru a nu dezvălui ce adrese sunt clienți.
 - Un fișier este corupt sau nu poate fi procesat: originalul rămâne descărcabil, iar în galerie
   apare o miniatură generică cu mențiunea că previzualizarea nu este disponibilă.
-- Organizatorul șterge un fișier în timp ce generează arhiva: arhiva reflectă starea din momentul
-  cererii; fișierul șters nu mai este accesibil ulterior.
+- Metadatele de localizare ale unui fișier nu pot fi eliminate: fișierul nu este pus la
+  dispoziție (nici vizualizare, nici descărcare, nici arhivă), pentru că ar expune locația;
+  în galerie apare ca „nu a putut fi procesat”, iar organizatorul îl poate șterge.
+- Organizatorul șterge fișiere în timp ce o arhivă este în curs de generare sau gata de
+  descărcare: arhiva este anulată și ștearsă (nu mai poate conține fișiere șterse);
+  organizatorul vede că trebuie să ceară o arhivă nouă, care nu include fișierele șterse.
 - Un număr mare de invitați încarcă simultan la începutul petrecerii: uploadurile continuă fără
   erori pentru volumul definit în criteriile de succes.
+- Organizatorul prelungește retenția după ce a primit emailul de 30 sau de 7 zile: avertizările se
+  reiau pentru noua dată de ștergere (nu se mai trimit pentru data veche).
+- Organizatorul prelungește retenția cu câteva secunde înainte de termen, în timp ce
+  ștergerea automată pornește: câștigă operația înregistrată prima; dacă ștergerea a început,
+  prelungirea este refuzată cu mesaj clar.
+- Administratorul modifică perioada de upload: data ștergerii se recalculează; modificarea
+  este refuzată dacă noua dată de ștergere ar fi deja în trecut.
+- Opțiunea aleasă de un eveniment este dezactivată în catalog: evenimentul își păstrează
+  opțiunea și prețul; opțiunea nu mai poate fi aleasă de alte evenimente.
+- Organizatorul are o arhivă în curs de generare la momentul expirării: arhiva este anulată
+  și ștearsă împreună cu fișierele.
 
 ## Requirements *(mandatory)*
 
@@ -250,8 +364,11 @@ poza apare în galerie fără reîncărcarea paginii.
 - **FR-001**: Sistemul TREBUIE să permită administratorului să creeze un eveniment cu: nume,
   dată, adresa de email a organizatorului, începutul și sfârșitul perioadei de upload, numărul
   maxim de fișiere per invitat și dimensiunea maximă per fișier.
+- **FR-001a**: Dimensiunea maximă per fișier se configurează separat pentru poze și pentru
+  video și NU TREBUIE să depășească plafoanele platformei: 50 MB pentru poze și 1 GB pentru
+  video. Valorile implicite la crearea evenimentului sunt chiar aceste plafoane.
 - **FR-002**: Sistemul TREBUIE să valideze datele evenimentului (email valid, sfârșitul perioadei
-  după început, limite pozitive) și să refuze salvarea datelor invalide cu mesaje explicite.
+  după început, limite pozitive și în plafoanele din FR-001a) și să refuze salvarea datelor invalide cu mesaje explicite.
 - **FR-003**: Sistemul TREBUIE să permită administratorului să vadă lista evenimentelor și să
   modifice datele unui eveniment existent, inclusiv perioada de upload și limitele.
 - **FR-004**: Sistemul TREBUIE să genereze pentru fiecare eveniment un link public de upload
@@ -261,6 +378,14 @@ poza apare în galerie fără reîncărcarea paginii.
   format PNG (minim 2000×2000 px) și SVG.
 - **FR-006**: Doar administratorul TREBUIE să poată crea sau modifica evenimente; nu există
   înregistrare self-service.
+- **FR-006a**: Administratorul TREBUIE să se autentifice prin link pe email, disponibil doar
+  pentru adresele de administrator preconfigurate, urmat obligatoriu de un al doilea factor
+  (cod temporar dintr-o aplicație de autentificare). Fără al doilea factor validat, nicio
+  funcție de administrare nu este accesibilă.
+- **FR-006b**: Administratorul TREBUIE să poată șterge definitiv un eveniment întreg, după
+  confirmare prin tastarea numelui evenimentului. Ștergerea include toate fișierele (originale
+  și derivate), sesiunile invitaților și datele evenimentului; linkul de upload devine invalid.
+  Organizatorul nu poate șterge evenimentul, doar fișierele (FR-031).
 - **FR-007**: Accesul la conținutul fișierelor media (vizualizare, descărcare) TREBUIE să fie
   rezervat exclusiv organizatorului evenimentului. Administratorul NU TREBUIE să poată vedea sau
   descărca fișierele; vede doar statistici agregate per eveniment (număr de fișiere, spațiu
@@ -288,7 +413,13 @@ poza apare în galerie fără reîncărcarea paginii.
 - **FR-015**: Sistemul TREBUIE să afișeze progresul individual al fișierelor și o confirmare
   finală cu numărul de fișiere încărcate cu succes și cel al celor eșuate.
 - **FR-016**: Uploadurile întrerupte TREBUIE să se reia automat, de unde au rămas, la revenirea
-  conexiunii, fără ca invitatul să aleagă din nou fișierele, cât timp pagina rămâne deschisă.
+  conexiunii, fără ca invitatul să aleagă din nou fișierele, cât timp pagina nu se reîncarcă.
+- **FR-016a**: Dacă pagina se reîncarcă în timpul uploadului, sistemul TREBUIE să păstreze
+  fișierele deja finalizate, să afișeze invitatului care fișiere nu s-au finalizat (după nume)
+  și să îi permită să le reselecteze doar pe acestea. Fișierele nu se păstrează în memoria
+  telefonului între reîncărcări.
+- **FR-016b**: Pe durata uploadului, pagina TREBUIE să afișeze vizibil rugămintea de a o ține
+  deschisă până la finalizare.
 - **FR-017**: Sistemul TREBUIE să verifice pe server, pentru fiecare fișier, tipul, dimensiunea
   maximă și limita de fișiere per invitat, indiferent de verificările făcute pe dispozitivul
   invitatului.
@@ -313,6 +444,9 @@ poza apare în galerie fără reîncărcarea paginii.
 - **FR-025**: Sistemul TREBUIE să genereze miniaturi pentru poze și video.
 - **FR-026**: Procesarea video TREBUIE să nu întârzie confirmarea uploadului pentru invitat;
   videourile în curs de procesare apar în galerie cu starea „în procesare”.
+- **FR-026a**: Sistemul TREBUIE să genereze, pentru fiecare video, o versiune de redare
+  compatibilă cu toate browserele moderne de pe desktop și mobil, indiferent de formatul
+  original; vizualizarea folosește această versiune, iar descărcarea folosește originalul.
 
 **Galerie organizator**
 
@@ -322,8 +456,10 @@ poza apare în galerie fără reîncărcarea paginii.
   redea videourile în browser.
 - **FR-029**: Organizatorul TREBUIE să poată descărca un fișier individual la calitatea
   originală.
-- **FR-030**: Organizatorul TREBUIE să poată descărca toate fișierele evenimentului într-o
-  singură arhivă, la calitatea originală.
+- **FR-030**: Organizatorul TREBUIE să poată descărca toate fișierele evenimentului procesate
+  cu succes (inclusiv cele fără previzualizare) într-o singură arhivă, la calitatea originală.
+  Fișierele încă în procesare sau a căror curățare de metadate a eșuat nu sunt incluse, iar
+  numărul lor este afișat lângă arhivă.
 - **FR-031**: Organizatorul TREBUIE să poată selecta unul sau mai multe fișiere și să le șteargă,
   după o confirmare explicită.
 - **FR-032**: Ștergerea TREBUIE să fie definitivă: originalul și toate versiunile derivate devin
@@ -342,11 +478,54 @@ poza apare în galerie fără reîncărcarea paginii.
   44×44 px.
 - **FR-037**: Toate ecranele TREBUIE să respecte nivelul de accesibilitate WCAG 2.2 AA.
 
+**Retenție și preț**
+
+- **FR-038**: Administratorul TREBUIE să poată gestiona un catalog de opțiuni de retenție,
+  fiecare cu durata în luni (1–60) și un supliment de preț fix în lei (≥ 0); opțiunile pot fi
+  dezactivate, dar nu șterse cât timp sunt folosite de un eveniment.
+- **FR-039**: Fiecare eveniment TREBUIE să aibă în orice moment o opțiune de retenție și un
+  preț de bază (în lei, ≥ 0), stabilite de administrator la creare. Prețul final =
+  prețul de bază + suplimentul opțiunii, la valorile din momentul alegerii.
+- **FR-040**: Data ștergerii automate TREBUIE să fie sfârșitul perioadei de upload plus durata
+  opțiunii de retenție și TREBUIE recalculată la orice modificare a acestora.
+- **FR-041**: Organizatorul TREBUIE să vadă data ștergerii automate, opțiunea curentă și prețul
+  final ale fiecărui eveniment și să poată alege o opțiune activă mai lungă decât cea curentă,
+  oricând înainte de data ștergerii; alegerea cere confirmarea explicită a noului preț final
+  și a noii date de ștergere.
+- **FR-042**: Organizatorul NU TREBUIE să poată alege o opțiune mai scurtă sau egală cu cea
+  curentă; administratorul poate schimba opțiunea în orice sens, precum și prețul de bază.
+- **FR-043**: Fiecare schimbare de opțiune sau de preț TREBUIE înregistrată (cine, când,
+  opțiunea și prețul final înainte și după) și vizibilă administratorului.
+- **FR-044**: La data ștergerii automate, sistemul TREBUIE să șteargă definitiv toate
+  fișierele evenimentului (originale și derivate), arhivele și sesiunile invitaților, cu
+  aceleași garanții ca FR-032; linkul de upload devine invalid. Evenimentul rămâne în liste
+  ca „expirat”, doar cu datele necesare facturării (nume, dată, email organizator, preț),
+  pentru perioada din FR-047.
+- **FR-045**: Sistemul TREBUIE să trimită organizatorului câte un email de avertizare cu 30 de
+  zile, cu 7 zile și cu 1 zi înainte de data ștergerii, cel mult o dată per prag și per dată de
+  ștergere, cu data ștergerii și linkul spre eveniment. Dacă mai multe praguri sunt deja
+  depășite în momentul evaluării, se trimite doar avertizarea pentru pragul cel mai apropiat de
+  data ștergerii.
+- **FR-046**: Prețurile TREBUIE afișate în lei, formatate conform limbii interfeței; aplicația
+  nu procesează plăți.
+- **FR-047**: La 3 ani după expirare, sistemul TREBUIE să anonimizeze automat evenimentul:
+  numele evenimentului și emailul organizatorului se șterg, autorii din istoricul de retenție se
+  elimină, iar contul organizatorului se șterge dacă nu mai este asociat niciunui eveniment.
+  Rămân doar prețurile, datele și durata retenției, fără legătură cu o persoană. Același cont de
+  organizator se șterge și când ultimul său eveniment este șters de administrator (FR-006b).
+
 ### Key Entities
 
 - **Eveniment**: evenimentul privat al unui client. Atribute: nume, dată, email-ul
   organizatorului (unic per eveniment), început și sfârșit al perioadei de upload, număr maxim de fișiere per invitat,
-  dimensiune maximă per fișier, identificator public aleator (pentru link și QR), data creării.
+  dimensiune maximă per fișier (separat pentru poze și video), identificator public aleator (pentru link și QR), data creării,
+  preț de bază, opțiunea de retenție curentă (durată și supliment la momentul alegerii), data
+  ștergerii automate, stare (activ, în expirare, expirat, în ștergere) și momentul
+  anonimizării (FR-047).
+- **Opțiune de retenție**: intrare în catalogul administratorului: durată în luni, supliment de
+  preț, activă/inactivă.
+- **Modificare de retenție**: istoric al schimbărilor de opțiune sau preț ale unui eveniment:
+  autor (administrator/organizator), moment, opțiunea și prețul final înainte și după.
 - **Organizator**: clientul care a cumpărat serviciul, identificat prin adresa de email; are
   acces la unul sau mai multe evenimente.
 - **Administrator**: proprietarul platformei; creează și gestionează evenimentele.
@@ -374,20 +553,31 @@ poza apare în galerie fără reîncărcarea paginii.
   secunde de la finalizarea uploadului.
 - **SC-008**: 100% dintre pozele HEIC încărcate pot fi vizualizate în galeria organizatorului în
   browserele moderne de pe desktop și mobil.
+- **SC-008a**: 100% dintre video-urile procesate cu succes pot fi redate în galeria
+  organizatorului în browserele moderne de pe desktop și mobil, inclusiv cele filmate pe iPhone.
 - **SC-009**: 0 fișiere puse la dispoziție organizatorului conțin metadate de localizare.
-- **SC-010**: Descărcarea unei arhive pentru un eveniment cu 1.000 de fișiere începe în sub 10
-  secunde de la cerere și conține toate fișierele, la calitatea originală.
-- **SC-011**: După ștergere, 0% dintre fișierele șterse mai pot fi accesate prin orice link emis
+- **SC-010**: Arhiva unui eveniment cu 1.000 de fișiere (≈ 10 GB) este gata în cel mult 15
+  minute de la cerere, organizatorul este anunțat în galerie fără reîncărcarea paginii, iar
+  descărcarea începe în sub 10 secunde de la apăsarea linkului; arhiva conține toate fișierele,
+  la calitatea originală.
+- **SC-011**: După ștergerea unor fișiere sau a unui eveniment întreg, 0% dintre fișierele șterse mai pot fi accesate prin orice link emis
   anterior.
 - **SC-012**: În testele de acces, 0 cazuri în care un invitat vede fișierele altor invitați sau
   un organizator vede evenimentele altui organizator sau administratorul accesează conținutul
   fișierelor media.
+- **SC-013**: Organizatorul prelungește retenția unui eveniment în sub 1 minut, iar prețul
+  final afișat lui și administratorului este identic.
+- **SC-014**: În cel mult 24 de ore de la data ștergerii automate, 0% dintre fișierele
+  evenimentului mai pot fi accesate prin orice link emis anterior.
+- **SC-015**: 100% dintre evenimentele care ajung la termen au primit emailurile de avertizare
+  aplicabile (30 de zile, 7 zile, 1 zi), fiecare exact o dată per dată de ștergere.
 
 ## Assumptions
 
 - Administratorul este un singur rol intern, cu acces creat manual; interfața de administrare nu
   necesită gestionarea mai multor administratori în MVP.
-- Organizatorul nu poate modifica datele evenimentului; modificările se fac de administrator.
+- Organizatorul nu poate modifica datele evenimentului, cu excepția prelungirii retenției
+  (FR-041); celelalte modificări se fac de administrator.
 - Dacă mai multe persoane (ex. ambii miri) vor acces, folosesc aceeași adresă de email sau
   organizatorul le transmite arhiva descărcată; accesul multi-organizator nu este în scop.
 - Suportul pentru probleme legate de fișiere concrete se face cu organizatorul, fără ca
@@ -398,11 +588,20 @@ poza apare în galerie fără reîncărcarea paginii.
   browserului sau folosește alt dispozitiv poate depăși practic limita — acceptabil pentru MVP.
 - Invitatul își vede doar propriile uploaduri din sesiunea curentă și nu își poate șterge
   fișierele după încărcare; ștergerea este rezervată organizatorului.
-- Pentru video, limita relevantă este dimensiunea maximă per fișier; nu se impune o durată
-  maximă separată.
+- Pentru video, limita relevantă este dimensiunea maximă per fișier (plafon 1 GB); nu se impune
+  o durată maximă separată.
 - Ordinea cronologică din galerie se bazează pe momentul încărcării, nu pe data din metadatele
   fișierului.
-- Ștergerea automată la expirare, ecranul live, moderarea, plățile și brandingul personalizat
-  sunt în afara acestei funcționalități; până la implementarea ștergerii automate, fișierele se
-  păstrează până la ștergerea manuală.
+- Ștergerea automată la expirare face parte din această funcționalitate (extindere de scop din
+  2026-09-24, vezi Clarifications); ecranul live, moderarea, procesarea plăților și brandingul
+  personalizat rămân în afara ei.
+- Plata se încasează în afara aplicației (ex. factură emisă de administrator pe baza prețului
+  final afișat); prețurile sunt valori finale, detaliile fiscale (TVA) nu sunt în scop.
+- Perioada de retenție începe la sfârșitul perioadei de upload, nu la data evenimentului.
+- Datele păstrate pentru un eveniment expirat (nume, dată, email organizator, preț, istoric)
+  sunt necesare facturării și eventualelor dispute; se anonimizează automat după 3 ani
+  (FR-047) sau mai devreme, prin ștergerea evenimentului de către administrator (FR-006b).
 - Datele sunt găzduite în UE, conform constituției proiectului.
+- Ștergerea este imediată în aplicație; copiile din backup-urile bazei de date (găzduite în UE)
+  dispar la rotirea acestora, în cel mult 7 zile. Nota de informare de pe pagina de upload
+  menționează acest termen.
