@@ -56,9 +56,20 @@ export async function handleMessage(registry: Registry, queued: QueuedMessage): 
 /** Buclă de polling cu concurență limitată și oprire grațioasă. */
 export async function runLoop(registry: Registry, opts: { concurrency: number; signal: AbortSignal }): Promise<void> {
   const inFlight = new Set<Promise<void>>();
+  let backoffMs = 1000;
   while (!opts.signal.aborted) {
     const free = opts.concurrency - inFlight.size;
-    const messages = free > 0 ? await readMessages(INITIAL_VISIBILITY_SECONDS, free) : [];
+    let messages: Awaited<ReturnType<typeof readMessages>>;
+    try {
+      messages = free > 0 ? await readMessages(INITIAL_VISIBILITY_SECONDS, free) : [];
+      backoffMs = 1000;
+    } catch (error) {
+      // Baza de date indisponibilă: se reîncearcă cu pauză crescătoare (max 30 s).
+      log.warn({ job: "queue", error_code: error instanceof Error ? error.name : "UNKNOWN" }, "citirea cozii a eșuat");
+      await new Promise((r) => setTimeout(r, backoffMs));
+      backoffMs = Math.min(backoffMs * 2, 30_000);
+      continue;
+    }
     for (const queued of messages) {
       const p = handleMessage(registry, queued).finally(() => inFlight.delete(p));
       inFlight.add(p);

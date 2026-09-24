@@ -38,6 +38,53 @@ export async function createAdmin(): Promise<string> {
   return email;
 }
 
+const FIXTURES = new URL("../../../../../fixtures/media/", import.meta.url);
+
+/**
+ * Încarcă un fixture ca un invitat real (sesiune, rezervare, upload în `incoming`); worker-ul
+ * îl procesează. Întoarce id-ul fișierului.
+ */
+export async function uploadAsGuest(
+  token: string,
+  fixture: string,
+  mime: string,
+  guestName?: string,
+): Promise<string> {
+  const { readFile } = await import("node:fs/promises");
+  const client = serviceClient();
+  const session = await client.rpc("start_guest_session", {
+    p_token: token,
+    p_ip_hash: randomUUID(),
+    p_display_name: guestName ?? "",
+  });
+  if (session.error) throw session.error;
+  const body = await readFile(new URL(fixture, FIXTURES));
+  const reserved = await client.rpc("reserve_upload", {
+    p_session_id: session.data,
+    p_token: token,
+    p_filename: fixture,
+    p_mime: mime,
+    p_bytes: body.length,
+  });
+  if (reserved.error) throw reserved.error;
+  const row = reserved.data[0];
+  if (!row) throw new Error("rezervare eșuată");
+  const upload = await client.storage.from("incoming").upload(row.path, body, { contentType: mime });
+  if (upload.error) throw upload.error;
+  return row.media_id;
+}
+
+/** Așteaptă ca worker-ul să termine procesarea fișierelor (necesită worker-ul pornit). */
+export async function waitForProcessed(mediaIds: string[], timeoutMs = 90_000): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const { data } = await serviceClient().from("media_items").select("status").in("id", mediaIds);
+    if (data?.length === mediaIds.length && data.every((m) => m.status === "ready" || m.status === "failed")) return;
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+  throw new Error("Worker-ul nu a procesat fișierele (rulează: pnpm --filter worker docker:run)");
+}
+
 export interface SeededEvent {
   id: string;
   token: string;

@@ -188,17 +188,17 @@ timestamp cerut de Supabase CLI (`supabase/migrations/2026092500NNNN_<nume>.sql`
 
 ### Tests for User Story 3 (scrise înainte, trebuie să eșueze) ⚠️
 
-- [ ] T082 [P] [US3] Scrie `supabase/tests/rls/media-storage.test.ts`: rândurile din matricea RLS pentru `media_items`, `storage media/{A}`, `storage incoming/*`, `archive_jobs`, `guest_sessions` pentru anon, organizator A/B, admin `aal1`/`aal2` (SC-012); plus: după trecerea evenimentului lui A în `expiring`, organizatorul A nu mai poate citi `media_items` și nici crea URL-uri semnate direct prin Storage API (FR-044)
-- [ ] T083 [P] [US3] Scrie `apps/web/tests/e2e/gallery.spec.ts`: organizatorul A se autentifică prin link din Mailpit și vede doar evenimentele sale; galeria ordonează miniaturile după `uploaded_at` cu numele invitatului; `iphone.heic` se afișează la dimensiune completă; video-ul se redă; URL-ul direct al evenimentului lui B → acces refuzat; fișier corupt → miniatură generică și original descărcabil
+- [X] T082 [P] [US3] Scrie `supabase/tests/rls/media-storage.test.ts`: rândurile din matricea RLS pentru `media_items`, `storage media/{A}`, `storage incoming/*`, `archive_jobs`, `guest_sessions` pentru anon, organizator A/B, admin `aal1`/`aal2` (SC-012); plus: după trecerea evenimentului lui A în `expiring`, organizatorul A nu mai poate citi `media_items` și nici crea URL-uri semnate direct prin Storage API (FR-044)
+- [X] T083 [P] [US3] Scrie `apps/web/tests/e2e/gallery.spec.ts`: organizatorul A se autentifică prin link din Mailpit și vede doar evenimentele sale; galeria ordonează miniaturile după `uploaded_at` cu numele invitatului; `iphone.heic` se afișează la dimensiune completă; video-ul se redă; URL-ul direct al evenimentului lui B → acces refuzat; fișier corupt → miniatură generică și original descărcabil
 
 ### Implementation for User Story 3
 
-- [ ] T084 [US3] Implementează în `apps/web/lib/actions/organizer.ts`: `listMedia(eventId, cursor?, updatedSince?)` (cursor `(uploaded_at, id)`, 60 elemente/pagină, URL-uri semnate de 15 min pentru miniaturi, `FORBIDDEN`) și `getMediaUrls(mediaId)` (`{ viewUrl, downloadUrl }` semnate de 15 min — `display.webp` pentru poze, `playback.mp4` pentru video; `NOT_READY`); acțiunile de galerie pe un eveniment `expiring`/`expired` întorc `EVENT_EXPIRED`
-- [ ] T085 [US3] Creează `apps/web/app/events/layout.tsx` (cere sesiune, altfel `/login?next=`) și `apps/web/app/events/page.tsx` (lista din view-ul `organizer_events`: nume, dată, număr de fișiere)
-- [ ] T086 [US3] Creează `apps/web/app/events/[eventId]/page.tsx`: verifică proprietatea (404 altfel), încarcă prima pagină din `listMedia` și redă `GalleryGrid`
-- [ ] T087 [P] [US3] Creează `apps/web/components/gallery/GalleryGrid.tsx` (react-aria `GridList` accesibilă din tastatură, încărcare incrementală, numele invitatului sub miniatură, badge „în procesare”, miniatură generică pentru `thumb_path = NULL` sau `failed`)
-- [ ] T088 [P] [US3] Creează `apps/web/components/gallery/MediaViewer.tsx` (react-aria `Modal`/`Dialog`: `<img>` la dimensiune completă sau `<video controls playsinline>` pe `playback.mp4`, navigare anterior/următor, URL-uri reînnoite la expirare)
-- [ ] T089 [US3] Adaugă cheile de text pentru galerie în `apps/web/lib/i18n/messages/ro.ts`
+- [X] T084 [US3] Implementează în `apps/web/lib/actions/organizer.ts`: `listMedia(eventId, cursor?, updatedSince?)` (cursor `(uploaded_at, id)`, 60 elemente/pagină, URL-uri semnate de 15 min pentru miniaturi, `FORBIDDEN`) și `getMediaUrls(mediaId)` (`{ viewUrl, downloadUrl }` semnate de 15 min — `display.webp` pentru poze, `playback.mp4` pentru video; `NOT_READY`); acțiunile de galerie pe un eveniment `expiring`/`expired` întorc `EVENT_EXPIRED`
+- [X] T085 [US3] Creează `apps/web/app/events/layout.tsx` (cere sesiune, altfel `/login?next=`) și `apps/web/app/events/page.tsx` (lista din view-ul `organizer_events`: nume, dată, număr de fișiere)
+- [X] T086 [US3] Creează `apps/web/app/events/[eventId]/page.tsx`: verifică proprietatea (404 altfel), încarcă prima pagină din `listMedia` și redă `GalleryGrid`
+- [X] T087 [P] [US3] Creează `apps/web/components/gallery/GalleryGrid.tsx` (react-aria `GridList` accesibilă din tastatură, încărcare incrementală, numele invitatului sub miniatură, badge „în procesare”, miniatură generică pentru `thumb_path = NULL` sau `failed`)
+- [X] T088 [P] [US3] Creează `apps/web/components/gallery/MediaViewer.tsx` (react-aria `Modal`/`Dialog`: `<img>` la dimensiune completă sau `<video controls playsinline>` pe `playback.mp4`, navigare anterior/următor, URL-uri reînnoite la expirare)
+- [X] T089 [US3] Adaugă cheile de text pentru galerie în `apps/web/lib/i18n/messages/ro.ts`
 
 **Checkpoint**: MVP-ul P1 complet — admin → QR → invitat → galerie organizator
 

@@ -140,6 +140,27 @@ export const ro = {
   "admin.delete.confirm": "Șterge definitiv",
   "admin.delete.anonymizedConfirm": "șterge",
 
+  // Organizator
+  "organizer.nav": "Navigare organizator",
+  "organizer.myEvents": "Evenimentele mele",
+  "organizer.noEvents": "Nu ai încă evenimente asociate acestei adrese de email.",
+  "organizer.purgeOn": "Fișierele se șterg automat pe {date}.",
+  "organizer.expired": "Expirat",
+  "organizer.expiredExplain": "Perioada de păstrare s-a încheiat, iar fișierele evenimentului au fost șterse definitiv.",
+
+  // Galerie
+  "gallery.label": "Fișierele evenimentului",
+  "gallery.empty": "Încă nu s-a încărcat niciun fișier. Pozele apar aici imediat ce invitații le trimit.",
+  "gallery.anonymousGuest": "Invitat anonim",
+  "gallery.noPreview": "Previzualizare indisponibilă",
+  "gallery.processing": "În procesare",
+  "gallery.video": "Video",
+  "gallery.loadMore": "Încarcă mai multe",
+  "gallery.photoBy": "Poză de la {name}",
+  "gallery.previous": "Anteriorul",
+  "gallery.next": "Următorul",
+  "gallery.download": "Descarcă originalul",
+
   // Pagina invitatului
   "guest.intro": "Adaugă pozele și filmările tale de la eveniment. Nu ai nevoie de cont sau de aplicație.",
   "guest.nameLabel": "Numele tău (opțional)",
