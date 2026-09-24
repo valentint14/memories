@@ -23,7 +23,7 @@ Cheile de test Turnstile (local/CI): sitekey `1x00000000000000000000BB`, secret
 
 | # | Scenariu | Pași | Rezultat așteptat | Cerințe |
 | --- | --- | --- | --- | --- |
-| 1 | Creare + cod | pe `/` completează o adresă nouă, un nume, o dată, bifează termenii, trimite; ia codul din Mailpit și introdu-l | ajungi la `/events/{id}`, stare „în așteptarea activării”, codul QR se descarcă (PNG, SVG) | FR-001–FR-009, SC-001 |
+| 1 | Creare + cod | pe `/` completează o adresă nouă, un nume, o dată, bifează termenii, trimite; ia codul din Mailpit și introdu-l | emailul apare în Mailpit în cel mult 30 s; ajungi la `/events/{id}`, stare „în așteptarea activării”, codul QR se descarcă (PNG, SVG) | FR-001–FR-009, SC-001 |
 | 2 | Confirmare prin link pe alt dispozitiv | ca la 1, dar deschide linkul din Mailpit într-o fereastră privată | pagina arată numele evenimentului și butonul; după apăsare ești autentificat în fereastra privată | FR-007, SC-002 |
 | 3 | Linkul fără buton | deschide linkul, nu apăsa; încearcă apoi codul | codul funcționează (linkul nu a consumat nimic) | FR-007, SC-003 |
 | 4 | Adresă existentă vs nouă | trimite formularul cu `org-a@example.test` și cu o adresă nouă | același mesaj și aceeași pagină de cod | FR-003, SC-004 |
@@ -32,7 +32,7 @@ Cheile de test Turnstile (local/CI): sitekey `1x00000000000000000000BB`, secret
 | 7 | Creare din cont | din `/events`, „Eveniment nou” | se creează direct, fără email; la a 3-a creare apare limita | FR-005, FR-021 |
 | 8 | Invitat pe eveniment neactivat | deschide `/e/{token}` al evenimentului din scenariul 1 | mesaj politicos, fără formular | FR-032 |
 | 9 | Cerere de activare | pe eveniment, „Solicită activarea” | email către admin în Mailpit; butonul arată data cererii și e indisponibil 24 h | FR-018a |
-| 10 | Activare | ca admin, `/admin/events` → filtru „activare solicitată” → activează cu motiv | eveniment activ, preț și dată de ștergere; invitatul încarcă prin același cod QR; istoricul are rândul | FR-025, SC-011 |
+| 10 | Activare | ca admin, `/admin/events` → filtru „activare solicitată”; înainte de activare, modifică numele evenimentului (doar numele și data sunt editabile); apoi activează cu motiv | eveniment activ, preț și dată de ștergere; invitatul încarcă prin același cod QR; istoricul are rândul | FR-025, SC-011 |
 | 11 | Activare repetată | rulează din nou `activate_event` pentru același eveniment (SQL, sursa `payment`, aceeași `external_ref`) | prețul și data ștergerii nu se schimbă | FR-026, SC-010 |
 | 12 | Suspendare | ca admin, suspendă cu motiv; ca invitat încearcă upload; ca organizator deschide galeria | invitatul vede mesajul; organizatorul poate vedea, descărca, șterge, dar nu modifica sau prelungi | FR-028a, FR-031 |
 | 13 | Modificare și ștergere | ca organizator, schimbă numele și data, apoi șterge (tastând numele) | codul QR rămâne același după modificare; după ștergere, linkul invitatului dă „nu a fost găsit” | FR-033, FR-035 |

@@ -110,5 +110,6 @@ aceleași limite de frecvență; răspuns neutru.
 | --- | --- | --- |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | web (public) | local/CI: `1x00000000000000000000BB` |
 | `TURNSTILE_SECRET_KEY` | web (server), Supabase Auth | local/CI: `1x0000000000000000000000000000000AA` |
-| `RATE_LIMIT_IP_PER_HOUR` | web (server) | implicit 20 (FR-036); ridicat doar în testul de timp de răspuns |
+| `RATE_LIMIT_IP_PER_HOUR` | web (server) | implicit 20 (FR-036); ridicat pe serverul e2e principal (toată suita rulează de pe `127.0.0.1`) |
+| `TURNSTILE_OFFLINE` | web (server) | doar local/CI, doar cu secretul de test: `TurnstileField` nu încarcă scriptul extern și trimite tokenul de test; pornirea eșuează dacă e setat cu alt secret |
 | `ADMIN_NOTIFY_EMAILS` | worker | destinatarii cererilor de activare (implicit: adresele din `platform_admins`) |

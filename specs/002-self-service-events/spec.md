@@ -166,7 +166,10 @@ verifică istoricul fiecăruia.
 3. **Given** un eveniment activ, **When** administratorul îl suspendă cu un motiv, **Then**
    invitații nu mai pot încărca, organizatorul vede că evenimentul este suspendat și poate doar
    vizualiza, descărca și șterge fișierele, iar administratorul îl poate reactiva.
-4. **Given** administratorul, **When** vede lista, **Then** nu poate vedea sau descărca
+4. **Given** un eveniment în așteptarea activării, **When** administratorul îi modifică numele
+   sau data, **Then** modificarea apare și la organizator, iar prețul, limitele și perioada de
+   upload rămân nestabilite până la activare.
+5. **Given** administratorul, **When** vede lista, **Then** nu poate vedea sau descărca
    fișierele media (001/FR-007 rămâne valabil).
 
 ---
@@ -488,7 +491,7 @@ linkul invitaților devine invalid, iar fișierele nu mai sunt accesibile.
   referință externă.
 - **Cerere de confirmare**: legată de o adresă de email și, la creare, de un eveniment
   neconfirmat: link și cod de unică folosință, expirare, număr de încercări greșite, stare
-  (în așteptare, folosită, expirată, invalidată).
+  (în așteptare, folosită, invalidată); expirarea se deduce din momentul expirării.
 - **Document legal**: termeni sau politică de confidențialitate, cu versiune și dată de intrare
   în vigoare.
 - **Acceptare**: organizator, document, versiune, moment, eveniment asociat.
