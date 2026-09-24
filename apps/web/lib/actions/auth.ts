@@ -72,7 +72,8 @@ async function requirePlatformAdminUser() {
 
 export interface TotpEnrollment {
   factorId: string;
-  qrCodeSvg: string;
+  /** Imaginea gata de afișat (`data:image/svg+xml;…`), așa cum o întoarce Supabase. */
+  qrCodeDataUrl: string;
   secret: string;
 }
 
@@ -87,7 +88,7 @@ export async function enrollTotp(): Promise<ActionResult<TotpEnrollment>> {
     }
     const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp", friendlyName: "Admin" });
     if (error) throw new ActionError("INTERNAL");
-    return { factorId: data.id, qrCodeSvg: data.totp.qr_code, secret: data.totp.secret };
+    return { factorId: data.id, qrCodeDataUrl: data.totp.qr_code, secret: data.totp.secret };
   });
 }
 

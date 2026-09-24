@@ -49,6 +49,11 @@ test("autentificare cu al doilea factor obligatoriu (FR-006a)", async ({ page })
   await page.goto("/admin/events");
   await expect(page).toHaveURL(/\/auth\/mfa/);
 
+  // Codul QR se încarcă efectiv ca imagine (nu doar elementul `img`).
+  const qr = page.getByRole("img", { name: "Cod QR pentru aplicația de autentificare" });
+  await expect(qr).toBeVisible();
+  await expect.poll(() => qr.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+
   const secret = (await page.getByTestId("totp-secret").innerText()).replace(/\s/g, "");
   totp = new TOTP({ secret });
   await verifyCode(page);

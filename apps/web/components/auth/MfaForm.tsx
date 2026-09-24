@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { Button, Form, Input, Label, TextField } from "react-aria-components";
 import { useRouter } from "next/navigation";
 import { enrollTotp, verifyTotp, type TotpEnrollment } from "@/lib/actions/auth";
@@ -12,9 +12,12 @@ export function MfaForm({ factorId: existingFactorId }: { factorId: string | nul
   const [enrollment, setEnrollment] = useState<TotpEnrollment | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  // În dev (Strict Mode) efectul rulează de două ori; a doua înrolare ar șterge factorul primei.
+  const enrollStarted = useRef(false);
 
   useEffect(() => {
-    if (existingFactorId !== null) return;
+    if (existingFactorId !== null || enrollStarted.current) return;
+    enrollStarted.current = true;
     void enrollTotp().then((result) => {
       if (result.ok) setEnrollment(result.data);
       else setError(t(`errors.${result.error}`));
@@ -34,7 +37,7 @@ export function MfaForm({ factorId: existingFactorId }: { factorId: string | nul
           {enrollment && (
             <>
               <img
-                src={`data:image/svg+xml;utf8,${encodeURIComponent(enrollment.qrCodeSvg)}`}
+                src={enrollment.qrCodeDataUrl}
                 alt={t("mfa.qrAlt")}
                 width={200}
                 height={200}
