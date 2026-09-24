@@ -1,3 +1,5 @@
+import { deleteOrganizerUser } from "./delete-organizer-user.ts";
+import { purgeEvent } from "./purge-event.ts";
 import type { JobHandler, JobMessage, Registry } from "./types.ts";
 
 /** Handler provizoriu pentru joburile încă neimplementate: eșuează explicit, fără să piardă mesajul. */
@@ -14,8 +16,8 @@ export const registry: Registry = {
   build_archive: notImplemented("build_archive"),
   delete_archive: notImplemented("delete_archive"),
   purge_media: notImplemented("purge_media"),
-  purge_event: notImplemented("purge_event"),
+  purge_event: purgeEvent,
   expire_event: notImplemented("expire_event"),
-  delete_organizer_user: notImplemented("delete_organizer_user"),
+  delete_organizer_user: deleteOrganizerUser,
   retention_notice: notImplemented("retention_notice"),
 };

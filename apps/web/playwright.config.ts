@@ -34,8 +34,8 @@ export default defineConfig({
   webServer: process.env.E2E_BASE_URL
     ? undefined
     : {
-        command: `pnpm build && pnpm start --port ${port}`,
-        url: baseURL,
+        command: `npx next build && npx next start --port ${port}`,
+        url: `${baseURL}/login`,
         reuseExistingServer: !process.env.CI,
         timeout: 300_000,
       },

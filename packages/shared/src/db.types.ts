@@ -512,22 +512,36 @@ export type Database = {
       }
     }
     Functions: {
+      admin_event_stats: {
+        Args: { p_event_id?: string }
+        Returns: {
+          event_id: string
+          file_count: number
+          total_bytes: number
+        }[]
+      }
       admin_event_token: { Args: { p_event_id: string }; Returns: string }
       check_rate_limit: {
         Args: { p_key: string; p_limit: number; p_window: string }
         Returns: boolean
       }
+      event_organizer_email: { Args: { p_event_id: string }; Returns: string }
       is_admin: { Args: never; Returns: boolean }
       is_platform_admin_user: { Args: never; Returns: boolean }
       organizer_owns_active_event: {
         Args: { p_object_name: string }
         Returns: boolean
       }
+      orphan_organizer_user_id: { Args: { p_email: string }; Returns: string }
       raise_app_error: {
         Args: { p_code: string; p_detail?: Json }
         Returns: undefined
       }
       rate_limit_retry_after: { Args: { p_window: string }; Returns: number }
+      request_event_deletion: {
+        Args: { p_confirm_name: string; p_event_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       archive_status: "pending" | "building" | "ready" | "failed" | "expired"

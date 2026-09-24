@@ -9,7 +9,8 @@ export type ActionResult<T> =
       ok: false;
       error: ErrorCode;
       retryAfterSec?: number;
-      fields?: Record<string, ErrorCode>;
+      /** Câmp → cheie de mesaj (`validation.*`) afișată lângă câmp. */
+      fields?: Record<string, string>;
       detail?: Record<string, unknown>;
     };
 
@@ -30,14 +31,11 @@ export function throwIfDbError(error: DbErrorLike | null): void {
   }
 }
 
-function fieldErrors(issues: z.core.$ZodIssue[]): Record<string, ErrorCode> {
-  const fields: Record<string, ErrorCode> = {};
+function fieldErrors(issues: z.core.$ZodIssue[]): Record<string, string> {
+  const fields: Record<string, string> = {};
   for (const issue of issues) {
     const path = issue.path.join(".");
-    const code = typeof issue.message === "string" && issue.message.length > 0 && /^[A-Z_]+$/.test(issue.message)
-      ? (issue.message as ErrorCode)
-      : "VALIDATION";
-    fields[path] ??= code;
+    fields[path] ??= issue.message.startsWith("validation.") ? issue.message : "validation.invalid";
   }
   return fields;
 }
