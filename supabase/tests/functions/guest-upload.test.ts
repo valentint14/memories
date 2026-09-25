@@ -210,3 +210,63 @@ describe("guest_uploads (FR-016a, FR-022)", () => {
     expect(data?.[0]?.status).toBe("reserved");
   });
 });
+
+// 002: stările noi ale evenimentului (FR-031, FR-032).
+describe("evenimente neactivate, suspendate sau neconfirmate (002)", () => {
+  async function awaitingEvent(): Promise<{ id: string; token: string }> {
+    const event = await createTestEvent({ organizerEmail: randomEmail("guest-await") });
+    await sql(
+      `update public.events set status = 'awaiting_activation', upload_starts_at = null, upload_ends_at = null,
+         base_price_minor = null, retention_option_id = null, activated_at = null,
+         pending_purge_at = now() + interval '30 days' where id = $1`,
+      [event.id],
+    );
+    return { id: event.id, token: event.public_token };
+  }
+
+  it("resolve_event_for_guest întoarce starea și numele pentru neactivat și suspendat", async () => {
+    const awaiting = await awaitingEvent();
+    expect(await resolve(awaiting.token)).toMatchObject({ state: "not_activated", name: "Nuntă de test" });
+
+    const suspended = await createTestEvent({ organizerEmail: randomEmail("guest-susp") });
+    await sql("select public.transition_event($1, 'suspended', 'admin')", [suspended.id]);
+    expect(await resolve(suspended.public_token)).toMatchObject({ state: "suspended", name: "Nuntă de test" });
+
+    const unconfirmed = await createTestEvent({ organizerEmail: randomEmail("guest-unconf") });
+    await sql(
+      `update public.events set status = 'unconfirmed', upload_starts_at = null, upload_ends_at = null,
+         base_price_minor = null, retention_option_id = null where id = $1`,
+      [unconfirmed.id],
+    );
+    expect(await resolve(unconfirmed.public_token)).toMatchObject({ state: "not_found", name: null });
+  });
+
+  it("sesiunea și rezervarea sunt refuzate cu coduri distincte", async () => {
+    const awaiting = await awaitingEvent();
+    const r1 = await service.rpc("start_guest_session", { p_token: awaiting.token, p_ip_hash: "x" });
+    expect(r1.error?.message).toBe("EVENT_NOT_ACTIVATED");
+
+    const event = await createTestEvent({ organizerEmail: randomEmail("guest-susp2") });
+    const sessionId = await startSession(event.public_token);
+    await sql("select public.transition_event($1, 'suspended', 'admin')", [event.id]);
+    const r2 = await service.rpc("start_guest_session", { p_token: event.public_token, p_ip_hash: "x" });
+    expect(r2.error?.message).toBe("EVENT_SUSPENDED");
+    const r3 = await reserve(sessionId, event.public_token, "image/jpeg", 1000);
+    expect(r3.error?.message).toBe("EVENT_SUSPENDED");
+  });
+
+  it("un fișier rezervat înainte de suspendare și finalizat după e respins cu EVENT_SUSPENDED", async () => {
+    const event = await createTestEvent({ organizerEmail: randomEmail("guest-susp3") });
+    const sessionId = await startSession(event.public_token);
+    const { data, error } = await reserve(sessionId, event.public_token, "image/jpeg", 1000);
+    expect(error).toBeNull();
+    const reservation = data?.[0];
+    await sql("select public.transition_event($1, 'suspended', 'admin')", [event.id]);
+    await completeUpload(reservation?.path ?? "", 1000);
+    const [row] = await sql<{ status: string; processing_error: string }>(
+      "select status::text, processing_error from public.media_items where id = $1",
+      [reservation?.media_id],
+    );
+    expect(row).toEqual({ status: "rejected", processing_error: "EVENT_SUSPENDED" });
+  });
+});

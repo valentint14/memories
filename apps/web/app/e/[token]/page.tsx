@@ -30,6 +30,16 @@ export default async function GuestUploadPage({ params }: { params: Promise<{ to
           {t("guest.notStarted", { date: formatDateTime(event.uploadStartsAt) })}
         </p>
       )}
+      {event.state === "not_activated" && (
+        <p role="status" className="rounded-lg bg-brand-50 p-4">
+          {t("guest.notActivated")}
+        </p>
+      )}
+      {event.state === "suspended" && (
+        <p role="status" className="rounded-lg bg-brand-50 p-4">
+          {t("guest.suspended")}
+        </p>
+      )}
       {event.state === "ended" && (
         <p role="status" className="rounded-lg bg-brand-50 p-4">
           {t("errors.UPLOAD_ENDED")}

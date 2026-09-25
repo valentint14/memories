@@ -342,6 +342,8 @@ export const ro = {
   "archive.expired": "Arhiva anterioară nu mai este disponibilă (a expirat sau s-au șters fișiere). Cere o arhivă nouă.",
 
   // Pagina invitatului
+  "guest.notActivated": "Încărcarea fișierelor nu este încă deschisă pentru acest eveniment. Revino mai târziu sau ia legătura cu organizatorul.",
+  "guest.suspended": "Evenimentul nu primește momentan fișiere. Îți mulțumim pentru înțelegere.",
   "guest.intro": "Adaugă pozele și filmările tale de la eveniment. Nu ai nevoie de cont sau de aplicație.",
   "guest.nameLabel": "Numele tău (opțional)",
   "guest.pick": "Alege poze și video",

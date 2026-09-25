@@ -257,14 +257,14 @@ noi încep de la `supabase/migrations/20261001000100_*.sql`. Mesajele din coadă
 
 ### Tests for User Story 6 ⚠️
 
-- [ ] T087 [P] [US6] Test DB în `supabase/tests/functions/guest-upload.test.ts` (extinde): `resolve_event_for_guest` întoarce starea; `start_guest_session` și `reserve_upload` dau `EVENT_NOT_ACTIVATED` pentru `awaiting_activation`, `EVENT_SUSPENDED` pentru `suspended` și `EVENT_NOT_FOUND` pentru `unconfirmed`; un fișier rezervat înainte de suspendare și finalizat după este respins cu `processing_error = 'EVENT_SUSPENDED'`
-- [ ] T088 [P] [US6] Test e2e în `apps/web/tests/e2e/guest-states.spec.ts`: `/e/{token}` pentru un eveniment neactivat arată numele și mesajul, fără formular; pentru unul suspendat arată mesajul fără motiv; pentru unul `unconfirmed`, „nu a fost găsit”; un upload în curs când adminul suspendă evenimentul marchează fișierele rămase cu mesajul politicos
+- [X] T087 [P] [US6] Test DB în `supabase/tests/functions/guest-upload.test.ts` (extinde): `resolve_event_for_guest` întoarce starea; `start_guest_session` și `reserve_upload` dau `EVENT_NOT_ACTIVATED` pentru `awaiting_activation`, `EVENT_SUSPENDED` pentru `suspended` și `EVENT_NOT_FOUND` pentru `unconfirmed`; un fișier rezervat înainte de suspendare și finalizat după este respins cu `processing_error = 'EVENT_SUSPENDED'`
+- [X] T088 [P] [US6] Test e2e în `apps/web/tests/e2e/guest-states.spec.ts`: `/e/{token}` pentru un eveniment neactivat arată numele și mesajul, fără formular; pentru unul suspendat arată mesajul fără motiv; pentru unul `unconfirmed`, „nu a fost găsit”; un upload în curs când adminul suspendă evenimentul marchează fișierele rămase cu mesajul politicos
 
 ### Implementation for User Story 6
 
-- [ ] T089 [US6] Migrația `supabase/migrations/20261001001600_guest_states.sql`: `resolve_event_for_guest`, `start_guest_session`, `reserve_upload` și triggerul de finalizare din 001 tratează stările noi conform contractului
-- [ ] T090 [US6] `apps/web/app/e/[token]/page.tsx` și `apps/web/lib/guest/`: mesajele `guest.notActivated` și `guest.suspended` (texte în `apps/web/lib/i18n/messages/ro.ts`); coada de upload (`apps/web/lib/upload/`) afișează `EVENT_SUSPENDED` pe fișierele refuzate, fără eroare tehnică
-- [ ] T091 [US6] Rulează T087–T088 și testul LCP din 001 (`apps/web/tests/e2e/lcp.spec.ts`) pentru pagina invitatului; toate trec
+- [X] T089 [US6] Migrația `supabase/migrations/20261001001600_guest_states.sql`: `resolve_event_for_guest`, `start_guest_session`, `reserve_upload` și triggerul de finalizare din 001 tratează stările noi conform contractului
+- [X] T090 [US6] `apps/web/app/e/[token]/page.tsx` și `apps/web/lib/guest/`: mesajele `guest.notActivated` și `guest.suspended` (texte în `apps/web/lib/i18n/messages/ro.ts`); coada de upload (`apps/web/lib/upload/`) afișează `EVENT_SUSPENDED` pe fișierele refuzate, fără eroare tehnică
+- [X] T091 [US6] Rulează T087–T088 și testul LCP din 001 (`apps/web/tests/e2e/lcp.spec.ts`) pentru pagina invitatului; toate trec
 
 **Checkpoint**: invitații nu văd niciodată erori tehnice pentru stările noi
 

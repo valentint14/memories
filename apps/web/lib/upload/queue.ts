@@ -29,6 +29,9 @@ export interface ReservationResult {
   remainingFiles: number;
 }
 
+/** Erori de sesiune definitive: fișierul e refuzat cu mesajul lor, fără reîncercare. */
+const FINAL_SESSION_ERRORS: ReadonlySet<ErrorCode> = new Set(["EVENT_SUSPENDED", "EVENT_NOT_ACTIVATED", "EVENT_NOT_FOUND", "UPLOAD_ENDED"]);
+
 type Result<T> = { ok: true; data: T } | { ok: false; error: ErrorCode; detail?: Record<string, unknown>; retryAfterSec?: number };
 
 export interface TransferCallbacks {
@@ -84,6 +87,7 @@ export class UploadQueue {
   private transfers = new Map<string, Transfer>();
   private listeners = new Set<() => void>();
   private session: Promise<boolean> | null = null;
+  private sessionError: ErrorCode | null = null;
   private active = 0;
 
   constructor(
@@ -185,7 +189,10 @@ export class UploadQueue {
 
   private ensureSession(): Promise<boolean> {
     this.session ??= this.deps.startSession(this.getDisplayName()).then((r) => {
-      if (!r.ok) this.session = null;
+      if (!r.ok) {
+        this.session = null;
+        this.sessionError = r.error;
+      }
       return r.ok;
     });
     return this.session;
@@ -212,7 +219,10 @@ export class UploadQueue {
     let reserved: Awaited<ReturnType<QueueDeps["reserve"]>>;
     try {
       if (!(await this.ensureSession())) {
-        this.update(id, { status: "failed", message: { key: "upload.sessionFailed" } });
+        // Evenimentul a fost suspendat sau închis între timp (002/FR-031): mesaj politicos, nu eroare.
+        const final = this.sessionError !== null && FINAL_SESSION_ERRORS.has(this.sessionError);
+        if (final) this.reject(id, { key: `errors.${this.sessionError ?? "INTERNAL"}` });
+        else this.update(id, { status: "failed", message: { key: "upload.sessionFailed" } });
         return;
       }
       reserved = await this.deps.reserve({ name: file.name, type, size: file.size }, this.replaces.get(id));

@@ -1,7 +1,7 @@
 import "server-only";
 import { adminSupabase } from "../supabase/admin";
 
-export type GuestEventState = "open" | "not_started" | "ended" | "not_found";
+export type GuestEventState = "open" | "not_started" | "ended" | "not_found" | "not_activated" | "suspended";
 
 export interface GuestEvent {
   state: GuestEventState;
