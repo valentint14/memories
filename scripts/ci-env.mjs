@@ -39,6 +39,12 @@ const env = {
   SMTP_FROM: "Memories <no-reply@example.test>",
   APP_URL: "http://localhost:3000",
   IP_HASH_SECRET: process.env.IP_HASH_SECRET ?? randomBytes(32).toString("hex"),
+  // Cheile de test Cloudflare Turnstile (research R3): trec mereu; producția are cheile proprii.
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: "1x00000000000000000000BB",
+  TURNSTILE_SECRET_KEY: "1x0000000000000000000000000000000AA",
+  // Fără scriptul extern în teste; acceptat doar împreună cu secretul de test (server-env.ts).
+  TURNSTILE_OFFLINE: "1",
+  ADMIN_NOTIFY_EMAILS: "",
   MAILPIT_URL: status.MAILPIT_URL ?? status.INBUCKET_URL ?? "http://127.0.0.1:54324",
 };
 
@@ -47,16 +53,27 @@ const lines = (keys) => keys.map((k) => `${k}=${env[k]}`).join("\n") + "\n";
 if (process.argv.includes("--write")) {
   writeFileSync(
     "apps/web/.env.local",
-    lines(["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY", "APP_URL", "IP_HASH_SECRET"]),
+    lines([
+      "NEXT_PUBLIC_SUPABASE_URL",
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      "SUPABASE_SERVICE_ROLE_KEY",
+      "APP_URL",
+      "IP_HASH_SECRET",
+      "NEXT_PUBLIC_TURNSTILE_SITE_KEY",
+      "TURNSTILE_SECRET_KEY",
+      "TURNSTILE_OFFLINE",
+    ]) +
+      // Doar local, pentru testarea de mână: toate cererile vin de pe aceeași adresă (producția: 20).
+      "RATE_LIMIT_IP_PER_HOUR=1000\n",
   );
   writeFileSync(
     "apps/worker/.env",
-    lines(["DATABASE_URL", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "S3_ENDPOINT", "S3_REGION", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY", "SMTP_HOST", "SMTP_PORT", "SMTP_FROM", "APP_URL"]),
+    lines(["DATABASE_URL", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "S3_ENDPOINT", "S3_REGION", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY", "SMTP_HOST", "SMTP_PORT", "SMTP_FROM", "APP_URL", "ADMIN_NOTIFY_EMAILS"]),
   );
   // Varianta pentru containerul worker-ului: Supabase local se vede prin host.docker.internal.
   writeFileSync(
     "apps/worker/.env.docker",
-    lines(["DATABASE_URL", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "S3_ENDPOINT", "S3_REGION", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY", "SMTP_HOST", "SMTP_PORT", "SMTP_FROM", "APP_URL"]).replaceAll("127.0.0.1", "host.docker.internal"),
+    lines(["DATABASE_URL", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "S3_ENDPOINT", "S3_REGION", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY", "SMTP_HOST", "SMTP_PORT", "SMTP_FROM", "APP_URL", "ADMIN_NOTIFY_EMAILS"]).replaceAll("127.0.0.1", "host.docker.internal"),
   );
   console.log("Scris: apps/web/.env.local, apps/worker/.env, apps/worker/.env.docker");
 } else {

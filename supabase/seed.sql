@@ -39,3 +39,9 @@ insert into public.retention_options (months, surcharge_minor) values
   (3, 0),
   (6, 4900),
   (12, 9900);
+
+-- Pachetul complet (002, research R7): preț de bază 299 lei, opțiunea de 3 luni inclusă.
+update public.packages
+   set price_minor = 29900,
+       retention_option_id = (select id from public.retention_options where months = 3)
+ where code = 'complete';

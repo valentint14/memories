@@ -1,7 +1,8 @@
 "use server";
 
-import { archiveEntryName } from "@memories/shared";
+import { archiveEntryName, mapDbError } from "@memories/shared";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { archiveUrl, latestArchive, requestArchiveJob, type ArchiveState } from "../organizer/archive";
 import {
@@ -13,7 +14,10 @@ import {
   type MediaUrls,
 } from "../organizer/media";
 import { extendEventRetention, retentionQuote, type RetentionOptionQuote } from "../organizer/retention";
+import { serverSupabase } from "../supabase/server";
+import { eventBasicsSchema } from "../validation/self-service";
 import { runAction, throwIfDbError, type ActionResult } from "./result";
+import type { FormState } from "./self-service";
 
 const cursorSchema = z.object({ uploadedAt: z.iso.datetime({ offset: true }), id: z.uuid() });
 
@@ -125,4 +129,76 @@ export async function getLatestArchive(eventId: string): Promise<ActionResult<Ar
 /** URL-uri semnate de 15 min pentru vizualizare și descărcare (FR-028, FR-029, FR-034). */
 export async function getMediaUrls(mediaId: string): Promise<ActionResult<MediaUrls>> {
   return runAction(z.object({ mediaId: z.uuid() }), { mediaId }, (input) => mediaUrls(input.mediaId, safeDownloadName));
+}
+
+/**
+ * Crearea din cont, fără email de confirmare (002: FR-005, FR-021, FR-041). Acceptarea termenilor
+ * se cere doar dacă organizatorul nu a acceptat versiunea curentă.
+ */
+export async function createEventForm(_prev: FormState, formData: FormData): Promise<FormState> {
+  const text = (name: string) => {
+    const value = formData.get(name);
+    return typeof value === "string" ? value : "";
+  };
+  const values = { name: text("name"), eventDate: text("eventDate"), accepted: formData.get("accepted") === "on" ? "on" : "" };
+  const parsed = eventBasicsSchema(new Date()).safeParse({ name: values.name, eventDate: values.eventDate });
+  const needsTerms = text("termsVersion") !== "";
+  const missingAcceptance = needsTerms && values.accepted !== "on";
+  if (!parsed.success || missingAcceptance) {
+    const fields: Record<string, string> = {};
+    if (!parsed.success) for (const issue of parsed.error.issues) fields[issue.path.join(".")] ??= issue.message;
+    if (missingAcceptance) fields.accepted = "validation.acceptTerms";
+    return { status: "error", error: "VALIDATION", fields, values };
+  }
+
+  const supabase = await serverSupabase();
+  const { data, error } = await supabase.rpc("create_event_as_organizer", {
+    p_name: parsed.data.name,
+    p_event_date: parsed.data.eventDate,
+    ...(needsTerms ? { p_terms_version: text("termsVersion"), p_privacy_version: text("privacyVersion") } : {}),
+  });
+  if (error) {
+    const { code } = mapDbError(error);
+    return {
+      status: "error",
+      error: ["AWAITING_LIMIT_REACHED", "TERMS_OUTDATED", "VALIDATION", "FORBIDDEN"].includes(code) ? code : "INTERNAL",
+      values,
+    };
+  }
+  revalidatePath("/events");
+  redirect(`/events/${data}`);
+}
+
+/** Cererea de activare a pachetului complet (002: FR-018a). */
+export async function requestActivation(eventId: string): Promise<ActionResult<{ requestedAt: string }>> {
+  return runAction(z.object({ eventId: z.uuid() }), { eventId }, async (input) => {
+    const supabase = await serverSupabase();
+    const { data, error } = await supabase.rpc("request_activation", { p_event_id: input.eventId });
+    throwIfDbError(error);
+    revalidatePath(`/events/${input.eventId}`);
+    return { requestedAt: data ?? new Date().toISOString() };
+  });
+}
+
+/** Numele și data evenimentului propriu (002: FR-033, FR-034); linkul și codul QR rămân aceleași. */
+export async function updateOwnEvent(input: { eventId: string; name: string; eventDate: string }): Promise<ActionResult<null>> {
+  return runAction(eventBasicsSchema(new Date()).extend({ eventId: z.uuid() }), input, async ({ eventId, name, eventDate }) => {
+    const supabase = await serverSupabase();
+    const { error } = await supabase.rpc("organizer_update_event", { p_event_id: eventId, p_name: name, p_event_date: eventDate });
+    throwIfDbError(error);
+    revalidatePath("/events");
+    revalidatePath(`/events/${eventId}`);
+    return null;
+  });
+}
+
+/** Ștergerea definitivă a evenimentului propriu, confirmată prin nume (002: FR-035). */
+export async function deleteOwnEvent(input: { eventId: string; confirmName: string }): Promise<ActionResult<null>> {
+  return runAction(z.object({ eventId: z.uuid(), confirmName: z.string().max(200) }), input, async ({ eventId, confirmName }) => {
+    const supabase = await serverSupabase();
+    const { error } = await supabase.rpc("request_event_deletion", { p_event_id: eventId, p_confirm_name: confirmName });
+    throwIfDbError(error);
+    revalidatePath("/events");
+    return null;
+  });
 }

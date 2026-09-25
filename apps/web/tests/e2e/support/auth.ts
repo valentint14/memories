@@ -1,16 +1,22 @@
 import { expect, type Page } from "@playwright/test";
 import { TOTP } from "otpauth";
-import { extractLink, waitForEmail } from "./mailpit";
 import { gotoHydrated, waitForHydration } from "./page";
+import { codeFromEmail, enterCode } from "./self-service";
 
-/** Autentificare prin magic link, citit din Mailpit (fără emailuri reale). */
+/**
+ * Autentificare cu codul din email, citit din Mailpit (002: FR-010; fără emailuri reale).
+ * Numele e păstrat din 001 pentru testele existente.
+ */
 export async function loginWithMagicLink(page: Page, email: string): Promise<void> {
   const since = new Date();
-  await page.goto("/login");
+  await gotoHydrated(page, "/login");
   await page.getByLabel("Adresa de email").fill(email);
-  await page.getByRole("button", { name: "Trimite linkul" }).click();
-  await expect(page.getByRole("status")).toBeVisible();
-  await page.goto(extractLink(await waitForEmail(email, { since }), "/auth/confirm"));
+  await page.getByRole("button", { name: "Trimite codul" }).click();
+  await expect(page).toHaveURL(/\/auth\/code\?request=/);
+  const { code } = await codeFromEmail(email, since);
+  await waitForHydration(page);
+  await enterCode(page, code);
+  await expect(page).not.toHaveURL(/\/auth\/code/);
   await waitForHydration(page);
 }
 

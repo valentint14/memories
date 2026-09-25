@@ -34,6 +34,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      activation_requests: {
+        Row: {
+          event_id: string
+          id: number
+          requested_at: string
+        }
+        Insert: {
+          event_id: string
+          id?: never
+          requested_at?: string
+        }
+        Update: {
+          event_id?: string
+          id?: never
+          requested_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activation_requests_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activation_requests_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "organizer_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      app_audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json
+          event_id: string | null
+          id: number
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json
+          event_id?: string | null
+          id?: never
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json
+          event_id?: string | null
+          id?: never
+        }
+        Relationships: []
+      }
       archive_jobs: {
         Row: {
           archive_path: string | null
@@ -84,6 +141,57 @@ export type Database = {
           },
           {
             foreignKeyName: "archive_jobs_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "organizer_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      auth_requests: {
+        Row: {
+          created_at: string
+          email: string
+          event_id: string | null
+          expires_at: string
+          failed_attempts: number
+          id: string
+          purpose: Database["public"]["Enums"]["auth_request_purpose"]
+          status: Database["public"]["Enums"]["auth_request_status"]
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          event_id?: string | null
+          expires_at?: string
+          failed_attempts?: number
+          id?: string
+          purpose: Database["public"]["Enums"]["auth_request_purpose"]
+          status?: Database["public"]["Enums"]["auth_request_status"]
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          event_id?: string | null
+          expires_at?: string
+          failed_attempts?: number
+          id?: string
+          purpose?: Database["public"]["Enums"]["auth_request_purpose"]
+          status?: Database["public"]["Enums"]["auth_request_status"]
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auth_requests_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "auth_requests_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "organizer_events"
@@ -145,11 +253,82 @@ export type Database = {
           },
         ]
       }
+      event_status_changes: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          event_id: string
+          external_ref: string | null
+          from_status: Database["public"]["Enums"]["event_status"] | null
+          id: number
+          note: string | null
+          reason: string | null
+          source: Database["public"]["Enums"]["status_change_source"]
+          to_status: Database["public"]["Enums"]["event_status"]
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          event_id: string
+          external_ref?: string | null
+          from_status?: Database["public"]["Enums"]["event_status"] | null
+          id?: never
+          note?: string | null
+          reason?: string | null
+          source: Database["public"]["Enums"]["status_change_source"]
+          to_status: Database["public"]["Enums"]["event_status"]
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          event_id?: string
+          external_ref?: string | null
+          from_status?: Database["public"]["Enums"]["event_status"] | null
+          id?: never
+          note?: string | null
+          reason?: string | null
+          source?: Database["public"]["Enums"]["status_change_source"]
+          to_status?: Database["public"]["Enums"]["event_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_status_changes_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_status_changes_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "organizer_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_status_transitions: {
+        Row: {
+          from_status: Database["public"]["Enums"]["event_status"]
+          to_status: Database["public"]["Enums"]["event_status"]
+        }
+        Insert: {
+          from_status: Database["public"]["Enums"]["event_status"]
+          to_status: Database["public"]["Enums"]["event_status"]
+        }
+        Update: {
+          from_status?: Database["public"]["Enums"]["event_status"]
+          to_status?: Database["public"]["Enums"]["event_status"]
+        }
+        Relationships: []
+      }
       events: {
         Row: {
+          activated_at: string | null
           anonymized_at: string | null
-          base_price_minor: number
+          base_price_minor: number | null
           created_at: string
+          deletion_keeps_billing: boolean
           event_date: string
           expired_at: string | null
           final_price_minor: number | null
@@ -159,20 +338,25 @@ export type Database = {
           max_video_bytes: number
           name: string | null
           organizer_email: string | null
+          origin: Database["public"]["Enums"]["event_origin"]
+          package_id: string | null
+          pending_purge_at: string | null
           public_token: string
-          purge_at: string
+          purge_at: string | null
           retention_months: number
-          retention_option_id: string
+          retention_option_id: string | null
           retention_surcharge_minor: number
           status: Database["public"]["Enums"]["event_status"]
           updated_at: string
-          upload_ends_at: string
-          upload_starts_at: string
+          upload_ends_at: string | null
+          upload_starts_at: string | null
         }
         Insert: {
+          activated_at?: string | null
           anonymized_at?: string | null
-          base_price_minor: number
+          base_price_minor?: number | null
           created_at?: string
+          deletion_keeps_billing?: boolean
           event_date: string
           expired_at?: string | null
           final_price_minor?: number | null
@@ -182,20 +366,25 @@ export type Database = {
           max_video_bytes?: number
           name?: string | null
           organizer_email?: string | null
+          origin?: Database["public"]["Enums"]["event_origin"]
+          package_id?: string | null
+          pending_purge_at?: string | null
           public_token?: string
-          purge_at?: string
+          purge_at?: string | null
           retention_months?: number
-          retention_option_id: string
+          retention_option_id?: string | null
           retention_surcharge_minor?: number
           status?: Database["public"]["Enums"]["event_status"]
           updated_at?: string
-          upload_ends_at: string
-          upload_starts_at: string
+          upload_ends_at?: string | null
+          upload_starts_at?: string | null
         }
         Update: {
+          activated_at?: string | null
           anonymized_at?: string | null
-          base_price_minor?: number
+          base_price_minor?: number | null
           created_at?: string
+          deletion_keeps_billing?: boolean
           event_date?: string
           expired_at?: string | null
           final_price_minor?: number | null
@@ -205,17 +394,27 @@ export type Database = {
           max_video_bytes?: number
           name?: string | null
           organizer_email?: string | null
+          origin?: Database["public"]["Enums"]["event_origin"]
+          package_id?: string | null
+          pending_purge_at?: string | null
           public_token?: string
-          purge_at?: string
+          purge_at?: string | null
           retention_months?: number
-          retention_option_id?: string
+          retention_option_id?: string | null
           retention_surcharge_minor?: number
           status?: Database["public"]["Enums"]["event_status"]
           updated_at?: string
-          upload_ends_at?: string
-          upload_starts_at?: string
+          upload_ends_at?: string | null
+          upload_starts_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "events_package_fk"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "events_retention_option_id_fkey"
             columns: ["retention_option_id"]
@@ -266,6 +465,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      legal_documents: {
+        Row: {
+          content_sha256: string
+          effective_at: string
+          kind: Database["public"]["Enums"]["legal_document_kind"]
+          version: string
+        }
+        Insert: {
+          content_sha256: string
+          effective_at: string
+          kind: Database["public"]["Enums"]["legal_document_kind"]
+          version: string
+        }
+        Update: {
+          content_sha256?: string
+          effective_at?: string
+          kind?: Database["public"]["Enums"]["legal_document_kind"]
+          version?: string
+        }
+        Relationships: []
       }
       media_items: {
         Row: {
@@ -363,6 +583,50 @@ export type Database = {
             columns: ["guest_session_id"]
             isOneToOne: false
             referencedRelation: "guest_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      packages: {
+        Row: {
+          code: string
+          id: string
+          max_files_per_guest: number
+          max_photo_bytes: number
+          max_video_bytes: number
+          name: string
+          price_minor: number
+          retention_option_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          id?: string
+          max_files_per_guest?: number
+          max_photo_bytes?: number
+          max_video_bytes?: number
+          name: string
+          price_minor?: number
+          retention_option_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          id?: string
+          max_files_per_guest?: number
+          max_photo_bytes?: number
+          max_video_bytes?: number
+          name?: string
+          price_minor?: number
+          retention_option_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "packages_retention_option_id_fkey"
+            columns: ["retention_option_id"]
+            isOneToOne: false
+            referencedRelation: "retention_options"
             referencedColumns: ["id"]
           },
         ]
@@ -469,15 +733,89 @@ export type Database = {
         }
         Relationships: []
       }
+      self_service_settings: {
+        Row: {
+          id: boolean
+          max_awaiting_events_per_organizer: number
+          updated_at: string
+        }
+        Insert: {
+          id?: boolean
+          max_awaiting_events_per_organizer?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: boolean
+          max_awaiting_events_per_organizer?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      terms_acceptances: {
+        Row: {
+          accepted_at: string
+          document_kind: Database["public"]["Enums"]["legal_document_kind"]
+          email: string | null
+          event_id: string | null
+          id: number
+          user_id: string | null
+          version: string
+        }
+        Insert: {
+          accepted_at?: string
+          document_kind: Database["public"]["Enums"]["legal_document_kind"]
+          email?: string | null
+          event_id?: string | null
+          id?: never
+          user_id?: string | null
+          version: string
+        }
+        Update: {
+          accepted_at?: string
+          document_kind?: Database["public"]["Enums"]["legal_document_kind"]
+          email?: string | null
+          event_id?: string | null
+          id?: never
+          user_id?: string | null
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "terms_acceptances_document_kind_version_fkey"
+            columns: ["document_kind", "version"]
+            isOneToOne: false
+            referencedRelation: "legal_documents"
+            referencedColumns: ["kind", "version"]
+          },
+          {
+            foreignKeyName: "terms_acceptances_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "terms_acceptances_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "organizer_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       organizer_events: {
         Row: {
+          activated_at: string | null
+          created_at: string | null
           event_date: string | null
           expired_at: string | null
           final_price_minor: number | null
           id: string | null
           name: string | null
+          origin: Database["public"]["Enums"]["event_origin"] | null
+          pending_purge_at: string | null
           purge_at: string | null
           retention_months: number | null
           status: Database["public"]["Enums"]["event_status"] | null
@@ -485,11 +823,15 @@ export type Database = {
           upload_starts_at: string | null
         }
         Insert: {
+          activated_at?: string | null
+          created_at?: string | null
           event_date?: string | null
           expired_at?: string | null
           final_price_minor?: number | null
           id?: string | null
           name?: string | null
+          origin?: Database["public"]["Enums"]["event_origin"] | null
+          pending_purge_at?: string | null
           purge_at?: string | null
           retention_months?: number | null
           status?: Database["public"]["Enums"]["event_status"] | null
@@ -497,11 +839,15 @@ export type Database = {
           upload_starts_at?: string | null
         }
         Update: {
+          activated_at?: string | null
+          created_at?: string | null
           event_date?: string | null
           expired_at?: string | null
           final_price_minor?: number | null
           id?: string | null
           name?: string | null
+          origin?: Database["public"]["Enums"]["event_origin"] | null
+          pending_purge_at?: string | null
           purge_at?: string | null
           retention_months?: number | null
           status?: Database["public"]["Enums"]["event_status"] | null
@@ -512,6 +858,17 @@ export type Database = {
       }
     }
     Functions: {
+      activate_event: {
+        Args: {
+          p_event_id: string
+          p_external_ref?: string
+          p_reason: string
+          p_source: Database["public"]["Enums"]["status_change_source"]
+        }
+        Returns: {
+          already_active: boolean
+        }[]
+      }
       admin_event_stats: {
         Args: { p_event_id?: string }
         Returns: {
@@ -521,14 +878,65 @@ export type Database = {
         }[]
       }
       admin_event_token: { Args: { p_event_id: string }; Returns: string }
+      admin_update_pending_event: {
+        Args: { p_event_date: string; p_event_id: string; p_name: string }
+        Returns: undefined
+      }
+      allow_event_write: { Args: never; Returns: undefined }
       anonymize_expired_events: { Args: { p_now?: string }; Returns: number }
+      assert_current_legal_versions: {
+        Args: { p_privacy_version: string; p_terms_version: string }
+        Returns: undefined
+      }
+      assert_event_input: {
+        Args: { p_event_date: string; p_name: string }
+        Returns: undefined
+      }
+      assert_reason: { Args: { p_reason: string }; Returns: undefined }
+      auth_mail_allowed: {
+        Args: { p_email: string; p_ip_hash: string; p_ip_limit: number }
+        Returns: boolean
+      }
+      auth_request_email: { Args: { p_request_id: string }; Returns: string }
+      auth_request_preview: {
+        Args: { p_request_id: string }
+        Returns: {
+          event_name: string
+          purpose: Database["public"]["Enums"]["auth_request_purpose"]
+        }[]
+      }
       check_rate_limit: {
         Args: { p_key: string; p_limit: number; p_window: string }
         Returns: boolean
       }
+      complete_auth_request: {
+        Args: { p_request_id: string }
+        Returns: {
+          event_id: string
+          outcome: string
+          purpose: Database["public"]["Enums"]["auth_request_purpose"]
+        }[]
+      }
       complete_event_expiry: {
         Args: { p_event_id: string }
         Returns: undefined
+      }
+      create_event_as_organizer: {
+        Args: {
+          p_event_date: string
+          p_name: string
+          p_privacy_version?: string
+          p_terms_version?: string
+        }
+        Returns: string
+      }
+      current_legal_versions: {
+        Args: never
+        Returns: {
+          effective_at: string
+          kind: Database["public"]["Enums"]["legal_document_kind"]
+          version: string
+        }[]
       }
       delete_media: {
         Args: { p_event_id: string; p_media_ids: string[] }
@@ -537,6 +945,7 @@ export type Database = {
           paths: string[]
         }[]
       }
+      enqueue_activation_notices: { Args: { p_now?: string }; Returns: number }
       enqueue_retention_notices: { Args: { p_now?: string }; Returns: number }
       event_organizer_email: { Args: { p_event_id: string }; Returns: string }
       expire_archives: { Args: never; Returns: number }
@@ -559,9 +968,11 @@ export type Database = {
       guest_open_event: {
         Args: { p_token: string }
         Returns: {
+          activated_at: string | null
           anonymized_at: string | null
-          base_price_minor: number
+          base_price_minor: number | null
           created_at: string
+          deletion_keeps_billing: boolean
           event_date: string
           expired_at: string | null
           final_price_minor: number | null
@@ -571,15 +982,18 @@ export type Database = {
           max_video_bytes: number
           name: string | null
           organizer_email: string | null
+          origin: Database["public"]["Enums"]["event_origin"]
+          package_id: string | null
+          pending_purge_at: string | null
           public_token: string
-          purge_at: string
+          purge_at: string | null
           retention_months: number
-          retention_option_id: string
+          retention_option_id: string | null
           retention_surcharge_minor: number
           status: Database["public"]["Enums"]["event_status"]
           updated_at: string
-          upload_ends_at: string
-          upload_starts_at: string
+          upload_ends_at: string | null
+          upload_starts_at: string | null
         }
         SetofOptions: {
           from: "*"
@@ -604,21 +1018,77 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       is_platform_admin_user: { Args: never; Returns: boolean }
+      new_auth_request: {
+        Args: {
+          p_email: string
+          p_event_id: string
+          p_purpose: Database["public"]["Enums"]["auth_request_purpose"]
+        }
+        Returns: string
+      }
+      organizer_event_token: { Args: { p_event_id: string }; Returns: string }
+      organizer_needs_terms: { Args: never; Returns: boolean }
       organizer_owns_active_event: {
         Args: { p_object_name: string }
         Returns: boolean
       }
+      organizer_status_history: {
+        Args: { p_event_id: string }
+        Returns: {
+          created_at: string
+          from_status: Database["public"]["Enums"]["event_status"]
+          source: Database["public"]["Enums"]["status_change_source"]
+          to_status: Database["public"]["Enums"]["event_status"]
+        }[]
+      }
+      organizer_update_event: {
+        Args: { p_event_date: string; p_event_id: string; p_name: string }
+        Returns: undefined
+      }
       orphan_organizer_user_id: { Args: { p_email: string }; Returns: string }
+      purge_auth_requests: { Args: { p_now?: string }; Returns: number }
+      purge_stale_auth_users: { Args: { p_now?: string }; Returns: number }
+      purge_unactivated_events: { Args: { p_now?: string }; Returns: number }
+      purge_unconfirmed_events: { Args: { p_now?: string }; Returns: number }
       raise_app_error: {
         Args: { p_code: string; p_detail?: Json }
         Returns: undefined
       }
       rate_limit_retry_after: { Args: { p_window: string }; Returns: number }
+      reactivate_event: {
+        Args: { p_event_id: string; p_reason: string }
+        Returns: undefined
+      }
       reconcile_deletions: { Args: never; Returns: number }
+      register_failed_code: {
+        Args: { p_request_id: string }
+        Returns: Database["public"]["Enums"]["auth_request_status"]
+      }
+      request_activation: { Args: { p_event_id: string }; Returns: string }
       request_archive: { Args: { p_event_id: string }; Returns: string }
       request_event_deletion: {
         Args: { p_confirm_name: string; p_event_id: string }
         Returns: undefined
+      }
+      request_login: {
+        Args: { p_email: string; p_ip_hash?: string; p_ip_limit?: number }
+        Returns: string
+      }
+      request_self_service_event: {
+        Args: {
+          p_email: string
+          p_event_date: string
+          p_ip_hash?: string
+          p_ip_limit?: number
+          p_name: string
+          p_privacy_version: string
+          p_terms_version: string
+        }
+        Returns: string
+      }
+      resend_auth_request: {
+        Args: { p_ip_hash?: string; p_ip_limit?: number; p_request_id: string }
+        Returns: string
       }
       reserve_upload: {
         Args: {
@@ -659,6 +1129,22 @@ export type Database = {
         Args: { p_display_name?: string; p_ip_hash: string; p_token: string }
         Returns: string
       }
+      suspend_event: {
+        Args: { p_event_id: string; p_reason: string }
+        Returns: undefined
+      }
+      transition_event: {
+        Args: {
+          p_actor?: string
+          p_event_id: string
+          p_external_ref?: string
+          p_note?: string
+          p_reason?: string
+          p_source: Database["public"]["Enums"]["status_change_source"]
+          p_to: Database["public"]["Enums"]["event_status"]
+        }
+        Returns: undefined
+      }
       update_guest_name: {
         Args: { p_display_name?: string; p_session_id: string; p_token: string }
         Returns: undefined
@@ -666,7 +1152,18 @@ export type Database = {
     }
     Enums: {
       archive_status: "pending" | "building" | "ready" | "failed" | "expired"
-      event_status: "active" | "expiring" | "expired" | "deleting"
+      auth_request_purpose: "create" | "login"
+      auth_request_status: "pending" | "used" | "invalidated"
+      event_origin: "admin" | "self_service"
+      event_status:
+        | "unconfirmed"
+        | "awaiting_activation"
+        | "active"
+        | "suspended"
+        | "expiring"
+        | "expired"
+        | "deleting"
+      legal_document_kind: "terms" | "privacy"
       media_kind: "photo" | "video"
       media_status:
         | "reserved"
@@ -676,8 +1173,9 @@ export type Database = {
         | "failed"
         | "rejected"
         | "deleting"
-      notice_threshold: "30d" | "7d" | "1d"
+      notice_threshold: "30d" | "7d" | "1d" | "activation_7d"
       retention_actor: "admin" | "organizer" | "system"
+      status_change_source: "organizer" | "admin" | "system" | "payment"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -809,7 +1307,19 @@ export const Constants = {
   public: {
     Enums: {
       archive_status: ["pending", "building", "ready", "failed", "expired"],
-      event_status: ["active", "expiring", "expired", "deleting"],
+      auth_request_purpose: ["create", "login"],
+      auth_request_status: ["pending", "used", "invalidated"],
+      event_origin: ["admin", "self_service"],
+      event_status: [
+        "unconfirmed",
+        "awaiting_activation",
+        "active",
+        "suspended",
+        "expiring",
+        "expired",
+        "deleting",
+      ],
+      legal_document_kind: ["terms", "privacy"],
       media_kind: ["photo", "video"],
       media_status: [
         "reserved",
@@ -820,8 +1330,9 @@ export const Constants = {
         "rejected",
         "deleting",
       ],
-      notice_threshold: ["30d", "7d", "1d"],
+      notice_threshold: ["30d", "7d", "1d", "activation_7d"],
       retention_actor: ["admin", "organizer", "system"],
+      status_change_source: ["organizer", "admin", "system", "payment"],
     },
   },
 } as const

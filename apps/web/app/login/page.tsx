@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { LoginForm } from "@/components/auth/LoginForm";
+import { TurnstileField } from "@/components/security/TurnstileField";
 import { t } from "@/lib/i18n";
 import { safeNextPath } from "@/lib/security/redirect";
 
@@ -20,7 +22,13 @@ export default async function LoginPage({
           {t("login.linkInvalid")}
         </p>
       )}
-      <LoginForm next={safeNextPath(params.next)} />
+      <LoginForm next={safeNextPath(params.next)} turnstile={<TurnstileField />} />
+      <p className="text-center text-sm">
+        {t("login.noAccount")}{" "}
+        <Link href="/" className="font-semibold text-brand-700 underline">
+          {t("login.createEvent")}
+        </Link>
+      </p>
     </main>
   );
 }

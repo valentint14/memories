@@ -29,16 +29,18 @@ function* files(dir: string): Generator<string> {
 }
 
 describe("bundle-ul client", () => {
-  it("nu conține cheia service role, secretul IP sau numele variabilelor secrete", { timeout: 600_000 }, () => {
+  it("nu conține cheia service role, secretul IP, secretul Turnstile sau numele variabilelor secrete", { timeout: 600_000 }, () => {
     if (!existsSync(STATIC)) execSync("npx next build", { cwd: WEB, stdio: "ignore" });
     const env = { ...loadEnv(), ...process.env };
     const needles = [
       "SUPABASE_SERVICE_ROLE_KEY",
       "IP_HASH_SECRET",
+      "TURNSTILE_SECRET_KEY",
       env.SUPABASE_SERVICE_ROLE_KEY,
       env.IP_HASH_SECRET,
+      env.TURNSTILE_SECRET_KEY,
     ].filter((n): n is string => typeof n === "string" && n.length > 0);
-    expect(needles.length).toBeGreaterThanOrEqual(2);
+    expect(needles.length).toBeGreaterThanOrEqual(3);
 
     const leaks: string[] = [];
     for (const file of files(STATIC)) {

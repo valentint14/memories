@@ -170,3 +170,22 @@ export async function createTestEvent(overrides: {
   if (!row) throw new Error("Evenimentul nu a fost creat");
   return { ...row, final_price_minor: Number(row.final_price_minor) };
 }
+
+/**
+ * Simulează activarea unui eveniment `awaiting_activation` (câmpurile comerciale + tranziția),
+ * pentru testele care nu testează activarea în sine (002; activarea reală: activate_event).
+ */
+export async function activateForTest(eventId: string): Promise<void> {
+  await sql(
+    `update public.events
+        set upload_starts_at = now(),
+            upload_ends_at = now() + interval '2 days',
+            base_price_minor = 29900,
+            retention_option_id = (select id from public.retention_options where months = 3),
+            pending_purge_at = null,
+            activated_at = now()
+      where id = $1`,
+    [eventId],
+  );
+  await sql("select public.transition_event($1, 'active', 'admin')", [eventId]);
+}

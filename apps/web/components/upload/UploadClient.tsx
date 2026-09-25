@@ -13,8 +13,17 @@ import { UploadSummary } from "./UploadSummary";
 const ACCEPT = "image/*,video/*,.heic,.heif,.mov";
 
 /** Singurul Client Component al paginii invitatului (research.md R12). */
-export function UploadClient({ token, limits }: { token: string; limits: QueueLimits }) {
-  const [name, setName] = useState("");
+export function UploadClient({
+  token,
+  limits,
+  initialName = "",
+}: {
+  token: string;
+  limits: QueueLimits;
+  /** Numele salvat în sesiunea dispozitivului, după o reîncărcare. */
+  initialName?: string;
+}) {
+  const [name, setName] = useState(initialName);
   const nameRef = useRef(name);
   nameRef.current = name;
 

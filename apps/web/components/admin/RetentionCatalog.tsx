@@ -121,7 +121,7 @@ export function RetentionCatalog({ options }: { options: CatalogRow[] }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto" tabIndex={0} role="region" aria-label={t("admin.retention")}>
         <table className="w-full min-w-[640px] border-collapse text-left">
           <thead>
             <tr className="border-b border-gray-300">

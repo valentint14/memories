@@ -3,9 +3,13 @@ import { notFound } from "next/navigation";
 import { ArchivePanel } from "@/components/gallery/ArchivePanel";
 import { GalleryGrid } from "@/components/gallery/GalleryGrid";
 import { RetentionPanel } from "@/components/retention/RetentionPanel";
+import { EventStatusPanel } from "@/components/self-service/EventStatusPanel";
+import { ManageEventSection } from "@/components/self-service/ManageEventSection";
+import { QrDownloads } from "@/components/self-service/QrDownloads";
 import { formatDate, t } from "@/lib/i18n";
+import { activationInfo } from "@/lib/organizer/activation";
 import { latestArchive } from "@/lib/organizer/archive";
-import { countReadyFiles, getOrganizerEvent, listGallery } from "@/lib/organizer/media";
+import { countReadyFiles, galleryAvailable, getOrganizerEvent, listGallery } from "@/lib/organizer/media";
 import { retentionQuote } from "@/lib/organizer/retention";
 
 export const metadata: Metadata = { title: "Galerie" };
@@ -16,7 +20,28 @@ export default async function EventGalleryPage({ params }: { params: Promise<{ e
   const event = await getOrganizerEvent(eventId);
   if (!event) notFound();
 
-  if (event.status !== "active") {
+  if (event.status === "awaiting_activation") {
+    const info = await activationInfo(eventId);
+    return (
+      <div className="flex flex-col gap-6">
+        <header className="flex flex-col gap-1">
+          <h1 className="text-2xl font-bold">{event.name}</h1>
+          <p className="text-muted">{formatDate(event.eventDate)}</p>
+          <p className="w-fit rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-900">
+            {t("status.awaiting_activation")}
+          </p>
+        </header>
+        <p role="status" className="rounded-lg bg-brand-50 p-4">
+          {t("organizer.awaitingExplain")}
+        </p>
+        <EventStatusPanel eventId={eventId} pendingPurgeAt={event.pendingPurgeAt} info={info} />
+        <QrDownloads eventId={eventId} />
+        {event.name !== null && <ManageEventSection eventId={eventId} name={event.name} eventDate={event.eventDate} canEdit />}
+      </div>
+    );
+  }
+
+  if (!galleryAvailable(event.status) || event.purgeAt === null) {
     return (
       <div className="flex flex-col gap-3">
         <h1 className="text-2xl font-bold">{event.name}</h1>
@@ -32,23 +57,34 @@ export default async function EventGalleryPage({ params }: { params: Promise<{ e
     listGallery(eventId),
     latestArchive(eventId),
     countReadyFiles(eventId),
-    retentionQuote(eventId),
+    event.status === "suspended" ? Promise.resolve([]) : retentionQuote(eventId),
   ]);
+  const suspended = event.status === "suspended";
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold">{event.name}</h1>
         <p className="text-muted">{formatDate(event.eventDate)}</p>
       </header>
+      {suspended && (
+        <p role="alert" className="rounded-lg border border-danger bg-red-50 p-4">
+          {t("organizer.suspendedExplain")}
+        </p>
+      )}
       <div className="grid gap-4 lg:grid-cols-2">
-        <RetentionPanel
-          eventId={eventId}
-          current={{ months: event.retentionMonths, finalPriceMinor: event.finalPriceMinor ?? 0, purgeAt: event.purgeAt }}
-          initialOptions={quote}
-        />
+        {!suspended && (
+          <RetentionPanel
+            eventId={eventId}
+            current={{ months: event.retentionMonths, finalPriceMinor: event.finalPriceMinor ?? 0, purgeAt: event.purgeAt }}
+            initialOptions={quote}
+          />
+        )}
         <ArchivePanel eventId={eventId} readyFiles={readyFiles} initial={archive} />
       </div>
-      <GalleryGrid eventId={eventId} initialItems={first.items} initialCursor={first.nextCursor} />
+      <GalleryGrid eventId={eventId} initialItems={first.items} initialCursor={first.nextCursor} live={!suspended} />
+      {event.name !== null && (
+        <ManageEventSection eventId={eventId} name={event.name} eventDate={event.eventDate} canEdit={!suspended} />
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
-import { createEvent, createOrganizer } from "./support/db";
+import { createEvent, createOrganizer, serviceClient } from "./support/db";
 import { gotoHydrated } from "./support/page";
 
 // US2 — invitatul încarcă poze și video de pe telefon (quickstart 4–6).
@@ -30,6 +30,26 @@ test.describe("pagina de upload a invitatului", () => {
     ]);
     await expect(page.getByRole("progressbar")).toHaveCount(4);
     await expect(page.getByRole("status").filter({ hasText: "4 fișiere încărcate" })).toBeVisible({ timeout: 60_000 });
+  });
+
+  test("numele completat după primul fișier ajunge pe toate fișierele și rămâne după reîncărcare", async ({ page }) => {
+    const event = await createEvent({ organizerEmail: await createOrganizer() });
+    await gotoHydrated(page, `/e/${event.token}`);
+    await page.getByLabel("Alege poze și video").setInputFiles([fixture("android.jpg")]);
+    await expect(page.getByRole("status").filter({ hasText: "1 fișier încărcat" })).toBeVisible({ timeout: 60_000 });
+
+    await page.getByLabel("Numele tău (opțional)").fill("Ioana");
+    await page.getByLabel("Alege poze și video").setInputFiles([fixture("corrupt.jpg")]);
+    await expect(page.getByRole("status").filter({ hasText: "2 fișiere încărcate" })).toBeVisible({ timeout: 60_000 });
+    await expect
+      .poll(async () => {
+        const { data } = await serviceClient().from("media_items").select("guest_name").eq("event_id", event.id);
+        return (data ?? []).map((r) => r.guest_name);
+      })
+      .toEqual(["Ioana", "Ioana"]);
+
+    await gotoHydrated(page, `/e/${event.token}`);
+    await expect(page.getByLabel("Numele tău (opțional)")).toHaveValue("Ioana");
   });
 
   test("butonul de cameră deschide captura foto (FR-013)", async ({ page }) => {

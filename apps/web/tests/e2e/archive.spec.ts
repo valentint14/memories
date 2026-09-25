@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 import { loginWithMagicLink } from "./support/auth";
 import { createEvent, createOrganizer, serviceClient, uploadAsGuest, waitForProcessed } from "./support/db";
-import { uniqueName } from "./support/page";
+import { gotoHydrated, uniqueName } from "./support/page";
 
 // US4 — descărcarea fișierelor (quickstart 14). Necesită worker-ul.
 test.describe.configure({ mode: "serial" });
@@ -59,7 +59,7 @@ test.afterAll(async () => {
 });
 
 test("descarcă un fișier la calitatea originală (FR-029)", async () => {
-  await page.goto(`/events/${eventId}`);
+  await gotoHydrated(page, `/events/${eventId}`);
   await page.getByRole("row").first().click();
   // Se verifică răspunsul linkului semnat, nu evenimentul de download al browserului: WebKit pe
   // Linux (emulare iPhone) nu emite evenimentul pentru un link cross-origin cu `attachment`.
@@ -75,7 +75,7 @@ test("descarcă un fișier la calitatea originală (FR-029)", async () => {
 });
 
 test("pregătește arhiva, anunță când e gata și o descarcă (FR-030, SC-010)", async () => {
-  await page.goto(`/events/${eventId}`);
+  await gotoHydrated(page, `/events/${eventId}`);
   await page.getByRole("button", { name: "Descarcă tot" }).click();
   await expect(page.getByText("Se pregătește arhiva")).toBeVisible();
 

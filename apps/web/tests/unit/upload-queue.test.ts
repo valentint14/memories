@@ -14,7 +14,7 @@ interface FakeTransfer extends Transfer {
   aborts: number;
 }
 
-function setup(overrides: Partial<QueueDeps> = {}) {
+function setup(overrides: Partial<QueueDeps> = {}, getName: () => string = () => "") {
   const transfers: FakeTransfer[] = [];
   let n = 0;
   const reserve = vi.fn<QueueDeps["reserve"]>((_file, replace) => {
@@ -50,7 +50,7 @@ function setup(overrides: Partial<QueueDeps> = {}) {
     formatBytes: (b) => `${String(b)} B`,
     ...overrides,
   };
-  const queue = new UploadQueue(deps, { maxPhotoBytes: 1000, maxVideoBytes: 5000 }, () => "");
+  const queue = new UploadQueue(deps, { maxPhotoBytes: 1000, maxVideoBytes: 5000 }, getName);
   return { queue, transfers, reserve };
 }
 
@@ -131,5 +131,21 @@ describe("mimeOf", () => {
     expect(mimeOf({ name: "IMG_0001.HEIC", type: "" })).toBe("image/heic");
     expect(mimeOf({ name: "clip.mov", type: "" })).toBe("video/quicktime");
     expect(mimeOf({ name: "x.pdf", type: "application/pdf" })).toBeNull();
+  });
+});
+
+describe("UploadQueue — numele invitatului", () => {
+  it("trimite numele completat sau schimbat după primul fișier", async () => {
+    let name = "";
+    const startSession = vi.fn<QueueDeps["startSession"]>(() => Promise.resolve({ ok: true as const, data: {} }));
+    const { queue } = setup({ startSession }, () => name);
+    queue.add([file("a.jpg", 100)]);
+    await flush();
+    name = "Ana";
+    queue.add([file("b.jpg", 100)]);
+    await flush();
+    queue.add([file("c.jpg", 100)]);
+    await flush();
+    expect(startSession.mock.calls).toEqual([[""], ["Ana"]]);
   });
 });

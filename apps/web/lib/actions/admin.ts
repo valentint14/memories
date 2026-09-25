@@ -7,6 +7,7 @@ import { requireAdmin } from "../admin/guard";
 import { adminSupabase } from "../supabase/admin";
 import { serverEnv } from "../server-env";
 import { eventInputSchema, type EventData, type EventInput } from "../validation/event";
+import { eventBasicsSchema } from "../validation/self-service";
 import { ActionError, runAction, throwIfDbError, type ActionResult } from "./result";
 
 /** Creează utilizatorul Auth al organizatorului, dacă nu există (research.md R4). */
@@ -60,7 +61,8 @@ export async function createEvent(input: EventInput): Promise<ActionResult<Saved
       eventId: row.id,
       uploadUrl: await uploadUrlOf(row.id),
       finalPriceMinor: row.final_price_minor ?? 0,
-      purgeAt: row.purge_at,
+      // Evenimentele create de administrator sunt active, deci au mereu data ștergerii.
+      purgeAt: row.purge_at ?? "",
     };
   });
 }
@@ -85,7 +87,8 @@ export async function updateEvent(eventId: string, input: EventInput): Promise<A
       eventId: row.id,
       uploadUrl: await uploadUrlOf(row.id),
       finalPriceMinor: row.final_price_minor ?? 0,
-      purgeAt: row.purge_at,
+      // Evenimentele create de administrator sunt active, deci au mereu data ștergerii.
+      purgeAt: row.purge_at ?? "",
     };
   });
 }
@@ -142,5 +145,104 @@ export async function deleteEvent(eventId: string, confirmName: string): Promise
     throwIfDbError(error);
     revalidatePath("/admin/events");
     return { status: "deleting" as const };
+  });
+}
+
+const reasonSchema = z.string().trim().min(1, "validation.reason").max(500, "validation.reason");
+const stateActionSchema = z.object({ eventId: z.uuid(), reason: reasonSchema });
+
+function revalidateEvent(eventId: string): void {
+  revalidatePath("/admin/events");
+  revalidatePath(`/admin/events/${eventId}`);
+}
+
+/** Activarea pachetului complet (002: FR-025, FR-028); aceeași funcție SQL o va folosi plata online. */
+export async function activateEvent(input: { eventId: string; reason: string }): Promise<ActionResult<{ alreadyActive: boolean }>> {
+  return runAction(stateActionSchema, input, async ({ eventId, reason }) => {
+    const supabase = await requireAdmin();
+    const { data, error } = await supabase.rpc("activate_event", { p_event_id: eventId, p_source: "admin", p_reason: reason });
+    throwIfDbError(error);
+    revalidateEvent(eventId);
+    return { alreadyActive: data?.[0]?.already_active ?? false };
+  });
+}
+
+export async function suspendEvent(input: { eventId: string; reason: string }): Promise<ActionResult<null>> {
+  return runAction(stateActionSchema, input, async ({ eventId, reason }) => {
+    const supabase = await requireAdmin();
+    const { error } = await supabase.rpc("suspend_event", { p_event_id: eventId, p_reason: reason });
+    throwIfDbError(error);
+    revalidateEvent(eventId);
+    return null;
+  });
+}
+
+export async function reactivateEvent(input: { eventId: string; reason: string }): Promise<ActionResult<null>> {
+  return runAction(stateActionSchema, input, async ({ eventId, reason }) => {
+    const supabase = await requireAdmin();
+    const { error } = await supabase.rpc("reactivate_event", { p_event_id: eventId, p_reason: reason });
+    throwIfDbError(error);
+    revalidateEvent(eventId);
+    return null;
+  });
+}
+
+/** Numele și data unui eveniment neactivat (002: FR-028). */
+export async function updatePendingEvent(input: { eventId: string; name: string; eventDate: string }): Promise<ActionResult<null>> {
+  return runAction(
+    eventBasicsSchema(new Date()).extend({ eventId: z.uuid() }),
+    input,
+    async ({ eventId, name, eventDate }) => {
+      const supabase = await requireAdmin();
+      const { error } = await supabase.rpc("admin_update_pending_event", { p_event_id: eventId, p_name: name, p_event_date: eventDate });
+      throwIfDbError(error);
+      revalidateEvent(eventId);
+      return null;
+    },
+  );
+}
+
+const MB = 1024 * 1024;
+
+const packageSchema = z.object({
+  priceLei: z.coerce.number("validation.price").min(0, "validation.price").max(1_000_000, "validation.price"),
+  maxFilesPerGuest: z.coerce.number("validation.maxFiles").int("validation.maxFiles").min(1, "validation.maxFiles").max(1000, "validation.maxFiles"),
+  maxPhotoMb: z.coerce.number("validation.maxPhotoMb").positive("validation.maxPhotoMb").max(50, "validation.maxPhotoMb"),
+  maxVideoMb: z.coerce.number("validation.maxVideoMb").positive("validation.maxVideoMb").max(1024, "validation.maxVideoMb"),
+  retentionOptionId: z.uuid("validation.option"),
+  maxAwaitingEventsPerOrganizer: z.coerce
+    .number("validation.maxAwaiting")
+    .int("validation.maxAwaiting")
+    .min(1, "validation.maxAwaiting")
+    .max(20, "validation.maxAwaiting"),
+});
+
+export type PackageInput = z.input<typeof packageSchema>;
+
+/**
+ * Pachetul complet și setările self-service, fără modificări de cod (002: FR-015). Se aplică doar
+ * evenimentelor activate ulterior; cele active își păstrează valorile (FR-016).
+ */
+export async function updatePackage(input: PackageInput): Promise<ActionResult<null>> {
+  return runAction(packageSchema, input, async (data) => {
+    const supabase = await requireAdmin();
+    const pkg = await supabase
+      .from("packages")
+      .update({
+        price_minor: leiToMinor(data.priceLei),
+        max_files_per_guest: data.maxFilesPerGuest,
+        max_photo_bytes: Math.round(data.maxPhotoMb * MB),
+        max_video_bytes: Math.round(data.maxVideoMb * MB),
+        retention_option_id: data.retentionOptionId,
+      })
+      .eq("code", "complete");
+    throwIfDbError(pkg.error);
+    const settings = await supabase
+      .from("self_service_settings")
+      .update({ max_awaiting_events_per_organizer: data.maxAwaitingEventsPerOrganizer })
+      .eq("id", true);
+    throwIfDbError(settings.error);
+    revalidatePath("/admin/package");
+    return null;
   });
 }

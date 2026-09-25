@@ -1,3 +1,6 @@
+import { adminActivationNotice } from "./admin-activation-notice.ts";
+import { authEmail } from "./auth-email.ts";
+import { authRotate } from "./auth-rotate.ts";
 import { buildArchive } from "./build-archive.ts";
 import { deleteArchive } from "./delete-archive.ts";
 import { deleteOrganizerUser } from "./delete-organizer-user.ts";
@@ -18,4 +21,7 @@ export const registry: Registry = {
   expire_event: expireEvent,
   delete_organizer_user: deleteOrganizerUser,
   retention_notice: retentionNotice,
+  auth_email: authEmail,
+  auth_rotate: authRotate,
+  admin_activation_notice: adminActivationNotice,
 };
