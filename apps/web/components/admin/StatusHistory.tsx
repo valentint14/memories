@@ -5,7 +5,7 @@ import { formatDateTime, t, type MessageKey } from "@/lib/i18n";
 export function StatusHistory({ rows }: { rows: StatusChangeRow[] }) {
   if (rows.length === 0) return <p className="text-muted">{t("admin.statusHistory.empty")}</p>;
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto" tabIndex={0} role="region" aria-label={t("admin.statusHistory.title")}>
       <table className="w-full min-w-[720px] border-collapse text-left">
         <caption className="sr-only">{t("admin.statusHistory.title")}</caption>
         <thead>

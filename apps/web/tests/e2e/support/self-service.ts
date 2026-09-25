@@ -1,5 +1,6 @@
-import { expect, type Page } from "@playwright/test";
-import { serviceClient } from "./db";
+import { expect, test, type Browser, type Page } from "@playwright/test";
+import { loginWithMagicLink } from "./auth";
+import { createOrganizer, serviceClient } from "./db";
 import { waitForEmail } from "./mailpit";
 import { gotoHydrated } from "./page";
 
@@ -21,7 +22,8 @@ export async function submitCreateForm(page: Page, input: { email: string; name:
 
 /** Codul de 6 cifre din ultimul email trimis adresei după `since`. */
 export async function codeFromEmail(email: string, since: Date): Promise<{ code: string; link: string }> {
-  const message = await waitForEmail(email, { since });
+  // Doar emailurile cu cod (confirmare sau autentificare); administratorii primesc și alte emailuri.
+  const message = await waitForEmail(email, { since, subjectIncludes: "Memories" });
   const code = /\b(\d{6})\b/.exec(message.Subject)?.[1];
   const link = /(https?:\/\/\S+\/auth\/confirm\?\S+)/.exec(message.Text)?.[1];
   if (code === undefined || link === undefined) throw new Error("Emailul nu conține codul și linkul");
@@ -43,4 +45,22 @@ export async function failedAttempts(page: Page): Promise<number> {
   const requestId = new URL(page.url()).searchParams.get("request") ?? "";
   const { data } = await serviceClient().from("auth_requests").select("failed_attempts").eq("id", requestId).maybeSingle();
   return data?.failed_attempts ?? -1;
+}
+
+/** Un eveniment în așteptarea activării, creat din contul unui organizator nou (context separat). */
+export async function createAwaitingEvent(browser: Browser, name: string): Promise<string> {
+  const context = await browser.newContext(test.info().project.use);
+  const organizer = await context.newPage();
+  try {
+    await loginWithMagicLink(organizer, await createOrganizer());
+    await gotoHydrated(organizer, "/events/new");
+    await organizer.getByLabel("Numele evenimentului").fill(name);
+    await organizer.getByLabel("Data evenimentului").fill(futureDate(20));
+    await organizer.getByRole("checkbox", { name: /Accept termenii/ }).check();
+    await organizer.getByRole("button", { name: "Creează evenimentul" }).click();
+    await expect(organizer).toHaveURL(/\/events\/[0-9a-f-]{36}$/);
+    return organizer.url().split("/").pop() ?? "";
+  } finally {
+    await context.close();
+  }
 }

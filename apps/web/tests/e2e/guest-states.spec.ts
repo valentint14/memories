@@ -1,10 +1,9 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { expect, test, type Browser } from "@playwright/test";
-import { loginWithMagicLink } from "./support/auth";
+import { expect, test } from "@playwright/test";
 import { createEvent, createOrganizer, randomEmail, serviceClient } from "./support/db";
 import { gotoHydrated, uniqueName } from "./support/page";
-import { futureDate } from "./support/self-service";
+import { createAwaitingEvent, futureDate } from "./support/self-service";
 
 // US6 — invitatul primește un mesaj clar când nu poate încărca (002: FR-031, FR-032).
 const photo = {
@@ -18,27 +17,9 @@ async function tokenOf(eventId: string): Promise<string> {
   return data?.public_token ?? "";
 }
 
-/** Un eveniment în așteptarea activării, creat din contul unui organizator nou. */
-async function awaitingEvent(browser: Browser, name: string): Promise<string> {
-  const organizerContext = await browser.newContext(test.info().project.use);
-  const organizer = await organizerContext.newPage();
-  try {
-    await loginWithMagicLink(organizer, await createOrganizer());
-    await gotoHydrated(organizer, "/events/new");
-    await organizer.getByLabel("Numele evenimentului").fill(name);
-    await organizer.getByLabel("Data evenimentului").fill(futureDate(20));
-    await organizer.getByRole("checkbox", { name: /Accept termenii/ }).check();
-    await organizer.getByRole("button", { name: "Creează evenimentul" }).click();
-    await expect(organizer).toHaveURL(/\/events\/[0-9a-f-]{36}$/);
-    return organizer.url().split("/").pop() ?? "";
-  } finally {
-    await organizerContext.close();
-  }
-}
-
 test("evenimentul neactivat: numele și mesajul, fără formular de upload", async ({ page, browser }) => {
   const name = uniqueName("Botez neactivat");
-  const eventId = await awaitingEvent(browser, name);
+  const eventId = await createAwaitingEvent(browser, name);
   await gotoHydrated(page, `/e/${await tokenOf(eventId)}`);
   await expect(page.getByRole("heading", { name })).toBeVisible();
   await expect(page.getByRole("status").filter({ hasText: "nu este încă deschisă" })).toBeVisible();

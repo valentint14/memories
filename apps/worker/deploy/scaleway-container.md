@@ -25,7 +25,8 @@ Aceleași chei ca în [`apps/worker/.env.example`](../.env.example):
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | proiectul Supabase de producție |
 | `S3_ENDPOINT`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | chei S3 ale Supabase Storage (Settings › Storage › S3) |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | Resend, regiunea `eu-west-1` (`smtp.resend.com:465`) |
-| `APP_URL` | URL-ul public al aplicației (linkurile din emailurile de avertizare) |
+| `APP_URL` | URL-ul public al aplicației (linkurile din emailurile de avertizare și de autentificare) |
+| `ADMIN_NOTIFY_EMAILS` | destinatarii cererilor de activare (002), separați prin virgulă; gol = adresele din `platform_admins` |
 | `SENTRY_DSN` | proiect Sentry în regiunea de date UE |
 | `WORKER_CONCURRENCY` | `3` (implicit) |
 

@@ -150,7 +150,7 @@ export default async function AdminEventPage({ params }: { params: Promise<{ eve
         <h2 id="history-title" className="text-lg font-semibold">
           {t("admin.history.title")}
         </h2>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" tabIndex={0} role="region" aria-label={t("admin.history.title")}>
           <table className="w-full min-w-[640px] border-collapse text-left">
             <thead>
               <tr className="border-b border-gray-300">

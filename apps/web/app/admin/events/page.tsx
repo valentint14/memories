@@ -70,8 +70,8 @@ export default async function AdminEventsPage({
       {events.length === 0 ? (
         <p className="text-muted">{t("admin.noEvents")}</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[1040px] border-collapse text-left">
+        <div className="overflow-x-auto" tabIndex={0} role="region" aria-label={t("admin.events")}>
+          <table className="w-full min-w-[1120px] border-collapse text-left">
             <caption className="sr-only">{t("admin.events")}</caption>
             <thead>
               <tr className="border-b border-gray-300">
@@ -83,6 +83,7 @@ export default async function AdminEventsPage({
                 <th scope="col" className="p-2">{t("admin.col.activationRequest")}</th>
                 <th scope="col" className="p-2">{t("admin.col.files")}</th>
                 <th scope="col" className="p-2">{t("admin.col.price")}</th>
+                <th scope="col" className="p-2">{t("admin.col.retention")}</th>
                 <th scope="col" className="p-2">{t("admin.col.purgeAt")}</th>
               </tr>
             </thead>
@@ -110,6 +111,7 @@ export default async function AdminEventsPage({
                       {activated ? `${tp("plural.files", e.fileCount)} · ${formatBytes(e.totalBytes)}` : t("admin.noDate")}
                     </td>
                     <td className="p-2">{activated ? formatMoney(e.finalPriceMinor) : t("admin.noDate")}</td>
+                    <td className="p-2">{activated ? tp("plural.months", e.retentionMonths) : t("admin.noDate")}</td>
                     <td className="p-2">
                       {e.purgeAt !== null
                         ? formatDate(e.purgeAt)

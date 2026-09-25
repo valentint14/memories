@@ -298,14 +298,14 @@ noi încep de la `supabase/migrations/20261001000100_*.sql`. Mesajele din coadă
 
 ## Phase 10: Polish & Cross-Cutting Concerns
 
-- [ ] T098 [P] Accesibilitate: extinde `apps/web/tests/e2e/a11y.spec.ts` cu `/`, `/auth/code`, `/auth/confirm`, `/terms`, `/privacy`, `/events/new`, panoul de stare, `/admin/package` și `/admin/events/[id]` (acțiuni + istoric); 0 încălcări WCAG 2.2 AA în cele trei proiecte
-- [ ] T099 [P] Performanță: test LCP pentru `/` pe profilul mobil throttled, în `apps/web/tests/e2e/lcp.spec.ts` (< 2,5 s), cu Turnstile încărcat `async` și fără efect asupra LCP
-- [ ] T100 [P] Test e2e de tip smoke `apps/web/tests/e2e/turnstile-widget.spec.ts`, în proiectul `turnstile-smoke` (portul 3003, fără `TURNSTILE_OFFLINE`, desktop Chromium): scriptul real de pe `challenges.cloudflare.com` se încarcă cu nonce-ul CSP, fără încălcări CSP în consolă, iar widgetul produce un token acceptat de server (evenimentul se creează)
-- [ ] T101 [P] Test unitar `apps/web/tests/unit/no-secrets-in-client.test.ts` (extinde): `TURNSTILE_SECRET_KEY` nu apare în bundle-ul client
-- [ ] T102 [P] Documentație: `README.md` (variabilele noi, Cloudflare în lista de procesatori cu DPA, fluxul de autentificare cu cod), `apps/worker/deploy/scaleway-container.md` (`ADMIN_NOTIFY_EMAILS`) și nota de informare de pe pagina invitatului, dacă menționează procesatorii
-- [ ] T103 Actualizează `.github/workflows/ci.yml` dacă e nevoie (cheile de test Turnstile vin din `scripts/ci-env.mjs`, T001) și rulează toată suita local: `pnpm lint`, `pnpm typecheck`, `pnpm test:unit`, `pnpm test:db`, testele worker în imaginea Docker, `pnpm test:e2e`
+- [X] T098 [P] Accesibilitate: extinde `apps/web/tests/e2e/a11y.spec.ts` cu `/`, `/auth/code`, `/auth/confirm`, `/terms`, `/privacy`, `/events/new`, panoul de stare, `/admin/package` și `/admin/events/[id]` (acțiuni + istoric); 0 încălcări WCAG 2.2 AA în cele trei proiecte
+- [X] T099 [P] Performanță: test LCP pentru `/` pe profilul mobil throttled, în `apps/web/tests/e2e/lcp.spec.ts` (< 2,5 s), cu Turnstile încărcat `async` și fără efect asupra LCP
+- [X] T100 [P] Test e2e de tip smoke `apps/web/tests/e2e/turnstile-widget.spec.ts`, în proiectul `turnstile-smoke` (portul 3003, fără `TURNSTILE_OFFLINE`, desktop Chromium): scriptul real de pe `challenges.cloudflare.com` se încarcă cu nonce-ul CSP, fără încălcări CSP în consolă, iar widgetul produce un token acceptat de server (evenimentul se creează)
+- [X] T101 [P] Test unitar `apps/web/tests/unit/no-secrets-in-client.test.ts` (extinde): `TURNSTILE_SECRET_KEY` nu apare în bundle-ul client
+- [X] T102 [P] Documentație: `README.md` (variabilele noi, Cloudflare în lista de procesatori cu DPA, fluxul de autentificare cu cod), `apps/worker/deploy/scaleway-container.md` (`ADMIN_NOTIFY_EMAILS`) și nota de informare de pe pagina invitatului, dacă menționează procesatorii
+- [X] T103 Actualizează `.github/workflows/ci.yml` dacă e nevoie (cheile de test Turnstile vin din `scripts/ci-env.mjs`, T001) și rulează toată suita local: `pnpm lint`, `pnpm typecheck`, `pnpm test:unit`, `pnpm test:db`, testele worker în imaginea Docker, `pnpm test:e2e`
 - [ ] T104 Validare manuală: toate cele 17 scenarii din `specs/002-self-service-events/quickstart.md`; pe preview, SC-008 (Gmail, Outlook, Yahoo), o singură dată, conform regulii de a limita testele cu email real
-- [ ] T105 Raportul de implementare `specs/002-self-service-events/raport-implementare.md`, conform constituției v1.2.0 (ce, cum, verificare cu cifre, limitări și pași următori)
+- [X] T105 Raportul de implementare `specs/002-self-service-events/raport-implementare.md`, conform constituției v1.2.0 (ce, cum, verificare cu cifre, limitări și pași următori)
 
 ---
 

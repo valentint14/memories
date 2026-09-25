@@ -1,12 +1,15 @@
 # Memories
 
-Pozele și filmările invitaților de la un eveniment privat, într-un singur loc: administratorul
-creează evenimentul și codul QR, invitații încarcă din browser (fără cont), iar organizatorul
-vede, descarcă și șterge fișierele. Fișierele se șterg automat la sfârșitul perioadei de
+Pozele și filmările invitaților de la un eveniment privat, într-un singur loc: organizatorul își
+creează singur evenimentul (sau îl creează administratorul) și descarcă codul QR, administratorul
+activează pachetul complet, invitații încarcă din browser (fără cont), iar organizatorul vede,
+descarcă și șterge fișierele. Fișierele se șterg automat la sfârșitul perioadei de
 păstrare alese, care influențează prețul final.
 
-Specificația, planul și deciziile tehnice: [`specs/001-event-qr-upload/`](specs/001-event-qr-upload/)
-(spec, plan, research, data-model, contracte, quickstart, tasks).
+Specificațiile, planurile și deciziile tehnice: [`specs/001-event-qr-upload/`](specs/001-event-qr-upload/)
+(bucla de bază) și [`specs/002-self-service-events/`](specs/002-self-service-events/) (crearea
+self-service, activarea, autentificarea cu cod) — spec, plan, research, data-model, contracte,
+quickstart, tasks.
 
 ## Structură
 
@@ -33,9 +36,20 @@ pnpm --filter web dev                           # http://localhost:3000
 ```
 
 Worker-ul rulează în Docker: `pnpm --filter worker docker:run` folosește `apps/worker/.env.docker`
-(generat de `ci-env`, cu Supabase local accesat prin `host.docker.internal`). Emailurile locale (autentificare, avertizări) apar în Mailpit:
-<http://localhost:54324>. Utilizatorii din seed: `admin@example.test` (înrolează TOTP la prima
-autentificare), `org-a@example.test`, `org-b@example.test`.
+(generat de `ci-env`, cu Supabase local accesat prin `host.docker.internal`). Worker-ul trimite și
+emailurile de confirmare și de autentificare (cod de 6 cifre + link), deci trebuie să ruleze pentru
+orice autentificare. Emailurile locale apar în Mailpit: <http://localhost:54324>. Utilizatorii din
+seed: `admin@example.test` (înrolează TOTP la prima autentificare), `org-a@example.test`,
+`org-b@example.test`.
+
+Autentificarea (organizatori și administratori) se face cu codul sau linkul din email, fără parolă;
+linkul deschide o pagină cu buton „Confirmă”. Oricine își poate crea un eveniment de pe pagina
+principală (`/`); evenimentul așteaptă activarea pachetului complet de către administrator
+([specificația 002](specs/002-self-service-events/spec.md)).
+
+Verificarea anti-bot folosește Cloudflare Turnstile. `ci-env` scrie cheile de test Cloudflare și
+`TURNSTILE_OFFLINE=1` (fără scriptul extern, verificare emulată local, permisă doar cu cheile de
+test); `supabase/.env` conține secretul de test pentru CAPTCHA-ul Supabase Auth.
 
 ## Verificări (identice cu CI)
 
@@ -49,7 +63,10 @@ pnpm test:e2e                                   # Playwright: desktop, Android, 
 
 Testele media ale worker-ului rulează în imaginea Docker (au nevoie de `heif-dec` și ffmpeg).
 Scenariile manuale și cele de performanță sunt descrise în
-[`quickstart.md`](specs/001-event-qr-upload/quickstart.md).
+[`quickstart 001`](specs/001-event-qr-upload/quickstart.md) și
+[`quickstart 002`](specs/002-self-service-events/quickstart.md) (inclusiv configurarea DNS pentru
+email și a Turnstile în producție). Testul widgetului Turnstile real rulează în CI sau cu
+`E2E_TURNSTILE_SMOKE=1` (are nevoie de internet).
 
 ## Medii
 
@@ -68,6 +85,8 @@ este necesar un acord de prelucrare a datelor (DPA) înainte de producție (rese
 - **Supabase** — baza de date, autentificarea și stocarea fișierelor (`eu-central-1`)
 - **Resend** — trimiterea emailurilor (`eu-west-1`)
 - **Sentry** — raportarea erorilor, fără date personale (regiunea de date UE)
+- **Cloudflare** — verificarea anti-bot Turnstile pe formularele de creare și de autentificare
+  (adresa IP și semnale ale browserului, fără cookie-uri și fără stocarea datelor aplicației)
 
 Backup-urile bazei de date se păstrează 7 zile; ștergerea completă a datelor unei persoane are
 loc în cel mult 7 zile de la ștergerea din aplicație ([`supabase/README.md`](supabase/README.md)).

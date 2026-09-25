@@ -1,9 +1,10 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { TOTP } from "otpauth";
-import { loginWithMagicLink } from "./support/auth";
-import { createAdmin, createEvent, createOrganizer, uploadAsGuest, waitForProcessed } from "./support/db";
+import { loginAsNewAdmin, loginWithMagicLink } from "./support/auth";
+import { createAdmin, createEvent, createOrganizer, randomEmail, serviceClient, uploadAsGuest, waitForProcessed } from "./support/db";
 import { gotoHydrated, uniqueName, waitForHydration } from "./support/page";
+import { codeFromEmail, createAwaitingEvent, futureDate, submitCreateForm } from "./support/self-service";
 
 // FR-037: WCAG 2.2 nivel AA pe toate ecranele (constituția, principiul VIII).
 const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
@@ -94,4 +95,70 @@ test("zona de administrare", async ({ page }) => {
 
   await gotoHydrated(page, "/admin/retention");
   await expectAccessible(page, "/admin/retention");
+});
+
+// 002 — ecranele noi (FR-042).
+test.describe("002: creare self-service, confirmare, documente legale", () => {
+  test("pagina principală, erorile, pagina de cod, confirmarea și documentele legale", async ({ page }) => {
+    await gotoHydrated(page, "/");
+    await expectAccessible(page, "/");
+    await page.getByRole("button", { name: "Creează evenimentul" }).click();
+    await expect(page.getByText("Trebuie să accepți termenii")).toBeVisible();
+    await expectAccessible(page, "/ cu erori");
+
+    const email = randomEmail("a11y-ss");
+    const since = new Date();
+    await submitCreateForm(page, { email, name: uniqueName("A11y") });
+    await expectAccessible(page, "/auth/code");
+    const { link } = await codeFromEmail(email, since);
+    await gotoHydrated(page, link);
+    await expectAccessible(page, "/auth/confirm");
+
+    for (const path of ["/terms", "/privacy"]) {
+      await gotoHydrated(page, path);
+      await expectAccessible(page, path);
+    }
+  });
+
+  test("pagina invitatului pentru evenimente neactivate și suspendate", async ({ page }) => {
+    const event = await createEvent({ organizerEmail: await createOrganizer(), name: uniqueName("A11y suspendat") });
+    await serviceClient().rpc("transition_event", { p_event_id: event.id, p_to: "suspended", p_source: "admin", p_reason: "a11y" });
+    await gotoHydrated(page, `/e/${event.token}`);
+    await expectAccessible(page, "invitat — suspendat");
+  });
+
+  test("organizatorul: eveniment nou, panoul de activare, editare și ștergere", async ({ page }) => {
+    await loginWithMagicLink(page, await createOrganizer());
+    await gotoHydrated(page, "/events/new");
+    await expectAccessible(page, "/events/new");
+    await page.getByLabel("Numele evenimentului").fill(uniqueName("A11y neactivat"));
+    await page.getByLabel("Data evenimentului").fill(futureDate(20));
+    await page.getByRole("checkbox", { name: /Accept termenii/ }).check();
+    await page.getByRole("button", { name: "Creează evenimentul" }).click();
+    await expect(page).toHaveURL(/\/events\/[0-9a-f-]{36}$/);
+    await expectAccessible(page, "eveniment neactivat");
+
+    await page.getByRole("button", { name: "Solicită activarea" }).click();
+    await expect(page.getByRole("status").filter({ hasText: "Cerere trimisă" })).toBeVisible();
+    await expectAccessible(page, "cerere de activare trimisă");
+
+    await page.getByRole("button", { name: "Șterge evenimentul" }).click();
+    await expect(page.getByRole("alertdialog")).toBeVisible();
+    await expectAccessible(page, "dialog ștergere organizator");
+  });
+
+  test("administrarea: pachetul, lista filtrată și acțiunile de stare", async ({ page, browser }) => {
+    const eventId = await createAwaitingEvent(browser, uniqueName("A11y admin"));
+
+    await loginAsNewAdmin(page, await createAdmin());
+    await gotoHydrated(page, "/admin/package");
+    await expectAccessible(page, "/admin/package");
+    await gotoHydrated(page, "/admin/events?origin=self_service");
+    await expectAccessible(page, "/admin/events filtrat");
+    await gotoHydrated(page, `/admin/events/${eventId}`);
+    await expectAccessible(page, "eveniment neactivat (admin)");
+    await page.getByRole("button", { name: "Activează pachetul complet" }).click();
+    await expect(page.getByRole("alertdialog")).toBeVisible();
+    await expectAccessible(page, "dialog activare");
+  });
 });
