@@ -175,3 +175,26 @@ export async function requestActivation(eventId: string): Promise<ActionResult<{
     return { requestedAt: data ?? new Date().toISOString() };
   });
 }
+
+/** Numele și data evenimentului propriu (002: FR-033, FR-034); linkul și codul QR rămân aceleași. */
+export async function updateOwnEvent(input: { eventId: string; name: string; eventDate: string }): Promise<ActionResult<null>> {
+  return runAction(eventBasicsSchema(new Date()).extend({ eventId: z.uuid() }), input, async ({ eventId, name, eventDate }) => {
+    const supabase = await serverSupabase();
+    const { error } = await supabase.rpc("organizer_update_event", { p_event_id: eventId, p_name: name, p_event_date: eventDate });
+    throwIfDbError(error);
+    revalidatePath("/events");
+    revalidatePath(`/events/${eventId}`);
+    return null;
+  });
+}
+
+/** Ștergerea definitivă a evenimentului propriu, confirmată prin nume (002: FR-035). */
+export async function deleteOwnEvent(input: { eventId: string; confirmName: string }): Promise<ActionResult<null>> {
+  return runAction(z.object({ eventId: z.uuid(), confirmName: z.string().max(200) }), input, async ({ eventId, confirmName }) => {
+    const supabase = await serverSupabase();
+    const { error } = await supabase.rpc("request_event_deletion", { p_event_id: eventId, p_confirm_name: confirmName });
+    throwIfDbError(error);
+    revalidatePath("/events");
+    return null;
+  });
+}

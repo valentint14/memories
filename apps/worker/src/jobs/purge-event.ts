@@ -4,13 +4,14 @@ import { purgePrefix } from "../storage/purge-prefix.ts";
 import type { JobHandler } from "./types.ts";
 
 /**
- * Ștergerea definitivă a unui eveniment (FR-006b): golește prefixele din Storage, șterge
+ * Ștergerea definitivă a unui eveniment (001/FR-006b): golește prefixele din Storage, șterge
  * rândurile în cascadă și, dacă organizatorul nu mai are evenimente, cere ștergerea contului.
+ * Ștergerea cerută de organizator a unui eveniment activat păstrează rândul de facturare (002/FR-035).
  */
 export const purgeEvent: JobHandler<{ type: "purge_event"; event_id: string }> = {
   async run({ event_id: eventId }) {
-    const [event] = await query<{ status: string; organizer_email: string | null }>(
-      "select status, organizer_email from public.events where id = $1",
+    const [event] = await query<{ status: string; organizer_email: string | null; deletion_keeps_billing: boolean }>(
+      "select status, organizer_email, deletion_keeps_billing from public.events where id = $1",
       [eventId],
     );
     // Rândul lipsește: o rulare anterioară a terminat deja (idempotent).
@@ -21,6 +22,10 @@ export const purgeEvent: JobHandler<{ type: "purge_event"; event_id: string }> =
     if (event.status !== "deleting") return;
 
     await purgePrefix(eventId, ["incoming", "media", "archives"]);
+    if (event.deletion_keeps_billing) {
+      await query("select public.complete_event_expiry($1)", [eventId]);
+      return;
+    }
     await query("delete from public.events where id = $1", [eventId]);
 
     if (event.organizer_email !== null) {

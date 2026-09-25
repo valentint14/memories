@@ -278,19 +278,19 @@ noi încep de la `supabase/migrations/20261001000100_*.sql`. Mesajele din coadă
 
 ### Tests for User Story 7 ⚠️
 
-- [ ] T092 [P] [US7] Test DB în `supabase/tests/functions/organizer-update.test.ts`:
+- [X] T092 [P] [US7] Test DB în `supabase/tests/functions/organizer-update.test.ts`:
   - `organizer_update_event` doar pentru proprietar, stările `awaiting_activation` / `active`, nume 1–120 și dată azi…+2 ani;
   - pentru self-service activ recalculează perioada de upload (FR-034), iar după sfârșitul uploadului `purge_at` nu se schimbă;
   - pentru `awaiting_activation` recalculează `pending_purge_at`;
   - tokenul public rămâne neschimbat.
-- [ ] T093 [P] [US7] Test DB în `supabase/tests/functions/admin.test.ts` (extinde `request_event_deletion`): organizatorul proprietar poate șterge (alt organizator nu); un eveniment niciodată activat dispare direct; unul activat trece prin `deleting` cu istoric sursa `organizer`, iar rândul de facturare se păstrează conform 001
-- [ ] T094 [P] [US7] Test e2e în `apps/web/tests/e2e/organizer-edit.spec.ts`: redenumire și schimbarea datei (codul QR descărcat înainte și după e identic ca link); ștergere cu numele tastat greșit (refuz), apoi corect; linkul invitatului dă „nu a fost găsit”; URL-urile semnate emise anterior întorc ≥ 400 în ≤ 60 s (001/SC-011)
+- [X] T093 [P] [US7] Test DB în `supabase/tests/functions/admin.test.ts` (extinde `request_event_deletion`): organizatorul proprietar poate șterge (alt organizator nu); un eveniment niciodată activat dispare direct; unul activat trece prin `deleting` cu istoric sursa `organizer`, iar rândul de facturare se păstrează conform 001
+- [X] T094 [P] [US7] Test e2e în `apps/web/tests/e2e/organizer-edit.spec.ts`: redenumire și schimbarea datei (codul QR descărcat înainte și după e identic ca link); ștergere cu numele tastat greșit (refuz), apoi corect; linkul invitatului dă „nu a fost găsit”; URL-urile semnate emise anterior întorc ≥ 400 în ≤ 60 s (001/SC-011)
 
 ### Implementation for User Story 7
 
-- [ ] T095 [US7] Migrația `supabase/migrations/20261001001700_organizer_edit.sql`: `organizer_update_event` și `request_event_deletion` extinsă (organizator proprietar; ștergere directă dacă `activated_at is null`), conform contractului
-- [ ] T096 [US7] `apps/web/components/self-service/EditEventForm.tsx` și `apps/web/components/self-service/DeleteEventDialog.tsx` (reutilizează logica din `apps/web/components/admin/DeleteEventDialog.tsx`: tastarea numelui) pe `apps/web/app/events/[eventId]/page.tsx`; Server Actions `updateEvent` și `deleteEvent` în `apps/web/lib/actions/organizer.ts`
-- [ ] T097 [US7] Rulează T092–T094; toate trec
+- [X] T095 [US7] Migrația `supabase/migrations/20261001001700_organizer_edit.sql`: `organizer_update_event` și `request_event_deletion` extinsă (organizator proprietar; ștergere directă dacă `activated_at is null`), conform contractului
+- [X] T096 [US7] `apps/web/components/self-service/EditEventForm.tsx` și `apps/web/components/self-service/DeleteEventDialog.tsx` (reutilizează logica din `apps/web/components/admin/DeleteEventDialog.tsx`: tastarea numelui) pe `apps/web/app/events/[eventId]/page.tsx`; Server Actions `updateEvent` și `deleteEvent` în `apps/web/lib/actions/organizer.ts`
+- [X] T097 [US7] Rulează T092–T094; toate trec
 
 **Checkpoint**: toate poveștile funcționează independent
 

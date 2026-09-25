@@ -37,6 +37,27 @@ describe("purge_event (FR-006b)", () => {
   });
 });
 
+describe("purge_event — ștergere cerută de organizator (002/FR-035)", () => {
+  it("golește Storage-ul, dar păstrează rândul de facturare ca eveniment expirat", async () => {
+    const email = randomEmail("org-keep");
+    await createUser(email);
+    const event = await createEvent({ organizerEmail: email });
+    await putObject("media", `${event.id}/${randomUUID()}/original.jpg`, Buffer.from("x"), "image/jpeg");
+    await query("update public.events set status = 'deleting', deletion_keeps_billing = true where id = $1", [event.id]);
+
+    await purgeEvent.run({ type: "purge_event", event_id: event.id }, ctx);
+
+    expect(await listCount("media", event.id)).toBe(0);
+    const [row] = await query<{ status: string; expired_at: Date | null; deletion_keeps_billing: boolean }>(
+      "select status, expired_at, deletion_keeps_billing from public.events where id = $1",
+      [event.id],
+    );
+    expect(row?.status).toBe("expired");
+    expect(row?.expired_at).toBeInstanceOf(Date);
+    expect(row?.deletion_keeps_billing).toBe(false);
+  });
+});
+
 describe("delete_organizer_user (FR-047)", () => {
   it("șterge contul orfan", async () => {
     const userId = await createUser(randomEmail("org"));

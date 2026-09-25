@@ -4,6 +4,7 @@ import { ArchivePanel } from "@/components/gallery/ArchivePanel";
 import { GalleryGrid } from "@/components/gallery/GalleryGrid";
 import { RetentionPanel } from "@/components/retention/RetentionPanel";
 import { EventStatusPanel } from "@/components/self-service/EventStatusPanel";
+import { ManageEventSection } from "@/components/self-service/ManageEventSection";
 import { QrDownloads } from "@/components/self-service/QrDownloads";
 import { formatDate, t } from "@/lib/i18n";
 import { activationInfo } from "@/lib/organizer/activation";
@@ -35,6 +36,7 @@ export default async function EventGalleryPage({ params }: { params: Promise<{ e
         </p>
         <EventStatusPanel eventId={eventId} pendingPurgeAt={event.pendingPurgeAt} info={info} />
         <QrDownloads eventId={eventId} />
+        {event.name !== null && <ManageEventSection eventId={eventId} name={event.name} eventDate={event.eventDate} canEdit />}
       </div>
     );
   }
@@ -80,6 +82,9 @@ export default async function EventGalleryPage({ params }: { params: Promise<{ e
         <ArchivePanel eventId={eventId} readyFiles={readyFiles} initial={archive} />
       </div>
       <GalleryGrid eventId={eventId} initialItems={first.items} initialCursor={first.nextCursor} live={!suspended} />
+      {event.name !== null && (
+        <ManageEventSection eventId={eventId} name={event.name} eventDate={event.eventDate} canEdit={!suspended} />
+      )}
     </div>
   );
 }

@@ -1041,6 +1041,10 @@ export type Database = {
           to_status: Database["public"]["Enums"]["event_status"]
         }[]
       }
+      organizer_update_event: {
+        Args: { p_event_date: string; p_event_id: string; p_name: string }
+        Returns: undefined
+      }
       orphan_organizer_user_id: { Args: { p_email: string }; Returns: string }
       purge_auth_requests: { Args: { p_now?: string }; Returns: number }
       purge_stale_auth_users: { Args: { p_now?: string }; Returns: number }
