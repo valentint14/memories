@@ -16,9 +16,9 @@ const browsers = [
   { name: "mobile-safari", device: devices["iPhone 15"] },
 ];
 
-// retention.spec.ts modifică suplimentele din catalogul global de retenție: rulează pe rând în cele
-// trei browsere (fiecare proiect depinde de precedentul), niciodată în paralel cu el însuși.
-const RETENTION = /retention\.spec\.ts/;
+// Fișierele care modifică stare globală (catalogul de retenție, pachetul complet) rulează pe rând în
+// cele trei browsere (fiecare proiect depinde de precedentul), niciodată în paralel cu ele însele.
+const RETENTION = /(retention|admin-package)\.spec\.ts/;
 
 // Servere suplimentare pe același build (002, T006): limitele reale de frecvență, secretul
 // Turnstile care respinge mereu și widgetul Turnstile real (are nevoie de internet).

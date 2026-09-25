@@ -236,14 +236,14 @@ noi încep de la `supabase/migrations/20261001000100_*.sql`. Mesajele din coadă
 
 ### Tests for User Story 5 ⚠️
 
-- [ ] T082 [P] [US5] Test DB în `supabase/tests/rls/packages.test.ts`: organizatorul citește `packages`, dar nu îl modifică; adminul aal1 nu îl modifică; adminul aal2 da; check-urile refuză `price_minor < 0`, `max_files_per_guest = 0`, `max_photo_bytes > 52428800`, `max_video_bytes > 1073741824`, o opțiune de retenție inactivă, `max_awaiting_events_per_organizer` în afara 1–20
-- [ ] T083 [P] [US5] Test e2e în `apps/web/tests/e2e/admin-package.spec.ts`: modifică prețul, apoi evenimentul neactivat afișează noul preț, iar unul activ îl păstrează pe cel vechi; valorile invalide dau erori lângă câmpuri
+- [X] T082 [P] [US5] Test DB în `supabase/tests/rls/packages.test.ts`: organizatorul citește `packages`, dar nu îl modifică; adminul aal1 nu îl modifică; adminul aal2 da; check-urile refuză `price_minor < 0`, `max_files_per_guest = 0`, `max_photo_bytes > 52428800`, `max_video_bytes > 1073741824`, o opțiune de retenție inactivă, `max_awaiting_events_per_organizer` în afara 1–20
+- [X] T083 [P] [US5] Test e2e în `apps/web/tests/e2e/admin-package.spec.ts`: modifică prețul, apoi evenimentul neactivat afișează noul preț, iar unul activ îl păstrează pe cel vechi; valorile invalide dau erori lângă câmpuri
 
 ### Implementation for User Story 5
 
-- [ ] T084 [US5] Server Actions `updatePackage` și `updateSelfServiceSettings` în `apps/web/lib/actions/admin.ts` (zod cu aceleași limite ca check-urile din T015; prețul introdus în lei, salvat în bani)
-- [ ] T085 [US5] Pagina `apps/web/app/admin/package/page.tsx` + `apps/web/components/admin/PackageForm.tsx` (preț, fișiere per invitat, dimensiuni maxime în MB, opțiunea de retenție inclusă din catalog, limita de evenimente în așteptare); link în navigația de administrare din `apps/web/app/admin/layout.tsx`
-- [ ] T086 [US5] Rulează T082–T083; toate trec
+- [X] T084 [US5] Server Actions `updatePackage` și `updateSelfServiceSettings` în `apps/web/lib/actions/admin.ts` (zod cu aceleași limite ca check-urile din T015; prețul introdus în lei, salvat în bani)
+- [X] T085 [US5] Pagina `apps/web/app/admin/package/page.tsx` + `apps/web/components/admin/PackageForm.tsx` (preț, fișiere per invitat, dimensiuni maxime în MB, opțiunea de retenție inclusă din catalog, limita de evenimente în așteptare); link în navigația de administrare din `apps/web/app/admin/layout.tsx`
+- [X] T086 [US5] Rulează T082–T083; toate trec
 
 **Checkpoint**: pachetul se configurează din interfață
 

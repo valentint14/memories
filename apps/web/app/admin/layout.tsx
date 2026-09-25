@@ -24,6 +24,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           <Link href="/admin/retention" className="underline-offset-4 hover:underline">
             {t("admin.retention")}
           </Link>
+          <Link href="/admin/package" className="underline-offset-4 hover:underline">
+            {t("admin.package.nav")}
+          </Link>
         </nav>
       </header>
       <main className="mx-auto max-w-6xl p-4 sm:p-6">{children}</main>

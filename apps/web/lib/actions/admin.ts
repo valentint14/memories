@@ -201,3 +201,48 @@ export async function updatePendingEvent(input: { eventId: string; name: string;
     },
   );
 }
+
+const MB = 1024 * 1024;
+
+const packageSchema = z.object({
+  priceLei: z.coerce.number("validation.price").min(0, "validation.price").max(1_000_000, "validation.price"),
+  maxFilesPerGuest: z.coerce.number("validation.maxFiles").int("validation.maxFiles").min(1, "validation.maxFiles").max(1000, "validation.maxFiles"),
+  maxPhotoMb: z.coerce.number("validation.maxPhotoMb").positive("validation.maxPhotoMb").max(50, "validation.maxPhotoMb"),
+  maxVideoMb: z.coerce.number("validation.maxVideoMb").positive("validation.maxVideoMb").max(1024, "validation.maxVideoMb"),
+  retentionOptionId: z.uuid("validation.option"),
+  maxAwaitingEventsPerOrganizer: z.coerce
+    .number("validation.maxAwaiting")
+    .int("validation.maxAwaiting")
+    .min(1, "validation.maxAwaiting")
+    .max(20, "validation.maxAwaiting"),
+});
+
+export type PackageInput = z.input<typeof packageSchema>;
+
+/**
+ * Pachetul complet și setările self-service, fără modificări de cod (002: FR-015). Se aplică doar
+ * evenimentelor activate ulterior; cele active își păstrează valorile (FR-016).
+ */
+export async function updatePackage(input: PackageInput): Promise<ActionResult<null>> {
+  return runAction(packageSchema, input, async (data) => {
+    const supabase = await requireAdmin();
+    const pkg = await supabase
+      .from("packages")
+      .update({
+        price_minor: leiToMinor(data.priceLei),
+        max_files_per_guest: data.maxFilesPerGuest,
+        max_photo_bytes: Math.round(data.maxPhotoMb * MB),
+        max_video_bytes: Math.round(data.maxVideoMb * MB),
+        retention_option_id: data.retentionOptionId,
+      })
+      .eq("code", "complete");
+    throwIfDbError(pkg.error);
+    const settings = await supabase
+      .from("self_service_settings")
+      .update({ max_awaiting_events_per_organizer: data.maxAwaitingEventsPerOrganizer })
+      .eq("id", true);
+    throwIfDbError(settings.error);
+    revalidatePath("/admin/package");
+    return null;
+  });
+}
