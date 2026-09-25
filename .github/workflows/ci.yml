@@ -11,6 +11,9 @@ concurrency:
 
 jobs:
   checks:
+    # Doar pe PR: protecția lui main cere ca PR-ul să fie la zi și cu `checks` trecut, deci pe main
+    # ar repeta exact aceleași teste.
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
@@ -75,9 +78,8 @@ jobs:
         run: docker logs worker || echo "worker-ul nu a pornit"
 
   publish-worker:
-    # Doar pe main, după ce toate verificările au trecut (apps/worker/deploy/scaleway-container.md).
+    # Doar pe main; verificările au trecut deja pe PR (apps/worker/deploy/scaleway-container.md).
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: checks
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
