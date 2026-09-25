@@ -3,8 +3,10 @@ import { notFound } from "next/navigation";
 import { ArchivePanel } from "@/components/gallery/ArchivePanel";
 import { GalleryGrid } from "@/components/gallery/GalleryGrid";
 import { RetentionPanel } from "@/components/retention/RetentionPanel";
+import { EventStatusPanel } from "@/components/self-service/EventStatusPanel";
 import { QrDownloads } from "@/components/self-service/QrDownloads";
 import { formatDate, t } from "@/lib/i18n";
+import { activationInfo } from "@/lib/organizer/activation";
 import { latestArchive } from "@/lib/organizer/archive";
 import { countReadyFiles, galleryAvailable, getOrganizerEvent, listGallery } from "@/lib/organizer/media";
 import { retentionQuote } from "@/lib/organizer/retention";
@@ -18,6 +20,7 @@ export default async function EventGalleryPage({ params }: { params: Promise<{ e
   if (!event) notFound();
 
   if (event.status === "awaiting_activation") {
+    const info = await activationInfo(eventId);
     return (
       <div className="flex flex-col gap-6">
         <header className="flex flex-col gap-1">
@@ -30,6 +33,7 @@ export default async function EventGalleryPage({ params }: { params: Promise<{ e
         <p role="status" className="rounded-lg bg-brand-50 p-4">
           {t("organizer.awaitingExplain")}
         </p>
+        <EventStatusPanel eventId={eventId} pendingPurgeAt={event.pendingPurgeAt} info={info} />
         <QrDownloads eventId={eventId} />
       </div>
     );

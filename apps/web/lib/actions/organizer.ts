@@ -164,3 +164,14 @@ export async function createEventForm(_prev: FormState, formData: FormData): Pro
   revalidatePath("/events");
   redirect(`/events/${data}`);
 }
+
+/** Cererea de activare a pachetului complet (002: FR-018a). */
+export async function requestActivation(eventId: string): Promise<ActionResult<{ requestedAt: string }>> {
+  return runAction(z.object({ eventId: z.uuid() }), { eventId }, async (input) => {
+    const supabase = await serverSupabase();
+    const { data, error } = await supabase.rpc("request_activation", { p_event_id: input.eventId });
+    throwIfDbError(error);
+    revalidatePath(`/events/${input.eventId}`);
+    return { requestedAt: data ?? new Date().toISOString() };
+  });
+}

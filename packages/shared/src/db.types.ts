@@ -34,6 +34,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      activation_requests: {
+        Row: {
+          event_id: string
+          id: number
+          requested_at: string
+        }
+        Insert: {
+          event_id: string
+          id?: never
+          requested_at?: string
+        }
+        Update: {
+          event_id?: string
+          id?: never
+          requested_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activation_requests_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activation_requests_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "organizer_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       app_audit_log: {
         Row: {
           action: string
@@ -896,6 +929,7 @@ export type Database = {
           paths: string[]
         }[]
       }
+      enqueue_activation_notices: { Args: { p_now?: string }; Returns: number }
       enqueue_retention_notices: { Args: { p_now?: string }; Returns: number }
       event_organizer_email: { Args: { p_event_id: string }; Returns: string }
       expire_archives: { Args: never; Returns: number }
@@ -994,6 +1028,7 @@ export type Database = {
       orphan_organizer_user_id: { Args: { p_email: string }; Returns: string }
       purge_auth_requests: { Args: { p_now?: string }; Returns: number }
       purge_stale_auth_users: { Args: { p_now?: string }; Returns: number }
+      purge_unactivated_events: { Args: { p_now?: string }; Returns: number }
       purge_unconfirmed_events: { Args: { p_now?: string }; Returns: number }
       raise_app_error: {
         Args: { p_code: string; p_detail?: Json }
@@ -1005,6 +1040,7 @@ export type Database = {
         Args: { p_request_id: string }
         Returns: Database["public"]["Enums"]["auth_request_status"]
       }
+      request_activation: { Args: { p_event_id: string }; Returns: string }
       request_archive: { Args: { p_event_id: string }; Returns: string }
       request_event_deletion: {
         Args: { p_confirm_name: string; p_event_id: string }
