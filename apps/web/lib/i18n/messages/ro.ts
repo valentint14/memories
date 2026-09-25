@@ -279,6 +279,8 @@ export const ro = {
   "organizer.limitReached": "Ai deja numărul maxim de evenimente care așteaptă activarea, așa că evenimentul nou nu a fost creat. Activează sau șterge unul dintre evenimentele de mai jos.",
   "organizer.nav": "Navigare organizator",
   "organizer.myEvents": "Evenimentele mele",
+  "organizer.adminSession":
+    "Ești autentificat ca administrator ({email}), deci vezi doar evenimentele acestei adrese. Pentru galeria unui organizator, autentifică-te cu adresa lui într-o fereastră privată sau în alt browser.",
   "organizer.noEvents": "Nu ai încă evenimente asociate acestei adrese de email.",
   "organizer.pendingPurgeOn": "Dacă nu este activat, evenimentul se șterge pe {date}.",
   "organizer.newEvent": "Eveniment nou",

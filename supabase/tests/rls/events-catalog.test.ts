@@ -72,6 +72,13 @@ describe("events", () => {
     const token = await adminAal2.rpc("admin_event_token", { p_event_id: eventA.id });
     expect(token.data).toBe(eventA.public_token);
   });
+
+  it("organizer_events arată doar evenimentele proprii, și pentru adminul aal2", async () => {
+    // Altfel un admin autentificat în același browser vede pagina organizatorului cu galeria goală.
+    const { data, error } = await adminAal2.from("organizer_events").select("id").eq("id", eventA.id);
+    expect(error).toBeNull();
+    expect(data).toEqual([]);
+  });
 });
 
 describe("retention_options", () => {
