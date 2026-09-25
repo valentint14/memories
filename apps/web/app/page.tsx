@@ -3,8 +3,11 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { TurnstileField } from "@/components/security/TurnstileField";
 import { CreateEventForm } from "@/components/self-service/CreateEventForm";
+import { OrganizerCreateForm } from "@/components/self-service/OrganizerCreateForm";
 import { t } from "@/lib/i18n";
 import { currentLegalVersions } from "@/lib/legal";
+import { organizerCreateFormProps } from "@/lib/organizer/create";
+import { serverSupabase } from "@/lib/supabase/server";
 import { todayInAppZone } from "@/lib/validation/self-service";
 
 export const metadata: Metadata = { title: { absolute: "Memories — pozele invitaților, într-un singur loc" } };
@@ -13,6 +16,10 @@ export const metadata: Metadata = { title: { absolute: "Memories — pozele invi
 export default async function HomePage() {
   // Randare per cerere: nonce-ul CSP (proxy.ts) trebuie să ajungă pe scripturile paginii.
   await connection();
+  // Un organizator autentificat creează direct în cont, fără email și fără verificare anti-bot (FR-005).
+  const { data } = await (await serverSupabase()).auth.getUser();
+  const signedInEmail = data.user?.email ?? null;
+  const organizerProps = signedInEmail === null ? null : await organizerCreateFormProps();
   const versions = await currentLegalVersions();
   const today = todayInAppZone(new Date());
   const maxDate = `${String(Number(today.slice(0, 4)) + 2)}${today.slice(4)}`;
@@ -29,20 +36,35 @@ export default async function HomePage() {
         <h2 id="create-title" className="text-xl font-semibold">
           {t("home.formTitle")}
         </h2>
-        <CreateEventForm
-          termsVersion={versions.terms}
-          privacyVersion={versions.privacy}
-          minDate={today}
-          maxDate={maxDate}
-          turnstile={<TurnstileField />}
-        />
+        {organizerProps === null ? (
+          <CreateEventForm
+            termsVersion={versions.terms}
+            privacyVersion={versions.privacy}
+            minDate={today}
+            maxDate={maxDate}
+            turnstile={<TurnstileField />}
+          />
+        ) : (
+          <>
+            <p className="text-sm text-muted">{t("home.loggedInAs", { email: signedInEmail ?? "" })}</p>
+            <OrganizerCreateForm {...organizerProps} />
+          </>
+        )}
       </section>
 
       <p className="text-center text-sm">
-        {t("home.haveAccount")}{" "}
-        <Link href="/login" className="font-semibold text-brand-700 underline">
-          {t("home.login")}
-        </Link>
+        {organizerProps === null ? (
+          <>
+            {t("home.haveAccount")}{" "}
+            <Link href="/login" className="font-semibold text-brand-700 underline">
+              {t("home.login")}
+            </Link>
+          </>
+        ) : (
+          <Link href="/events" className="font-semibold text-brand-700 underline">
+            {t("organizer.myEvents")}
+          </Link>
+        )}
       </p>
     </main>
   );

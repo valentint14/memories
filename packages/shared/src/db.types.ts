@@ -872,6 +872,15 @@ export type Database = {
         Args: { p_event_id: string }
         Returns: undefined
       }
+      create_event_as_organizer: {
+        Args: {
+          p_event_date: string
+          p_name: string
+          p_privacy_version?: string
+          p_terms_version?: string
+        }
+        Returns: string
+      }
       current_legal_versions: {
         Args: never
         Returns: {
@@ -968,6 +977,7 @@ export type Database = {
         Returns: string
       }
       organizer_event_token: { Args: { p_event_id: string }; Returns: string }
+      organizer_needs_terms: { Args: never; Returns: boolean }
       organizer_owns_active_event: {
         Args: { p_object_name: string }
         Returns: boolean
@@ -983,6 +993,7 @@ export type Database = {
       }
       orphan_organizer_user_id: { Args: { p_email: string }; Returns: string }
       purge_auth_requests: { Args: { p_now?: string }; Returns: number }
+      purge_stale_auth_users: { Args: { p_now?: string }; Returns: number }
       purge_unconfirmed_events: { Args: { p_now?: string }; Returns: number }
       raise_app_error: {
         Args: { p_code: string; p_detail?: Json }

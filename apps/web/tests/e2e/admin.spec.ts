@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { TOTP } from "otpauth";
-import { loginWithMagicLink as login } from "./support/auth";
+import { loginAsNewAdmin, loginWithMagicLink as login } from "./support/auth";
 import { createAdmin, randomEmail } from "./support/db";
 import { gotoHydrated, uniqueName, waitForHydration } from "./support/page";
 
@@ -96,8 +96,7 @@ test("creează evenimentul, arată prețul, data ștergerii și descarcă QR-ul"
 });
 
 test("validarea formularului arată erorile lângă câmpuri (FR-002)", async ({ page }) => {
-  await login(page, adminEmail);
-  await verifyCode(page);
+  await loginAsNewAdmin(page, await createAdmin());
   await gotoHydrated(page, "/admin/events/new");
   await page.getByLabel("Numele evenimentului").fill("Test");
   await page.getByLabel("Emailul organizatorului").fill("nu-e-email");
@@ -109,8 +108,7 @@ test("validarea formularului arată erorile lângă câmpuri (FR-002)", async ({
 });
 
 test("ștergerea evenimentului cere numele și invalidează linkul (FR-006b)", async ({ page }) => {
-  await login(page, adminEmail);
-  await verifyCode(page);
+  await loginAsNewAdmin(page, await createAdmin());
   const name = uniqueName("Aniversare 30");
   const uploadUrl = await createEvent(page, name);
 

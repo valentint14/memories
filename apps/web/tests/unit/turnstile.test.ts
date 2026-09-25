@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { TURNSTILE_VERIFY_URL, verifyTurnstile } from "../../lib/security/turnstile";
+import { TURNSTILE_TEST_TOKEN, TURNSTILE_VERIFY_URL, verifyTurnstile } from "../../lib/security/turnstile";
 
 vi.mock("server-only", () => ({}));
 
@@ -38,6 +38,19 @@ describe("verifyTurnstile", () => {
     expect(await verifyTurnstile("tok", null)).toBe(false);
     stubFetch({}, false);
     expect(await verifyTurnstile("tok", null)).toBe(false);
+  });
+
+  it("în modul offline (doar cu secretele de test) emulează răspunsul, fără rețea", async () => {
+    const fetchMock = stubFetch({ success: true });
+    vi.stubEnv("TURNSTILE_OFFLINE", "1");
+    vi.stubEnv("TURNSTILE_SECRET_KEY", "1x0000000000000000000000000000000AA");
+    expect(await verifyTurnstile(TURNSTILE_TEST_TOKEN, null)).toBe(true);
+    expect(await verifyTurnstile("alt-token", null)).toBe(false);
+    vi.stubEnv("TURNSTILE_SECRET_KEY", "2x0000000000000000000000000000000AA");
+    expect(await verifyTurnstile(TURNSTILE_TEST_TOKEN, null)).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
+    vi.stubEnv("TURNSTILE_SECRET_KEY", "secret-de-productie");
+    await expect(verifyTurnstile(TURNSTILE_TEST_TOKEN, null)).rejects.toThrow("TURNSTILE_OFFLINE");
   });
 
   it("refuză tokenul lipsă fără să apeleze serviciul", async () => {

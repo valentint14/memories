@@ -1,7 +1,8 @@
 "use server";
 
-import { archiveEntryName } from "@memories/shared";
+import { archiveEntryName, mapDbError } from "@memories/shared";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { archiveUrl, latestArchive, requestArchiveJob, type ArchiveState } from "../organizer/archive";
 import {
@@ -13,7 +14,10 @@ import {
   type MediaUrls,
 } from "../organizer/media";
 import { extendEventRetention, retentionQuote, type RetentionOptionQuote } from "../organizer/retention";
+import { serverSupabase } from "../supabase/server";
+import { eventBasicsSchema } from "../validation/self-service";
 import { runAction, throwIfDbError, type ActionResult } from "./result";
+import type { FormState } from "./self-service";
 
 const cursorSchema = z.object({ uploadedAt: z.iso.datetime({ offset: true }), id: z.uuid() });
 
@@ -125,4 +129,38 @@ export async function getLatestArchive(eventId: string): Promise<ActionResult<Ar
 /** URL-uri semnate de 15 min pentru vizualizare și descărcare (FR-028, FR-029, FR-034). */
 export async function getMediaUrls(mediaId: string): Promise<ActionResult<MediaUrls>> {
   return runAction(z.object({ mediaId: z.uuid() }), { mediaId }, (input) => mediaUrls(input.mediaId, safeDownloadName));
+}
+
+/**
+ * Crearea din cont, fără email de confirmare (002: FR-005, FR-021, FR-041). Acceptarea termenilor
+ * se cere doar dacă organizatorul nu a acceptat versiunea curentă.
+ */
+export async function createEventForm(_prev: FormState, formData: FormData): Promise<FormState> {
+  const text = (name: string) => {
+    const value = formData.get(name);
+    return typeof value === "string" ? value : "";
+  };
+  const parsed = eventBasicsSchema(new Date()).safeParse({ name: text("name"), eventDate: text("eventDate") });
+  if (!parsed.success) {
+    const fields: Record<string, string> = {};
+    for (const issue of parsed.error.issues) fields[issue.path.join(".")] ??= issue.message;
+    return { status: "error", error: "VALIDATION", fields };
+  }
+  const needsTerms = text("termsVersion") !== "";
+  if (needsTerms && formData.get("accepted") !== "on") {
+    return { status: "error", error: "VALIDATION", fields: { accepted: "validation.acceptTerms" } };
+  }
+
+  const supabase = await serverSupabase();
+  const { data, error } = await supabase.rpc("create_event_as_organizer", {
+    p_name: parsed.data.name,
+    p_event_date: parsed.data.eventDate,
+    ...(needsTerms ? { p_terms_version: text("termsVersion"), p_privacy_version: text("privacyVersion") } : {}),
+  });
+  if (error) {
+    const { code } = mapDbError(error);
+    return { status: "error", error: ["AWAITING_LIMIT_REACHED", "TERMS_OUTDATED", "VALIDATION", "FORBIDDEN"].includes(code) ? code : "INTERNAL" };
+  }
+  revalidatePath("/events");
+  redirect(`/events/${data}`);
 }

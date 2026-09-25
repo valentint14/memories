@@ -1,10 +1,8 @@
 import { headers } from "next/headers";
 import { publicEnv } from "@/lib/env";
+import { TURNSTILE_TEST_TOKEN } from "@/lib/security/turnstile";
 import { serverEnv } from "@/lib/server-env";
 import { TurnstileWidget } from "./TurnstileWidget";
-
-/** Tokenul de test acceptat de secretul de test Cloudflare (research R3). */
-const TEST_TOKEN = "XXXX.DUMMY.TOKEN.XXXX";
 
 /**
  * Verificarea anti-bot din formularele publice (002: FR-037). În modul `TURNSTILE_OFFLINE`
@@ -13,7 +11,7 @@ const TEST_TOKEN = "XXXX.DUMMY.TOKEN.XXXX";
  */
 export async function TurnstileField() {
   if (serverEnv.turnstileOffline) {
-    return <input type="hidden" name="cf-turnstile-response" value={TEST_TOKEN} />;
+    return <input type="hidden" name="cf-turnstile-response" value={TURNSTILE_TEST_TOKEN} />;
   }
   const nonce = (await headers()).get("x-nonce") ?? "";
   return <TurnstileWidget siteKey={publicEnv.turnstileSiteKey} nonce={nonce} />;

@@ -53,12 +53,13 @@ export const ro = {
 
   // Autentificare
   "login.title": "Autentificare",
-  "login.intro": "Primești pe email un link de autentificare, fără parolă. Linkul expiră într-o oră.",
+  "login.intro": "Îți trimitem pe email un cod și un link de autentificare, fără parolă. Sunt valabile 15 minute.",
   "login.email": "Adresa de email",
-  "login.submit": "Trimite linkul",
+  "login.submit": "Trimite codul",
   "login.sending": "Se trimite…",
-  "login.sent": "Dacă adresa are acces, vei primi în câteva momente un email cu linkul de autentificare.",
-  "login.linkInvalid": "Linkul a expirat sau a fost deja folosit. Cere un link nou mai jos.",
+  "login.linkInvalid": "Linkul a expirat sau a fost deja folosit. Cere un cod nou mai jos.",
+  "login.noAccount": "Nu ai încă un eveniment?",
+  "login.createEvent": "Creează unul",
 
   // Verificare în doi pași (administrator)
   "mfa.title": "Verificare în doi pași",
@@ -206,6 +207,10 @@ export const ro = {
   "organizer.nav": "Navigare organizator",
   "organizer.myEvents": "Evenimentele mele",
   "organizer.noEvents": "Nu ai încă evenimente asociate acestei adrese de email.",
+  "organizer.pendingPurgeOn": "Dacă nu este activat, evenimentul se șterge pe {date}.",
+  "organizer.newEvent": "Eveniment nou",
+  "organizer.newTitle": "Eveniment nou",
+  "organizer.newIntro": "Evenimentul se creează direct în contul tău, fără email de confirmare. Invitații vor putea încărca fișiere după activarea pachetului complet.",
   "organizer.purgeOn": "Fișierele se șterg automat pe {date}.",
   "organizer.expired": "Expirat",
   "organizer.expiredExplain": "Perioada de păstrare s-a încheiat, iar fișierele evenimentului au fost șterse definitiv.",

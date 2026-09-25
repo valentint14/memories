@@ -1,61 +1,47 @@
 "use server";
 
-import { createHash } from "node:crypto";
-import type { ErrorCode } from "@memories/shared";
+import { randomUUID } from "node:crypto";
+import { normalizeEmail } from "@memories/shared";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { adminSupabase } from "../supabase/admin";
 import { serverSupabase } from "../supabase/server";
 import { serverEnv } from "../server-env";
 import { ActionError, runAction, type ActionResult } from "./result";
 import { safeNextPath } from "../security/redirect";
+import { clientIp, hashedClientIp } from "../security/ip-hash";
+import { verifyTurnstile } from "../security/turnstile";
+import type { FormState } from "./self-service";
 
-const magicLinkSchema = z.object({
-  email: z.email().max(254),
+const loginSchema = z.object({
+  email: z.string().transform(normalizeEmail).pipe(z.email().max(254)),
   next: z.string().max(200).optional(),
 });
 
 /**
- * Trimite linkul de autentificare. Răspunsul e întotdeauna `ok`, indiferent dacă adresa are
- * acces (nu dezvăluie clienții); singura eroare vizibilă este RATE_LIMITED (FR-008).
+ * Autentificarea organizatorilor și administratorilor (002: FR-010, FR-011, FR-036, FR-037):
+ * cererea și emailul (trimis de worker doar dacă adresa are cont) urmează același drum pentru
+ * orice adresă, apoi pagina de cod. Nu se mai folosește signInWithOtp (research R1).
  */
-export async function requestMagicLink(input: { email: string; next?: string }): Promise<ActionResult<null>> {
-  return runAction(magicLinkSchema, input, async ({ email, next }) => {
-    const normalized = email.trim().toLowerCase();
-    const key = `login:${createHash("sha256").update(normalized).digest("hex")}`;
-    const { data: allowed, error } = await adminSupabase().rpc("check_rate_limit", {
-      p_key: key,
-      p_limit: 5,
-      p_window: "1 hour",
-    });
-    if (error) throw new ActionError("INTERNAL");
-    if (!allowed) throw new ActionError("RATE_LIMITED");
-
-    const supabase = await serverSupabase();
-    const redirect = new URL("/auth/confirm", serverEnv.appUrl);
-    const nextPath = safeNextPath(next);
-    if (nextPath) redirect.searchParams.set("next", nextPath);
-    // Eroarea (ex. adresă inexistentă, shouldCreateUser: false) nu se comunică utilizatorului.
-    await supabase.auth.signInWithOtp({
-      email: normalized,
-      options: { shouldCreateUser: false, emailRedirectTo: redirect.toString() },
-    });
-    return null;
+export async function requestLoginForm(_prev: FormState, formData: FormData): Promise<FormState> {
+  const text = (name: string) => {
+    const value = formData.get(name);
+    return typeof value === "string" ? value : "";
+  };
+  const parsed = loginSchema.safeParse({ email: text("email"), next: text("next") || undefined });
+  if (!parsed.success) return { status: "error", error: "VALIDATION", fields: { email: "validation.email" } };
+  if (!(await verifyTurnstile(text("cf-turnstile-response"), await clientIp()))) {
+    return { status: "error", error: "CAPTCHA_FAILED" };
+  }
+  const { data } = await adminSupabase().rpc("request_login", {
+    p_email: parsed.data.email,
+    p_ip_hash: await hashedClientIp(),
+    p_ip_limit: serverEnv.rateLimitIpPerHour,
   });
-}
-
-export type LoginFormState = { status: "idle" } | { status: "sent" } | { status: "error"; error: ErrorCode };
-
-/** Varianta pentru `<form action>` (useActionState): funcționează și fără JavaScript hidratat. */
-export async function requestMagicLinkForm(_prev: LoginFormState, formData: FormData): Promise<LoginFormState> {
-  const email = formData.get("email");
-  const next = formData.get("next");
-  const result = await requestMagicLink({
-    email: typeof email === "string" ? email : "",
-    ...(typeof next === "string" && next !== "" ? { next } : {}),
-  });
-  if (result.ok) return { status: "sent" };
-  // O adresă invalidă primește același răspuns neutru; doar limitarea e comunicată.
-  return result.error === "RATE_LIMITED" ? { status: "error", error: "RATE_LIMITED" } : { status: "sent" };
+  const params = new URLSearchParams({ request: data ?? randomUUID() });
+  const next = safeNextPath(parsed.data.next);
+  if (next) params.set("next", next);
+  redirect(`/auth/code?${params.toString()}`);
 }
 
 const totpCodeSchema = z.object({
