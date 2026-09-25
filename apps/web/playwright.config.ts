@@ -23,7 +23,8 @@ const RETENTION = /(retention|admin-package)\.spec\.ts/;
 // Servere suplimentare pe același build (002, T006): limitele reale de frecvență, secretul
 // Turnstile care respinge mereu și widgetul Turnstile real (are nevoie de internet).
 const extraServers: { name: string; port: number; match: RegExp; env: Record<string, string> }[] = [
-  { name: "limits", port: 3001, match: /abuse-limits\.spec\.ts/, env: {} },
+  // Limita de producție, explicit: `.env.local` o ridică pentru testarea de mână.
+  { name: "limits", port: 3001, match: /abuse-limits\.spec\.ts/, env: { RATE_LIMIT_IP_PER_HOUR: "20" } },
   { name: "captcha-reject", port: 3002, match: /captcha-reject\.spec\.ts/, env: { TURNSTILE_SECRET_KEY: "2x0000000000000000000000000000000AA" } },
   ...(process.env.CI || process.env.E2E_TURNSTILE_SMOKE === "1"
     ? [{ name: "turnstile-smoke", port: 3003, match: /turnstile-widget\.spec\.ts/, env: { TURNSTILE_OFFLINE: "", RATE_LIMIT_IP_PER_HOUR: "100000" } }]

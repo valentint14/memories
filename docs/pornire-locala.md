@@ -215,6 +215,7 @@ modificat worker-ul) și 7.
 | Nu vine niciun email în Mailpit | worker-ul nu rulează | `docker ps` → trebuie să apară `memories-worker-dev`; altfel pasul 6 |
 | „Codul nu este corect sau a expirat” | codul are 15 minute și o singură folosire; o cerere nouă îl invalidează pe cel vechi | cere un cod nou și folosește doar ultimul email |
 | Al 4-lea email pentru aceeași adresă nu mai vine | limita anti-abuz: 3 emailuri la 15 minute per adresă | așteaptă 15 minute sau golește contoarele (mai jos) |
+| Nu mai vine niciun email, pentru nicio adresă | limita per IP (local 1000 pe oră, din `RATE_LIMIT_IP_PER_HOUR` în `apps/web/.env.local`; în producție 20) | golește contoarele (mai jos) |
 | Pagina se încarcă, dar formularele nu reacționează | aplicația a fost pornită înainte de pasul 5 | oprește cu `Ctrl+C` și repornește pasul 7 |
 | `/` sau `/login` dau eroare 500 după o actualizare | lipsesc variabile noi în `.env.local` | rulează din nou pasul 5 și repornește aplicația |
 | Evenimentele create de mână au dispărut | s-a rulat `db:reset` | normal: resetul șterge datele locale, rămân doar utilizatorii din seed |

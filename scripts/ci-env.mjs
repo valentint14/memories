@@ -62,7 +62,9 @@ if (process.argv.includes("--write")) {
       "NEXT_PUBLIC_TURNSTILE_SITE_KEY",
       "TURNSTILE_SECRET_KEY",
       "TURNSTILE_OFFLINE",
-    ]),
+    ]) +
+      // Doar local, pentru testarea de mână: toate cererile vin de pe aceeași adresă (producția: 20).
+      "RATE_LIMIT_IP_PER_HOUR=1000\n",
   );
   writeFileSync(
     "apps/worker/.env",
