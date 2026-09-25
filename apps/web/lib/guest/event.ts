@@ -52,3 +52,18 @@ export async function resolveGuestEvent(token: string): Promise<GuestEvent> {
     maxFilesPerGuest: limits?.max_files_per_guest ?? 0,
   };
 }
+
+/**
+ * Numele salvat al sesiunii din cookie, pentru precompletarea câmpului după reîncărcare: altfel
+ * un fișier încărcat cu câmpul gol ar șterge numele de pe fișierele sesiunii.
+ */
+export async function guestSessionName(eventId: string, sessionId: string | undefined): Promise<string> {
+  if (sessionId === undefined || !/^[0-9a-f-]{36}$/i.test(sessionId)) return "";
+  const { data } = await adminSupabase()
+    .from("guest_sessions")
+    .select("display_name")
+    .eq("id", sessionId)
+    .eq("event_id", eventId)
+    .maybeSingle();
+  return data?.display_name ?? "";
+}

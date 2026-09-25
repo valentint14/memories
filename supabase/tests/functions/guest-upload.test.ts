@@ -125,6 +125,30 @@ describe("reserve_upload (FR-017)", () => {
     expect(row?.guest_name).toBe("Maria 🌸");
   });
 
+  it("numele completat mai târziu ajunge și pe fișierele deja încărcate din sesiune", async () => {
+    const event = await createTestEvent({ organizerEmail: randomEmail("org") });
+    const session = await startSession(event.public_token);
+    const first = await reserve(session, event.public_token, "image/jpeg", 10);
+    expect(first.error).toBeNull();
+    const other = await startSession(event.public_token);
+    const foreign = await reserve(other, event.public_token, "image/jpeg", 10);
+
+    const { error } = await service.rpc("update_guest_name", {
+      p_session_id: session,
+      p_token: event.public_token,
+      p_display_name: " Ana ",
+    });
+    expect(error).toBeNull();
+
+    const rows = await sql<{ id: string; guest_name: string | null }>(
+      "select id, guest_name from public.media_items where id = any($1)",
+      [[first.data?.[0]?.media_id, foreign.data?.[0]?.media_id]],
+    );
+    const nameOf = (id: string | undefined) => rows.find((r) => r.id === id)?.guest_name ?? null;
+    expect(nameOf(first.data?.[0]?.media_id)).toBe("Ana");
+    expect(nameOf(foreign.data?.[0]?.media_id)).toBeNull();
+  });
+
   it("reutilizează o rezervare nefinalizată la reselectare, fără a consuma limita (FR-016a)", async () => {
     const event = await createTestEvent({ organizerEmail: randomEmail("org"), maxFilesPerGuest: 1 });
     const session = await startSession(event.public_token);

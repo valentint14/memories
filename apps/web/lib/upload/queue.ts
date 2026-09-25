@@ -87,6 +87,7 @@ export class UploadQueue {
   private transfers = new Map<string, Transfer>();
   private listeners = new Set<() => void>();
   private session: Promise<boolean> | null = null;
+  private sessionName: string | null = null;
   private sessionError: ErrorCode | null = null;
   private active = 0;
 
@@ -188,14 +189,24 @@ export class UploadQueue {
   }
 
   private ensureSession(): Promise<boolean> {
-    this.session ??= this.deps.startSession(this.getDisplayName()).then((r) => {
-      if (!r.ok) {
-        this.session = null;
-        this.sessionError = r.error;
-      }
-      return r.ok;
-    });
-    return this.session;
+    // Numele completat sau schimbat după primul fișier se trimite la următorul fișier.
+    // După cererea anterioară, ca aceasta să găsească cookie-ul sesiunii și să nu creeze alta.
+    const name = this.getDisplayName();
+    if (this.session !== null && name === this.sessionName) return this.session;
+    this.sessionName = name;
+    const previous = this.session ?? Promise.resolve(true);
+    const current: Promise<boolean> = previous
+      .catch(() => false)
+      .then(() => this.deps.startSession(name))
+      .then((r) => {
+        if (!r.ok) {
+          if (this.session === current) this.session = null;
+          this.sessionError = r.error;
+        }
+        return r.ok;
+      });
+    this.session = current;
+    return current;
   }
 
   private reject(id: string, message: ItemMessage): void {

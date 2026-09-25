@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { UploadClient } from "@/components/upload/UploadClient";
-import { resolveGuestEvent } from "@/lib/guest/event";
+import { guestSessionName, resolveGuestEvent } from "@/lib/guest/event";
 import { formatDate, formatDateTime, t } from "@/lib/i18n";
 
 export const metadata: Metadata = { title: "Încarcă poze", referrer: "no-referrer" };
@@ -46,9 +47,10 @@ export default async function GuestUploadPage({ params }: { params: Promise<{ to
         </p>
       )}
 
-      {event.state === "open" && (
+      {event.state === "open" && event.eventId !== null && (
         <UploadClient
           token={token}
+          initialName={await guestSessionName(event.eventId, (await cookies()).get("mg_s")?.value)}
           limits={{ maxPhotoBytes: event.maxPhotoBytes, maxVideoBytes: event.maxVideoBytes }}
         />
       )}
