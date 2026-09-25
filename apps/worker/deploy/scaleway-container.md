@@ -1,5 +1,10 @@
 # Livrarea worker-ului — Scaleway Serverless Containers (`fr-par`)
 
+> **Alternativă plătită.** Livrarea curentă e pe un server propriu
+> ([docs/livrare-server-propriu.md](../../../docs/livrare-server-propriu.md)); CI publică imaginile în
+> GitHub Container Registry, nu în Scaleway. Costuri comparate în
+> [docs/arhitectura-cost-redus.md](../../../docs/arhitectura-cost-redus.md).
+
 Worker-ul e un proces persistent (buclă de polling pe `pgmq`), deci rulează cu **cel puțin o
 instanță mereu pornită**. Regiune UE (constituția, principiul II; research.md R15).
 
@@ -34,10 +39,9 @@ Aceleași chei ca în [`apps/worker/.env.example`](../.env.example):
 
 1. CI construiește imaginea din `apps/worker/Dockerfile` la fiecare PR și rulează testul de fum
    HEIC și testele media în imagine.
-2. Pe `main`, jobul `publish-worker` din `.github/workflows/ci.yml` publică imaginea în Scaleway
-   Container Registry cu tag-ul commit-ului (secretele `SCW_SECRET_KEY` și `SCW_REGISTRY_NAMESPACE`
-   în GitHub). Testele nu se mai repetă pe `main`: protecția ramurii cere ca PR-ul să fie la zi
-   cu `main` și cu jobul `checks` trecut, deci codul publicat e exact cel testat.
+2. Pe `main`, CI publică imaginea în GitHub Container Registry
+   (`ghcr.io/valentint14/memories-worker:<sha>`). Pentru Scaleway, imaginea se copiază în Scaleway
+   Container Registry sau containerul se configurează direct cu imaginea din `ghcr.io`.
 3. Actualizarea containerului pe noul tag se face din consola Scaleway sau cu
    `scw container container update <id> registry-image=<imagine>:<sha> redeploy=true`.
 

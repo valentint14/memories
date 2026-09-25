@@ -45,6 +45,14 @@ jobs:
 
       - name: Build imagine worker
         run: docker build -f apps/worker/Dockerfile -t memories-worker .
+      # Pe main imaginea web se construiește doar la publicare; aici se prinde un Dockerfile stricat.
+      - name: Build imagine web
+        run: >-
+          docker build -f apps/web/Dockerfile -t memories-web
+          --build-arg NEXT_PUBLIC_SUPABASE_URL="$NEXT_PUBLIC_SUPABASE_URL"
+          --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="$NEXT_PUBLIC_SUPABASE_ANON_KEY"
+          --build-arg NEXT_PUBLIC_TURNSTILE_SITE_KEY="$NEXT_PUBLIC_TURNSTILE_SITE_KEY"
+          .
       - name: Test de fum HEIC
         run: docker run --rm memories-worker node scripts/smoke-heic.ts
       # Testele media rulează în imagine (heif-dec, ffmpeg, ExifTool); `--user root` pentru
@@ -77,17 +85,63 @@ jobs:
         if: failure()
         run: docker logs worker || echo "worker-ul nu a pornit"
 
-  publish-worker:
-    # Doar pe main; verificările au trecut deja pe PR (apps/worker/deploy/scaleway-container.md).
+  publish-images:
+    # Doar pe main; verificările au trecut deja pe PR. Imaginile merg în GitHub Container Registry,
+    # construite nativ pe amd64 și arm64 (Raspberry Pi, Oracle Ampere) — docs/livrare-server-propriu.md.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v5
-      - name: Autentificare în Scaleway Container Registry
-        run: echo "${{ secrets.SCW_SECRET_KEY }}" | docker login rg.fr-par.scw.cloud -u nologin --password-stdin
-      - name: Build și publicare imagine
+      - name: Autentificare în GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Worker
         run: |
-          IMAGE=rg.fr-par.scw.cloud/${{ secrets.SCW_REGISTRY_NAMESPACE }}/memories-worker
-          docker build -f apps/worker/Dockerfile -t "$IMAGE:${{ github.sha }}" -t "$IMAGE:latest" .
-          docker push "$IMAGE:${{ github.sha }}"
-          docker push "$IMAGE:latest"
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/memories-worker:${{ github.sha }}-${{ matrix.arch }}"
+          docker build -f apps/worker/Dockerfile -t "$IMAGE" .
+          docker push "$IMAGE"
+      # Valorile NEXT_PUBLIC_* ajung în bundle la build; sunt publice, deci stau în variabilele
+      # repository-ului (Settings › Secrets and variables › Actions › Variables), nu în secrete.
+      - name: Web
+        if: vars.NEXT_PUBLIC_SUPABASE_URL != ''
+        run: |
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/memories-web:${{ github.sha }}-${{ matrix.arch }}"
+          docker build -f apps/web/Dockerfile -t "$IMAGE" \
+            --build-arg NEXT_PUBLIC_SUPABASE_URL="${{ vars.NEXT_PUBLIC_SUPABASE_URL }}" \
+            --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" \
+            --build-arg NEXT_PUBLIC_TURNSTILE_SITE_KEY="${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}" \
+            --build-arg NEXT_PUBLIC_SENTRY_DSN="${{ vars.NEXT_PUBLIC_SENTRY_DSN }}" \
+            .
+          docker push "$IMAGE"
+      - name: Web — neconfigurat
+        if: vars.NEXT_PUBLIC_SUPABASE_URL == ''
+        run: echo "::warning::Imaginea web nu a fost publicată, lipsesc variabilele NEXT_PUBLIC_* ale repository-ului (docs/livrare-server-propriu.md)."
+
+  publish-manifests:
+    # Un singur tag pentru ambele arhitecturi: serverul își ia automat varianta potrivită.
+    needs: publish-images
+    runs-on: ubuntu-24.04
+    permissions:
+      packages: write
+    steps:
+      - name: Autentificare în GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Tag comun pentru amd64 și arm64 (commit și latest)
+        env:
+          PUBLISH_WEB: ${{ vars.NEXT_PUBLIC_SUPABASE_URL != '' }}
+        run: |
+          for NAME in memories-worker memories-web; do
+            if [ "$NAME" = memories-web ] && [ "$PUBLISH_WEB" != true ]; then continue; fi
+            IMAGE="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/$NAME"
+            docker buildx imagetools create -t "$IMAGE:${{ github.sha }}" -t "$IMAGE:latest" \
+              "$IMAGE:${{ github.sha }}-amd64" "$IMAGE:${{ github.sha }}-arm64"
+          done

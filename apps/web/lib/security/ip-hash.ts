@@ -3,9 +3,18 @@ import { createHmac } from "node:crypto";
 import { headers } from "next/headers";
 import { serverEnv } from "../server-env";
 
-/** IP-ul clientului: prima valoare din `x-forwarded-for` (Vercel) sau `x-real-ip`. */
+/** IP-ul clientului: antetul de încredere, altfel prima valoare din `x-forwarded-for` (Vercel) sau `x-real-ip`. */
 export async function clientIp(): Promise<string | null> {
-  const h = await headers();
+  return ipFromHeaders(await headers());
+}
+
+/**
+ * Cu `TRUSTED_IP_HEADER` (ex. `cf-connecting-ip` în spatele Cloudflare Tunnel) se citește doar acel
+ * antet: acolo prima valoare din `x-forwarded-for` vine de la client și poate fi falsificată.
+ */
+export function ipFromHeaders(h: Headers): string | null {
+  const trusted = serverEnv.trustedIpHeader;
+  if (trusted !== null) return h.get(trusted)?.trim() || null;
   return h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? h.get("x-real-ip") ?? null;
 }
 
