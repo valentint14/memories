@@ -1,9 +1,14 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TURNSTILE_TEST_TOKEN, TURNSTILE_VERIFY_URL, verifyTurnstile } from "../../lib/security/turnstile";
 
 vi.mock("server-only", () => ({}));
 
 // Verificarea anti-bot pe server (002: FR-037; research R3).
+beforeEach(() => {
+  // În CI, TURNSTILE_OFFLINE=1 vine din mediu; testele de rețea rulează fără el.
+  vi.stubEnv("TURNSTILE_OFFLINE", "");
+});
+
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
