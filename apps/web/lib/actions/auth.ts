@@ -28,10 +28,11 @@ export async function requestLoginForm(_prev: FormState, formData: FormData): Pr
     const value = formData.get(name);
     return typeof value === "string" ? value : "";
   };
-  const parsed = loginSchema.safeParse({ email: text("email"), next: text("next") || undefined });
-  if (!parsed.success) return { status: "error", error: "VALIDATION", fields: { email: "validation.email" } };
+  const values = { email: text("email") };
+  const parsed = loginSchema.safeParse({ email: values.email, next: text("next") || undefined });
+  if (!parsed.success) return { status: "error", error: "VALIDATION", fields: { email: "validation.email" }, values };
   if (!(await verifyTurnstile(text("cf-turnstile-response"), await clientIp()))) {
-    return { status: "error", error: "CAPTCHA_FAILED" };
+    return { status: "error", error: "CAPTCHA_FAILED", values };
   }
   const { data } = await adminSupabase().rpc("request_login", {
     p_email: parsed.data.email,

@@ -12,6 +12,7 @@ import { t } from "@/lib/i18n";
 export function LoginForm({ next, turnstile }: { next?: string | undefined; turnstile: ReactNode }) {
   const [state, action, pending] = useActionState<FormState, FormData>(requestLoginForm, { status: "idle" });
   const emailError = state.status === "error" && state.error === "VALIDATION";
+  const values = state.status === "error" ? (state.values ?? {}) : {};
 
   return (
     <form action={action} noValidate className="flex flex-col gap-4">
@@ -24,6 +25,7 @@ export function LoginForm({ next, turnstile }: { next?: string | undefined; turn
           id="login-email"
           name="email"
           type="email"
+          defaultValue={values.email}
           required
           autoComplete="email"
           aria-invalid={emailError}

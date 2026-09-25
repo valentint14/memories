@@ -25,6 +25,7 @@ export function OrganizerCreateForm({
   const [state, action, pending] = useActionState<FormState, FormData>(createEventForm, { status: "idle" });
   const fields = state.status === "error" ? (state.fields ?? {}) : {};
   const general = state.status === "error" && state.error !== "VALIDATION" ? state.error : undefined;
+  const values = state.status === "error" ? (state.values ?? {}) : {};
 
   return (
     <form action={action} noValidate className="flex flex-col gap-4">
@@ -42,6 +43,7 @@ export function OrganizerCreateForm({
           id="oc-name"
           name="name"
           type="text"
+          defaultValue={values.name}
           required
           maxLength={120}
           aria-invalid={fields.name !== undefined}
@@ -62,6 +64,7 @@ export function OrganizerCreateForm({
           id="oc-date"
           name="eventDate"
           type="date"
+          defaultValue={values.eventDate}
           required
           min={minDate}
           max={maxDate}
@@ -82,6 +85,7 @@ export function OrganizerCreateForm({
               id="oc-accept"
               name="accepted"
               type="checkbox"
+              defaultChecked={values.accepted === "on"}
               required
               aria-invalid={fields.accepted !== undefined}
               aria-describedby="oc-accept-error"

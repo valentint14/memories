@@ -140,15 +140,15 @@ export async function createEventForm(_prev: FormState, formData: FormData): Pro
     const value = formData.get(name);
     return typeof value === "string" ? value : "";
   };
-  const parsed = eventBasicsSchema(new Date()).safeParse({ name: text("name"), eventDate: text("eventDate") });
-  if (!parsed.success) {
-    const fields: Record<string, string> = {};
-    for (const issue of parsed.error.issues) fields[issue.path.join(".")] ??= issue.message;
-    return { status: "error", error: "VALIDATION", fields };
-  }
+  const values = { name: text("name"), eventDate: text("eventDate"), accepted: formData.get("accepted") === "on" ? "on" : "" };
+  const parsed = eventBasicsSchema(new Date()).safeParse({ name: values.name, eventDate: values.eventDate });
   const needsTerms = text("termsVersion") !== "";
-  if (needsTerms && formData.get("accepted") !== "on") {
-    return { status: "error", error: "VALIDATION", fields: { accepted: "validation.acceptTerms" } };
+  const missingAcceptance = needsTerms && values.accepted !== "on";
+  if (!parsed.success || missingAcceptance) {
+    const fields: Record<string, string> = {};
+    if (!parsed.success) for (const issue of parsed.error.issues) fields[issue.path.join(".")] ??= issue.message;
+    if (missingAcceptance) fields.accepted = "validation.acceptTerms";
+    return { status: "error", error: "VALIDATION", fields, values };
   }
 
   const supabase = await serverSupabase();
@@ -159,7 +159,11 @@ export async function createEventForm(_prev: FormState, formData: FormData): Pro
   });
   if (error) {
     const { code } = mapDbError(error);
-    return { status: "error", error: ["AWAITING_LIMIT_REACHED", "TERMS_OUTDATED", "VALIDATION", "FORBIDDEN"].includes(code) ? code : "INTERNAL" };
+    return {
+      status: "error",
+      error: ["AWAITING_LIMIT_REACHED", "TERMS_OUTDATED", "VALIDATION", "FORBIDDEN"].includes(code) ? code : "INTERNAL",
+      values,
+    };
   }
   revalidatePath("/events");
   redirect(`/events/${data}`);

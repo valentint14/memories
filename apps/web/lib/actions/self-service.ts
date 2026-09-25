@@ -16,7 +16,16 @@ import { createSelfServiceSchema, isHoneypotFilled } from "../validation/self-se
 export type FormState =
   | { status: "idle" }
   | { status: "resent" }
-  | { status: "error"; error: ErrorCode; fields?: Record<string, string> };
+  | {
+      status: "error";
+      error: ErrorCode;
+      fields?: Record<string, string>;
+      /**
+       * Valorile trimise: React golește formularul nativ după fiecare acțiune, iar la eroare
+       * câmpurile le primesc înapoi, ca utilizatorul să nu completeze totul din nou.
+       */
+      values?: Record<string, string>;
+    };
 
 function text(formData: FormData, name: string): string {
   const value = formData.get(name);
@@ -43,6 +52,12 @@ function fieldErrors(issues: z.core.$ZodIssue[]): Record<string, string> {
  * redirecționare la pagina de cod. Limitele depășite și capcana completată duc la un id aleator.
  */
 export async function requestEventCreationForm(_prev: FormState, formData: FormData): Promise<FormState> {
+  const values = {
+    email: text(formData, "email"),
+    name: text(formData, "name"),
+    eventDate: text(formData, "eventDate"),
+    accepted: formData.get("accepted") === "on" ? "on" : "",
+  };
   const parsed = createSelfServiceSchema().safeParse({
     email: text(formData, "email"),
     name: text(formData, "name"),
@@ -51,10 +66,10 @@ export async function requestEventCreationForm(_prev: FormState, formData: FormD
     privacyVersion: text(formData, "privacyVersion"),
     accepted: formData.get("accepted") ?? undefined,
   });
-  if (!parsed.success) return { status: "error", error: "VALIDATION", fields: fieldErrors(parsed.error.issues) };
+  if (!parsed.success) return { status: "error", error: "VALIDATION", fields: fieldErrors(parsed.error.issues), values };
 
   if (!(await verifyTurnstile(text(formData, "cf-turnstile-response"), await clientIp()))) {
-    return { status: "error", error: "CAPTCHA_FAILED" };
+    return { status: "error", error: "CAPTCHA_FAILED", values };
   }
 
   let requestId: string = randomUUID();
@@ -71,7 +86,7 @@ export async function requestEventCreationForm(_prev: FormState, formData: FormD
     });
     if (error) {
       const { code } = mapDbError(error);
-      return { status: "error", error: code === "TERMS_OUTDATED" || code === "VALIDATION" ? code : "INTERNAL" };
+      return { status: "error", error: code === "TERMS_OUTDATED" || code === "VALIDATION" ? code : "INTERNAL", values };
     }
     if (data) requestId = data;
   }

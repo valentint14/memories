@@ -36,6 +36,7 @@ export function CreateEventForm({
   const [state, action, pending] = useActionState<FormState, FormData>(requestEventCreationForm, { status: "idle" });
   const fields = state.status === "error" ? (state.fields ?? {}) : {};
   const general = state.status === "error" && state.error !== "VALIDATION" ? state.error : undefined;
+  const values = state.status === "error" ? (state.values ?? {}) : {};
 
   return (
     <form action={action} noValidate className="flex flex-col gap-4">
@@ -50,6 +51,7 @@ export function CreateEventForm({
           id="ss-email"
           name="email"
           type="email"
+          defaultValue={values.email}
           required
           autoComplete="email"
           aria-invalid={fields.email !== undefined}
@@ -70,6 +72,7 @@ export function CreateEventForm({
           id="ss-name"
           name="name"
           type="text"
+          defaultValue={values.name}
           required
           maxLength={120}
           aria-invalid={fields.name !== undefined}
@@ -87,6 +90,7 @@ export function CreateEventForm({
           id="ss-date"
           name="eventDate"
           type="date"
+          defaultValue={values.eventDate}
           required
           min={minDate}
           max={maxDate}
@@ -109,6 +113,7 @@ export function CreateEventForm({
             id="ss-accept"
             name="accepted"
             type="checkbox"
+            defaultChecked={values.accepted === "on"}
             required
             aria-invalid={fields.accepted !== undefined}
             aria-describedby="ss-accept-error"
