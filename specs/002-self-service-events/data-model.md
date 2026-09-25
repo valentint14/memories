@@ -62,7 +62,7 @@ un rând în `app_audit_log`.
 | `code` | text unic | `'complete'` (singurul rând în 002) |
 | `name` | text | 1–60 caractere |
 | `price_minor` | bigint | ≥ 0 |
-| `max_files_per_guest` | int | 1–10.000 |
+| `max_files_per_guest` | int | 1–1.000 (plafonul din 001) |
 | `max_photo_bytes` | bigint | 1 – 52.428.800 (plafonul 001/FR-001a) |
 | `max_video_bytes` | bigint | 1 – 1.073.741.824 |
 | `retention_option_id` | uuid FK → `retention_options` | opțiunea inclusă; trebuie să fie activă |

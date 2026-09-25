@@ -27,10 +27,13 @@ export function GalleryGrid({
   eventId,
   initialItems,
   initialCursor,
+  live = true,
 }: {
   eventId: string;
   initialItems: GalleryItem[];
   initialCursor: MediaCursor | null;
+  /** Fals pentru un eveniment suspendat (002/FR-028a). */
+  live?: boolean;
 }) {
   const [items, setItems] = useState(initialItems);
   const [cursor, setCursor] = useState(initialCursor);
@@ -61,7 +64,7 @@ export function GalleryGrid({
     onDelete: (id) => {
       setItems((prev) => mergeGallery(prev, [], [id]));
     },
-  });
+  }, live);
 
   const selectedIds = selected === "all" ? items.map((i) => i.id) : items.filter((i) => selected.has(i.id)).map((i) => i.id);
 

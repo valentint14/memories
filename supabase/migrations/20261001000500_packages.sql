@@ -5,7 +5,7 @@ create table public.packages (
   code text not null unique check (code ~ '^[a-z][a-z0-9_]{1,30}$'),
   name text not null check (char_length(name) between 1 and 60 and name = btrim(name)),
   price_minor bigint not null default 0 check (price_minor >= 0),
-  max_files_per_guest int not null default 50 check (max_files_per_guest between 1 and 10000),
+  max_files_per_guest int not null default 50 check (max_files_per_guest between 1 and 1000),
   max_photo_bytes bigint not null default 52428800 check (max_photo_bytes between 1 and 52428800),
   max_video_bytes bigint not null default 1073741824 check (max_video_bytes between 1 and 1073741824),
   -- Opțiunea de retenție inclusă; se completează de administrator (seed local: 3 luni).

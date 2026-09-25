@@ -858,6 +858,17 @@ export type Database = {
       }
     }
     Functions: {
+      activate_event: {
+        Args: {
+          p_event_id: string
+          p_external_ref?: string
+          p_reason: string
+          p_source: Database["public"]["Enums"]["status_change_source"]
+        }
+        Returns: {
+          already_active: boolean
+        }[]
+      }
       admin_event_stats: {
         Args: { p_event_id?: string }
         Returns: {
@@ -867,6 +878,10 @@ export type Database = {
         }[]
       }
       admin_event_token: { Args: { p_event_id: string }; Returns: string }
+      admin_update_pending_event: {
+        Args: { p_event_date: string; p_event_id: string; p_name: string }
+        Returns: undefined
+      }
       allow_event_write: { Args: never; Returns: undefined }
       anonymize_expired_events: { Args: { p_now?: string }; Returns: number }
       assert_current_legal_versions: {
@@ -877,6 +892,7 @@ export type Database = {
         Args: { p_event_date: string; p_name: string }
         Returns: undefined
       }
+      assert_reason: { Args: { p_reason: string }; Returns: undefined }
       auth_mail_allowed: {
         Args: { p_email: string; p_ip_hash: string; p_ip_limit: number }
         Returns: boolean
@@ -1035,6 +1051,10 @@ export type Database = {
         Returns: undefined
       }
       rate_limit_retry_after: { Args: { p_window: string }; Returns: number }
+      reactivate_event: {
+        Args: { p_event_id: string; p_reason: string }
+        Returns: undefined
+      }
       reconcile_deletions: { Args: never; Returns: number }
       register_failed_code: {
         Args: { p_request_id: string }
@@ -1104,6 +1124,10 @@ export type Database = {
       start_guest_session: {
         Args: { p_display_name?: string; p_ip_hash: string; p_token: string }
         Returns: string
+      }
+      suspend_event: {
+        Args: { p_event_id: string; p_reason: string }
+        Returns: undefined
       }
       transition_event: {
         Args: {

@@ -55,23 +55,31 @@ export default async function EventGalleryPage({ params }: { params: Promise<{ e
     listGallery(eventId),
     latestArchive(eventId),
     countReadyFiles(eventId),
-    retentionQuote(eventId),
+    event.status === "suspended" ? Promise.resolve([]) : retentionQuote(eventId),
   ]);
+  const suspended = event.status === "suspended";
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold">{event.name}</h1>
         <p className="text-muted">{formatDate(event.eventDate)}</p>
       </header>
+      {suspended && (
+        <p role="alert" className="rounded-lg border border-danger bg-red-50 p-4">
+          {t("organizer.suspendedExplain")}
+        </p>
+      )}
       <div className="grid gap-4 lg:grid-cols-2">
-        <RetentionPanel
-          eventId={eventId}
-          current={{ months: event.retentionMonths, finalPriceMinor: event.finalPriceMinor ?? 0, purgeAt: event.purgeAt }}
-          initialOptions={quote}
-        />
+        {!suspended && (
+          <RetentionPanel
+            eventId={eventId}
+            current={{ months: event.retentionMonths, finalPriceMinor: event.finalPriceMinor ?? 0, purgeAt: event.purgeAt }}
+            initialOptions={quote}
+          />
+        )}
         <ArchivePanel eventId={eventId} readyFiles={readyFiles} initial={archive} />
       </div>
-      <GalleryGrid eventId={eventId} initialItems={first.items} initialCursor={first.nextCursor} />
+      <GalleryGrid eventId={eventId} initialItems={first.items} initialCursor={first.nextCursor} live={!suspended} />
     </div>
   );
 }

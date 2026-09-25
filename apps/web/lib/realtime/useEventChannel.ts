@@ -12,12 +12,18 @@ export type ChannelStatus = "connecting" | "subscribed" | "offline";
  * la fiecare (re)abonare se apelează `onResync`, care cere diferența de la ultimul `updatedAt`
  * văzut — astfel o reconectare recuperează tot ce a apărut între timp, fără duplicate (FR-033).
  */
-export function useEventChannel(eventId: string, handlers: { onResync: () => void; onDelete: (id: string) => void }): ChannelStatus {
-  const [status, setStatus] = useState<ChannelStatus>("connecting");
+export function useEventChannel(
+  eventId: string,
+  handlers: { onResync: () => void; onDelete: (id: string) => void },
+  /** Fals pentru un eveniment suspendat: fără actualizări în timp real (002/FR-028a). */
+  enabled = true,
+): ChannelStatus {
+  const [status, setStatus] = useState<ChannelStatus>(enabled ? "connecting" : "offline");
   const handlersRef = useRef(handlers);
   handlersRef.current = handlers;
 
   useEffect(() => {
+    if (!enabled) return;
     const supabase = browserSupabase();
     let timer: ReturnType<typeof setTimeout> | undefined;
     // Mai multe evenimente apropiate (INSERT + UPDATE-uri) → o singură resincronizare.
@@ -67,7 +73,7 @@ export function useEventChannel(eventId: string, handlers: { onResync: () => voi
       window.removeEventListener("online", onOnline);
       void supabase.removeChannel(channel);
     };
-  }, [eventId]);
+  }, [eventId, enabled]);
 
   return status;
 }

@@ -7,6 +7,7 @@ import { requireAdmin } from "../admin/guard";
 import { adminSupabase } from "../supabase/admin";
 import { serverEnv } from "../server-env";
 import { eventInputSchema, type EventData, type EventInput } from "../validation/event";
+import { eventBasicsSchema } from "../validation/self-service";
 import { ActionError, runAction, throwIfDbError, type ActionResult } from "./result";
 
 /** Creează utilizatorul Auth al organizatorului, dacă nu există (research.md R4). */
@@ -145,4 +146,58 @@ export async function deleteEvent(eventId: string, confirmName: string): Promise
     revalidatePath("/admin/events");
     return { status: "deleting" as const };
   });
+}
+
+const reasonSchema = z.string().trim().min(1, "validation.reason").max(500, "validation.reason");
+const stateActionSchema = z.object({ eventId: z.uuid(), reason: reasonSchema });
+
+function revalidateEvent(eventId: string): void {
+  revalidatePath("/admin/events");
+  revalidatePath(`/admin/events/${eventId}`);
+}
+
+/** Activarea pachetului complet (002: FR-025, FR-028); aceeași funcție SQL o va folosi plata online. */
+export async function activateEvent(input: { eventId: string; reason: string }): Promise<ActionResult<{ alreadyActive: boolean }>> {
+  return runAction(stateActionSchema, input, async ({ eventId, reason }) => {
+    const supabase = await requireAdmin();
+    const { data, error } = await supabase.rpc("activate_event", { p_event_id: eventId, p_source: "admin", p_reason: reason });
+    throwIfDbError(error);
+    revalidateEvent(eventId);
+    return { alreadyActive: data?.[0]?.already_active ?? false };
+  });
+}
+
+export async function suspendEvent(input: { eventId: string; reason: string }): Promise<ActionResult<null>> {
+  return runAction(stateActionSchema, input, async ({ eventId, reason }) => {
+    const supabase = await requireAdmin();
+    const { error } = await supabase.rpc("suspend_event", { p_event_id: eventId, p_reason: reason });
+    throwIfDbError(error);
+    revalidateEvent(eventId);
+    return null;
+  });
+}
+
+export async function reactivateEvent(input: { eventId: string; reason: string }): Promise<ActionResult<null>> {
+  return runAction(stateActionSchema, input, async ({ eventId, reason }) => {
+    const supabase = await requireAdmin();
+    const { error } = await supabase.rpc("reactivate_event", { p_event_id: eventId, p_reason: reason });
+    throwIfDbError(error);
+    revalidateEvent(eventId);
+    return null;
+  });
+}
+
+/** Numele și data unui eveniment neactivat (002: FR-028). */
+export async function updatePendingEvent(input: { eventId: string; name: string; eventDate: string }): Promise<ActionResult<null>> {
+  return runAction(
+    eventBasicsSchema(new Date()).extend({ eventId: z.uuid() }),
+    input,
+    async ({ eventId, name, eventDate }) => {
+      const supabase = await requireAdmin();
+      const { error } = await supabase.rpc("admin_update_pending_event", { p_event_id: eventId, p_name: name, p_event_date: eventDate });
+      throwIfDbError(error);
+      revalidateEvent(eventId);
+      return null;
+    },
+  );
 }
