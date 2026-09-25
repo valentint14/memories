@@ -27,3 +27,7 @@ dist/
 supabase/.branches/
 supabase/.temp/
 fixtures/media/big-50mb.jpg
+
+# Secretele serverului (deploy/*.env.example rămân în repository)
+deploy/.env
+deploy/*.env

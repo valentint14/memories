@@ -1,0 +1,36 @@
+# Aplicația pe un server propriu: Oracle Always Free, Raspberry Pi sau orice VM cu Docker
+# (docs/livrare-server-propriu.md). Imaginile vin din GitHub Container Registry, publicate de CI
+# la fiecare merge pe main, pentru arm64 și amd64.
+#
+# Nimic nu ascultă pe porturi publice: Cloudflare Tunnel deschide o conexiune spre Cloudflare și
+# trimite traficul HTTPS către `web` prin rețeaua internă.
+
+services:
+  web:
+    image: ${IMAGE_PREFIX:-ghcr.io/valentint14}/memories-web:${TAG:-latest}
+    env_file: web.env
+    environment:
+      # În spatele Cloudflare, prima valoare din x-forwarded-for vine de la client (falsificabilă).
+      TRUSTED_IP_HEADER: cf-connecting-ip
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/login').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  worker:
+    image: ${IMAGE_PREFIX:-ghcr.io/valentint14}/memories-worker:${TAG:-latest}
+    env_file: worker.env
+    restart: unless-stopped
+    # La oprire (actualizare), worker-ul termină joburile în curs; un video mare durează minute.
+    stop_grace_period: 10m
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?lipsește CLOUDFLARE_TUNNEL_TOKEN în .env}
+    restart: unless-stopped
+    depends_on:
+      - web

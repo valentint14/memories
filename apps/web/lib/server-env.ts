@@ -34,6 +34,11 @@ export const serverEnv = {
     }
     return true;
   },
+  /** Antetul cu IP-ul real pus de proxy-ul din față (ex. `cf-connecting-ip`); null = Vercel. */
+  get trustedIpHeader(): string | null {
+    const value = process.env.TRUSTED_IP_HEADER?.trim().toLowerCase();
+    return value === undefined || value === "" ? null : value;
+  },
   /** Limita de cereri de email per IP pe oră (FR-036); ridicată doar pe serverul e2e principal. */
   get rateLimitIpPerHour(): number {
     const raw = process.env.RATE_LIMIT_IP_PER_HOUR;
