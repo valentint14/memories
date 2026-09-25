@@ -36,7 +36,8 @@ Aceleași chei ca în [`apps/worker/.env.example`](../.env.example):
    HEIC și testele media în imagine.
 2. Pe `main`, jobul `publish-worker` din `.github/workflows/ci.yml` publică imaginea în Scaleway
    Container Registry cu tag-ul commit-ului (secretele `SCW_SECRET_KEY` și `SCW_REGISTRY_NAMESPACE`
-   în GitHub).
+   în GitHub). Testele nu se mai repetă pe `main`: protecția ramurii cere ca PR-ul să fie la zi
+   cu `main` și cu jobul `checks` trecut, deci codul publicat e exact cel testat.
 3. Actualizarea containerului pe noul tag se face din consola Scaleway sau cu
    `scw container container update <id> registry-image=<imagine>:<sha> redeploy=true`.
 
