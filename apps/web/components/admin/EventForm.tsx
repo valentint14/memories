@@ -3,25 +3,12 @@
 import { computePurgeAt, finalPriceMinor, leiToMinor } from "@memories/shared";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
-import {
-  Button,
-  FieldError,
-  Form,
-  Input,
-  Label,
-  ListBox,
-  ListBoxItem,
-  Popover,
-  Select,
-  SelectValue,
-  Text,
-  TextField,
-} from "react-aria-components";
+import { Button, FieldError, Form, Input, Label, Text, TextField } from "react-aria-components";
 import { createEvent, updateEvent } from "@/lib/actions/admin";
 import { isoToLocalInput, localInputToIso } from "@/lib/dates";
 import { formatDateTime, formatMoney, t, type MessageKey } from "@/lib/i18n";
 import { ui } from "@/lib/ui";
-import { ChevronDownIcon } from "../ui/icons";
+import { SelectField } from "../ui/SelectField";
 
 export interface RetentionOptionView {
   id: string;
@@ -201,35 +188,13 @@ export function EventForm({ options, initial }: { options: RetentionOptionView[]
         <FieldError className={errorClass} />
       </TextField>
 
-      <Select
+      <SelectField
         name="retentionOptionId"
+        label={t("admin.form.retention")}
         value={optionId}
-        onChange={(key) => {
-          if (key !== null) setOptionId(String(key));
-        }}
-        className={fieldClass}
-      >
-        <Label className="font-medium">{t("admin.form.retention")}</Label>
-        <Button className={`${inputClass} flex cursor-pointer items-center justify-between gap-2 text-left`}>
-          <SelectValue />
-          <ChevronDownIcon />
-        </Button>
-        <FieldError className={errorClass} />
-        <Popover className="min-w-(--trigger-width) rounded-xs border border-ink bg-paper-raised shadow-dialog">
-          <ListBox className="p-1">
-            {options.map((o) => (
-              <ListBoxItem
-                key={o.id}
-                id={o.id}
-                textValue={optionLabel(o)}
-                className="min-h-11 cursor-pointer content-center rounded-xs px-3 py-2 outline-none data-focused:bg-paper data-selected:font-semibold"
-              >
-                {optionLabel(o)}
-              </ListBoxItem>
-            ))}
-          </ListBox>
-        </Popover>
-      </Select>
+        onChange={setOptionId}
+        options={options.map((o) => ({ id: o.id, label: optionLabel(o) }))}
+      />
 
       <div className="flex flex-col gap-1 border-y border-ink py-4 sm:col-span-2" aria-live="polite">
         <p>

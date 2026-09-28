@@ -153,7 +153,7 @@ test.describe("002: creare self-service, confirmare, documente legale", () => {
     await loginAsNewAdmin(page, await createAdmin());
     await gotoHydrated(page, "/admin/package");
     await expectAccessible(page, "/admin/package");
-    await gotoHydrated(page, "/admin/events?origin=self_service");
+    await gotoHydrated(page, "/admin/events?view=requested");
     await expectAccessible(page, "/admin/events filtrat");
     await gotoHydrated(page, `/admin/events/${eventId}`);
     await expectAccessible(page, "eveniment neactivat (admin)");

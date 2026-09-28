@@ -87,9 +87,9 @@ test("creează evenimentul, arată prețul, data ștergerii și descarcă QR-ul"
   expect(token1).not.toBe(token2);
   expect(token1.slice(0, 6)).not.toBe(token2.slice(0, 6));
 
-  // Lista arată prețul final, retenția și data ștergerii.
+  // Registrul arată prețul final, retenția și data ștergerii.
   await page.goto("/admin/events");
-  const row = page.getByRole("row", { name: new RegExp(firstName) });
+  const row = page.getByRole("listitem").filter({ hasText: firstName });
   await expect(row).toContainText("299,00");
   await expect(row).toContainText("3 luni");
   await expect(row).toContainText("0 fișiere");

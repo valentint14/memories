@@ -48,6 +48,32 @@ strong {
   outline-offset: 2px;
 }
 
+/* În listele derulante focusul urmează mouse-ul; opțiunea activă se vede prin fundal, nu prin contur. */
+[role="option"]:focus-visible {
+  outline: none;
+}
+
+/*
+ * Câmpurile de text nu primesc contur: focusul se vede prin bordura care trece din `field` în
+ * cerneală. Un câmp invalid își păstrează bordura de eroare și când e focusat.
+ */
+input:not([type="checkbox"]):not([type="radio"]):focus,
+textarea:focus {
+  outline: none;
+}
+input:not([type="checkbox"]):not([type="radio"]):not([aria-invalid="true"]):not([data-invalid]):focus,
+textarea:not([aria-invalid="true"]):not([data-invalid]):focus {
+  border-color: var(--color-ink);
+}
+
+/* Fără bare de derulare vizibile; derularea merge în continuare cu rotița, touchpadul, atingerea și tastatura. */
+* {
+  scrollbar-width: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;

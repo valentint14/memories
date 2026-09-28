@@ -862,7 +862,7 @@ export type Database = {
         Args: {
           p_event_id: string
           p_external_ref?: string
-          p_reason: string
+          p_reason?: string
           p_source: Database["public"]["Enums"]["status_change_source"]
         }
         Returns: {

@@ -82,7 +82,7 @@ aceleași limite de frecvență; răspuns neutru.
 
 | Acțiune | Funcție SQL |
 | --- | --- |
-| `activateEvent({ eventId, reason })` | `activate_event(..., source => 'admin')` |
+| `activateEvent({ eventId })` | `activate_event(..., source => 'admin')`, fără motiv |
 | `suspendEvent({ eventId, reason })` | `suspend_event` |
 | `reactivateEvent({ eventId, reason })` | `reactivate_event` |
 | `updatePendingEvent({ eventId, name, eventDate })` | `admin_update_pending_event` (formularul de editare din 001 arată doar numele și data pentru `awaiting_activation`) |

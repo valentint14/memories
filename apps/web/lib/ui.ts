@@ -31,6 +31,8 @@ export const ui = {
   hint: "text-sm text-ink-muted",
   fieldError: "text-sm text-danger",
   input: `${field} min-h-12 text-base`,
+  /** Câmp de pe o bară de instrumente (căutare lângă filtre). */
+  inputCompact: `${field} min-h-10 text-sm`,
   /** Câmpul pentru codul de 6 cifre. */
   codeInput: `${field} min-h-14 font-mono text-2xl font-medium tracking-[0.4em] tabular-nums`,
   textarea: `${field} py-3 text-base`,
@@ -42,8 +44,12 @@ export const ui = {
   buttonPrimaryLarge: `${primary} min-h-14 text-lg`,
   /** Acțiuni secundare: contur de cerneală. */
   buttonSecondary: `${button} min-h-12 border border-ink font-medium text-ink`,
+  /** Acțiune secundară pe o bară de instrumente, la înălțimea lui `inputCompact`. */
+  buttonSecondaryCompact: `${button} min-h-10 border border-ink text-sm font-medium text-ink`,
   /** Ștergere definitivă, în afara dialogului de confirmare. */
   buttonDanger: `${button} min-h-12 border border-danger font-medium text-danger`,
+  /** Ștergere pe o bară de instrumente (bara galeriei), la înălțimea lui `inputCompact`. */
+  buttonDangerCompact: `${button} min-h-10 border border-danger text-sm font-medium text-danger`,
   /** Confirmarea finală a unei ștergeri, în dialog (acțiunea principală a dialogului). */
   buttonDangerSolid: `${button} min-h-12 bg-danger font-semibold text-paper-raised`,
   /** Acțiune discretă: text subliniat. */

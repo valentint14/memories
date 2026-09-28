@@ -406,8 +406,10 @@ linkul invitaților devine invalid, iar fișierele nu mai sunt accesibile.
   (dacă există) și, pentru evenimentele active sau suspendate, numărul de fișiere, spațiul
   ocupat și data ștergerii, cu filtrare după stare și după „activare solicitată”.
 - **FR-028**: Administratorul TREBUIE să poată activa pachetul complet și suspenda sau reactiva
-  un eveniment, cu un motiv obligatoriu (1–500 de caractere). Fiecare acțiune TREBUIE să ceară
-  confirmare și TREBUIE înregistrată conform FR-024, împreună cu motivul. Pentru un eveniment
+  un eveniment. Fiecare acțiune TREBUIE să ceară confirmare într-un dialog care arată numele
+  evenimentului și emailul organizatorului, și TREBUIE înregistrată conform FR-024. Suspendarea
+  și reactivarea cer în plus un motiv obligatoriu (1–500 de caractere), înregistrat în istoric;
+  activarea nu cere motiv. Pentru un eveniment
   în așteptarea activării, administratorul poate modifica doar numele și data (ca
   organizatorul); prețul, limitele și perioada de upload se stabilesc la activare, din pachetul
   complet.

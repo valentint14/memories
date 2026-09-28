@@ -26,25 +26,18 @@ export interface AdminEventRow {
   lastActivationRequestAt: string | null;
 }
 
-export interface EventFilters {
-  origin?: "admin" | "self_service" | undefined;
-  status?: EventStatus | undefined;
-  /** Doar evenimentele neactivate cu cerere de activare (002/FR-027). */
-  requested?: boolean | undefined;
-}
-
-/** Lista evenimentelor cu statistici agregate (001/FR-003, FR-007; 002/FR-027) — fără acces la media. */
-export async function listEvents(filters: EventFilters = {}): Promise<AdminEventRow[]> {
+/**
+ * Toate evenimentele cu statistici agregate (001/FR-003, FR-007; 002/FR-027) — fără acces la media.
+ * Gruparea și căutarea se fac în `ledger.ts`, pe lista întreagă, ca numărătoarea filelor să fie exactă.
+ */
+export async function listEvents(): Promise<AdminEventRow[]> {
   const supabase = await requireAdmin();
-  let query = supabase
-    .from("events")
-    .select("id, name, event_date, organizer_email, status, origin, final_price_minor, retention_months, purge_at, pending_purge_at, created_at, anonymized_at")
-    .not("status", "in", "(deleting,unconfirmed)")
-    .order("created_at", { ascending: false });
-  if (filters.origin) query = query.eq("origin", filters.origin);
-  if (filters.status) query = query.eq("status", filters.status);
   const [events, stats, requests] = await Promise.all([
-    query,
+    supabase
+      .from("events")
+      .select("id, name, event_date, organizer_email, status, origin, final_price_minor, retention_months, purge_at, pending_purge_at, created_at, anonymized_at")
+      .not("status", "in", "(deleting,unconfirmed)")
+      .order("created_at", { ascending: false }),
     supabase.rpc("admin_event_stats", {}),
     supabase.from("activation_requests").select("event_id, requested_at").order("requested_at", { ascending: false }),
   ]);
@@ -54,7 +47,7 @@ export async function listEvents(filters: EventFilters = {}): Promise<AdminEvent
   const byId = new Map((stats.data ?? []).map((s) => [s.event_id, s]));
   const lastRequest = new Map<string, string>();
   for (const r of requests.data ?? []) if (!lastRequest.has(r.event_id)) lastRequest.set(r.event_id, r.requested_at);
-  const rows = (events.data ?? []).map((e) => ({
+  return (events.data ?? []).map((e) => ({
     id: e.id,
     name: e.name,
     eventDate: e.event_date,
@@ -71,7 +64,6 @@ export async function listEvents(filters: EventFilters = {}): Promise<AdminEvent
     totalBytes: byId.get(e.id)?.total_bytes ?? 0,
     lastActivationRequestAt: lastRequest.get(e.id) ?? null,
   }));
-  return filters.requested ? rows.filter((r) => r.status === "awaiting_activation" && r.lastActivationRequestAt !== null) : rows;
 }
 
 export interface AdminEventDetail extends AdminEventRow {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { SelectField } from "@/components/ui/SelectField";
 import { updatePackage } from "@/lib/actions/admin";
 import { t, tp, type MessageKey } from "@/lib/i18n";
 import type { PackageSettings } from "@/lib/admin/package";
@@ -77,25 +78,14 @@ export function PackageForm({
       {field("pk-photo", "maxPhotoMb", "admin.package.maxPhotoMb", { type: "number", min: 1, max: 50, defaultValue: initial.maxPhotoBytes / MB })}
       {field("pk-video", "maxVideoMb", "admin.package.maxVideoMb", { type: "number", min: 1, max: 1024, defaultValue: initial.maxVideoBytes / MB })}
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="pk-option" className={ui.label}>
-          {t("admin.package.retention")}
-        </label>
-        <select
-          id="pk-option"
+        <SelectField
           name="retentionOptionId"
-          defaultValue={initial.retentionOptionId ?? ""}
-          aria-invalid={fields.retentionOptionId !== undefined}
-          className={inputClass}
-        >
-          <option value="" disabled>
-            {t("admin.package.choose")}
-          </option>
-          {options.map((o) => (
-            <option key={o.id} value={o.id}>
-              {tp("plural.months", o.months)}
-            </option>
-          ))}
-        </select>
+          label={t("admin.package.retention")}
+          placeholder={t("admin.package.choose")}
+          defaultValue={initial.retentionOptionId ?? undefined}
+          isInvalid={fields.retentionOptionId !== undefined}
+          options={options.map((o) => ({ id: o.id, label: tp("plural.months", o.months) }))}
+        />
         {fields.retentionOptionId !== undefined && <p className={ui.fieldError}>{t(fields.retentionOptionId as MessageKey)}</p>}
       </div>
       {field("pk-awaiting", "maxAwaitingEventsPerOrganizer", "admin.package.maxAwaiting", {

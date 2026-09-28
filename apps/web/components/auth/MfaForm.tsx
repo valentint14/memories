@@ -43,11 +43,15 @@ export function MfaForm({ factorId: existingFactorId }: { factorId: string | nul
                 alt={t("mfa.qrAlt")}
                 width={200}
                 height={200}
-                className="rounded-xs border border-ink p-2"
+                className="self-center rounded-xs border border-ink p-2"
               />
-              <p>
-                {t("mfa.secretLabel")}{" "}
-                <code data-testid="totp-secret" className={`${ui.data} break-all border border-rule bg-paper-raised px-2 py-1`}>
+              {/* Cheia rămâne pe un singur rând; pe ecrane foarte înguste se derulează orizontal. */}
+              <p className="flex flex-col gap-1.5">
+                <span>{t("mfa.secretLabel")}</span>
+                <code
+                  data-testid="totp-secret"
+                  className={`${ui.data} block overflow-x-auto whitespace-nowrap border border-rule bg-paper-raised px-2 py-1 text-center`}
+                >
                   {enrollment.secret}
                 </code>
               </p>

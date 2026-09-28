@@ -60,7 +60,7 @@ export default async function AdminEventPage({ params }: { params: Promise<{ eve
         <h2 id="state-title" className={ui.kicker}>
           {t("admin.state.title")}
         </h2>
-        <EventStateActions eventId={event.id} status={event.status} />
+        <EventStateActions eventId={event.id} subject={{ name: title, organizerEmail: event.organizerEmail }} status={event.status} />
       </section>
 
       {event.status === "awaiting_activation" && event.name !== null && (
