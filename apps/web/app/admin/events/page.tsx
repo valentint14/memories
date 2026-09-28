@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { StatusStamp } from "@/components/ui/StatusStamp";
 import { listEvents, type EventFilters } from "@/lib/admin/queries";
 import { formatBytes, formatDate, formatDateTime, formatMoney, t, tp, type MessageKey } from "@/lib/i18n";
+import { ui } from "@/lib/ui";
 
 export const metadata: Metadata = { title: "Evenimente" };
 
@@ -15,8 +17,6 @@ function parseFilters(params: { origin?: string; status?: string; requested?: st
   };
 }
 
-const selectClass = "min-h-11 rounded-lg border border-gray-400 px-3";
-
 /** Lista evenimentelor, cu filtre după origine, stare și cerere de activare (001/FR-003, 002/FR-027). */
 export default async function AdminEventsPage({
   searchParams,
@@ -26,30 +26,30 @@ export default async function AdminEventsPage({
   const filters = parseFilters(await searchParams);
   const events = await listEvents(filters);
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">{t("admin.events")}</h1>
-        <Link href="/admin/events/new" className="inline-flex min-h-11 items-center rounded-lg bg-brand-600 px-4 font-semibold text-white">
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <h1 className={ui.pageTitle}>{t("admin.events")}</h1>
+        <Link href="/admin/events/new" className={ui.buttonPrimary}>
           {t("admin.newEvent")}
         </Link>
       </div>
 
-      <form method="get" className="flex flex-wrap items-end gap-4" aria-label={t("admin.filters.label")}>
-        <div className="flex flex-col gap-1">
-          <label htmlFor="f-origin" className="text-sm font-medium">
+      <form method="get" className="flex flex-wrap items-end gap-4 border-y border-rule py-4" aria-label={t("admin.filters.label")}>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="f-origin" className={`${ui.kicker} text-ink-muted`}>
             {t("admin.filters.origin")}
           </label>
-          <select id="f-origin" name="origin" defaultValue={filters.origin ?? ""} className={selectClass}>
+          <select id="f-origin" name="origin" defaultValue={filters.origin ?? ""} className={ui.input}>
             <option value="">{t("admin.filters.all")}</option>
             <option value="self_service">{t("admin.origin.self_service")}</option>
             <option value="admin">{t("admin.origin.admin")}</option>
           </select>
         </div>
-        <div className="flex flex-col gap-1">
-          <label htmlFor="f-status" className="text-sm font-medium">
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="f-status" className={`${ui.kicker} text-ink-muted`}>
             {t("admin.filters.status")}
           </label>
-          <select id="f-status" name="status" defaultValue={filters.status ?? ""} className={selectClass}>
+          <select id="f-status" name="status" defaultValue={filters.status ?? ""} className={ui.input}>
             <option value="">{t("admin.filters.all")}</option>
             {STATUSES.map((s) => (
               <option key={s} value={s}>
@@ -58,61 +58,65 @@ export default async function AdminEventsPage({
             ))}
           </select>
         </div>
-        <div className="flex min-h-11 items-center gap-2">
-          <input id="f-requested" name="requested" type="checkbox" value="1" defaultChecked={filters.requested} className="size-5" />
+        <div className="flex min-h-12 items-center gap-2">
+          <input id="f-requested" name="requested" type="checkbox" value="1" defaultChecked={filters.requested} className={ui.checkbox} />
           <label htmlFor="f-requested">{t("admin.filters.requested")}</label>
         </div>
-        <button type="submit" className="min-h-11 rounded-lg border border-brand-600 px-4 font-semibold text-brand-700">
+        <button type="submit" className={ui.buttonSecondary}>
           {t("admin.filters.apply")}
         </button>
       </form>
 
       {events.length === 0 ? (
-        <p className="text-muted">{t("admin.noEvents")}</p>
+        <p className="text-ink-muted">{t("admin.noEvents")}</p>
       ) : (
         <div className="overflow-x-auto" tabIndex={0} role="region" aria-label={t("admin.events")}>
-          <table className="w-full min-w-[1120px] border-collapse text-left">
+          <table className={`${ui.table} min-w-[1120px]`}>
             <caption className="sr-only">{t("admin.events")}</caption>
             <thead>
-              <tr className="border-b border-gray-300">
-                <th scope="col" className="p-2">{t("admin.col.event")}</th>
-                <th scope="col" className="p-2">{t("admin.col.date")}</th>
-                <th scope="col" className="p-2">{t("admin.col.organizer")}</th>
-                <th scope="col" className="p-2">{t("admin.col.status")}</th>
-                <th scope="col" className="p-2">{t("admin.col.created")}</th>
-                <th scope="col" className="p-2">{t("admin.col.activationRequest")}</th>
-                <th scope="col" className="p-2">{t("admin.col.files")}</th>
-                <th scope="col" className="p-2">{t("admin.col.price")}</th>
-                <th scope="col" className="p-2">{t("admin.col.retention")}</th>
-                <th scope="col" className="p-2">{t("admin.col.purgeAt")}</th>
+              <tr className={ui.theadRow}>
+                <th scope="col" className={ui.th}>{t("admin.col.event")}</th>
+                <th scope="col" className={ui.th}>{t("admin.col.date")}</th>
+                <th scope="col" className={ui.th}>{t("admin.col.organizer")}</th>
+                <th scope="col" className={ui.th}>{t("admin.col.status")}</th>
+                <th scope="col" className={ui.th}>{t("admin.col.created")}</th>
+                <th scope="col" className={ui.th}>{t("admin.col.activationRequest")}</th>
+                <th scope="col" className={ui.th}>{t("admin.col.files")}</th>
+                <th scope="col" className={ui.th}>{t("admin.col.price")}</th>
+                <th scope="col" className={ui.th}>{t("admin.col.retention")}</th>
+                <th scope="col" className={ui.th}>{t("admin.col.purgeAt")}</th>
               </tr>
             </thead>
             <tbody>
               {events.map((e) => {
                 const activated = e.status === "active" || e.status === "suspended" || e.status === "expiring";
                 return (
-                  <tr key={e.id} className="border-b border-gray-200">
-                    <th scope="row" className="p-2 font-medium">
+                  <tr key={e.id} className={ui.row}>
+                    <th scope="row" className={`${ui.td} font-medium`}>
                       {e.anonymizedAt ? (
                         <span>{t("admin.anonymizedEvent")}</span>
                       ) : (
-                        <Link href={`/admin/events/${e.id}`} className="text-brand-700 underline underline-offset-4">
+                        <Link href={`/admin/events/${e.id}`} className={ui.link}>
                           {e.name}
                         </Link>
                       )}
-                      <span className="ml-2 text-sm text-muted">{t(`admin.origin.${e.origin}`)}</span>
+                      <span className="block text-sm font-normal text-ink-muted">{t(`admin.origin.${e.origin}`)}</span>
                     </th>
-                    <td className="p-2">{formatDate(e.eventDate)}</td>
-                    <td className="p-2 break-all">{e.organizerEmail ?? t("admin.noDate")}</td>
-                    <td className="p-2">{t(`admin.status.${e.status}` as MessageKey)}</td>
-                    <td className="p-2">{formatDate(e.createdAt)}</td>
-                    <td className="p-2">{e.lastActivationRequestAt === null ? t("admin.noDate") : formatDateTime(e.lastActivationRequestAt)}</td>
-                    <td className="p-2">
+                    <td className={`${ui.td} ${ui.data} text-sm`}>{formatDate(e.eventDate)}</td>
+                    <td className={`${ui.td} break-all`}>{e.organizerEmail ?? t("admin.noDate")}</td>
+                    <td className={ui.td}>
+                      <StatusStamp status={e.status} prefix="admin.status" />
+                    </td>
+                    <td className={`${ui.td} ${ui.data} text-sm`}>{formatDate(e.createdAt)}</td>
+                    <td className={`${ui.td} ${ui.data} text-sm`}>
+                      {e.lastActivationRequestAt === null ? t("admin.noDate") : formatDateTime(e.lastActivationRequestAt)}
+                    </td>
+                    <td className={`${ui.td} ${ui.data} text-sm`}>
                       {activated ? `${tp("plural.files", e.fileCount)} · ${formatBytes(e.totalBytes)}` : t("admin.noDate")}
                     </td>
-                    <td className="p-2">{activated ? formatMoney(e.finalPriceMinor) : t("admin.noDate")}</td>
-                    <td className="p-2">{activated ? tp("plural.months", e.retentionMonths) : t("admin.noDate")}</td>
-                    <td className="p-2">
+                    <td className={`${ui.td} ${ui.data} text-sm`}>{activated ? formatMoney(e.finalPriceMinor) : t("admin.noDate")}</td>
+                    <td className={`${ui.td} ${ui.data} text-sm`}>{activated ? tp("plural.months", e.retentionMonths) : t("admin.noDate")}</td>
+                    <td className={`${ui.td} ${ui.data} text-sm`}>
                       {e.purgeAt !== null
                         ? formatDate(e.purgeAt)
                         : e.pendingPurgeAt !== null

@@ -2,18 +2,30 @@
 
 import { t, type MessageKey } from "@/lib/i18n";
 import type { QueueItem } from "@/lib/upload/queue";
+import { ui } from "@/lib/ui";
+import { CheckIcon } from "../ui/icons";
 
 const STATUS_STYLE: Record<QueueItem["status"], string> = {
-  queued: "text-muted",
-  reserving: "text-muted",
+  queued: "text-ink-muted",
+  reserving: "text-ink-muted",
   uploading: "text-ink",
   paused: "text-ink",
-  done: "text-success",
+  done: "text-success font-medium",
   rejected: "text-danger",
   failed: "text-danger",
 };
 
-/** Un fișier din coadă: nume, bară de progres și starea (FR-015). */
+const BAR_STYLE: Record<QueueItem["status"], string> = {
+  queued: "bg-ink",
+  reserving: "bg-ink",
+  uploading: "bg-ink",
+  paused: "bg-ink-muted",
+  done: "bg-success",
+  rejected: "bg-danger",
+  failed: "bg-danger",
+};
+
+/** Un rând din registrul de fișiere: nume în mono, linie de progres de 2 px, starea (FR-015). */
 export function FileRow({ item, onRetry }: { item: QueueItem; onRetry?: (id: string) => void }) {
   const percent = Math.round(item.progress * 100);
   const statusText =
@@ -24,16 +36,16 @@ export function FileRow({ item, onRetry }: { item: QueueItem; onRetry?: (id: str
         : t(`upload.status.${item.status}`);
 
   return (
-    <li className="flex flex-col gap-1 rounded-lg border border-gray-200 p-3">
-      <div className="flex items-center justify-between gap-2">
-        <span className="truncate font-medium">{item.name}</span>
+    <li className="flex flex-col gap-2 border-b border-rule py-3">
+      <div className="flex items-center justify-between gap-3">
+        <span className={`${ui.data} truncate text-sm`}>{item.name}</span>
         {item.status === "failed" && onRetry && (
           <button
             type="button"
             onClick={() => {
               onRetry(item.id);
             }}
-            className="min-h-11 min-w-11 shrink-0 rounded-lg border border-brand-600 px-3 font-semibold text-brand-700"
+            className={`${ui.buttonText} min-w-11 shrink-0 text-sm`}
           >
             {t("upload.retry")}
           </button>
@@ -45,14 +57,17 @@ export function FileRow({ item, onRetry }: { item: QueueItem; onRetry?: (id: str
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={percent}
-        className="h-2 overflow-hidden rounded-full bg-gray-200"
+        className="h-0.5 bg-rule"
       >
         <div
-          className={`h-full rounded-full transition-[width] ${item.status === "rejected" || item.status === "failed" ? "bg-danger" : "bg-brand-600"}`}
-          style={{ width: `${String(item.status === "done" ? 100 : percent)}%` }}
+          className={`h-full transition-[width] ${BAR_STYLE[item.status]}`}
+          style={{ width: `${String(item.status === "done" || item.status === "rejected" || item.status === "failed" ? 100 : percent)}%` }}
         />
       </div>
-      <p className={`text-sm ${STATUS_STYLE[item.status]}`}>{statusText}</p>
+      <p className={`flex items-center gap-1.5 text-sm ${STATUS_STYLE[item.status]}`}>
+        {item.status === "done" && <CheckIcon />}
+        {statusText}
+      </p>
     </li>
   );
 }

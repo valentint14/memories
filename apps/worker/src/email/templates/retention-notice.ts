@@ -3,6 +3,7 @@
  * imagini externe. Linkul duce la pagina evenimentului (cere autentificare, nu conține token).
  */
 import { APP_TIME_ZONE } from "@memories/shared";
+import { emailDocument, emailStyle, escapeHtml } from "../html.ts";
 
 export type Threshold = "30d" | "7d" | "1d";
 
@@ -14,10 +15,6 @@ const WHEN: Record<Threshold, string> = {
 
 const dateFormat = new Intl.DateTimeFormat("ro-RO", { timeZone: APP_TIME_ZONE, day: "numeric", month: "long", year: "numeric" });
 const timeFormat = new Intl.DateTimeFormat("ro-RO", { timeZone: APP_TIME_ZONE, hour: "2-digit", minute: "2-digit" });
-
-function escapeHtml(value: string): string {
-  return value.replace(/[&<>"']/g, (c) => `&#${String(c.charCodeAt(0))};`);
-}
 
 export function retentionNoticeEmail(input: {
   eventName: string;
@@ -43,18 +40,15 @@ export function retentionNoticeEmail(input: {
     "După ștergere, fișierele nu mai pot fi recuperate.",
   ];
   const text = lines.join("\n");
-  const html = `<!doctype html>
-<html lang="ro"><body style="font-family: system-ui, sans-serif; line-height: 1.5; color: #1f2937">
-<p>Bună ziua,</p>
-<p>Pozele și filmările de la <strong>„${escapeHtml(input.eventName)}”</strong> vor fi șterse automat și definitiv pe
+  const html = emailDocument(`<p style="${emailStyle.p}">Bună ziua,</p>
+<p style="${emailStyle.p}">Pozele și filmările de la <strong>„${escapeHtml(input.eventName)}”</strong> vor fi șterse automat și definitiv pe
 <strong>${escapeHtml(date)}</strong>, la ora ${escapeHtml(time)} (${escapeHtml(when)}).</p>
-<p>Înainte de această dată poți:</p>
-<ul>
+<p style="${emailStyle.p}">Înainte de această dată poți:</p>
+<ul style="${emailStyle.list}">
 <li>descărca toate fișierele într-o arhivă ZIP, din pagina evenimentului;</li>
 <li>prelungi perioada de păstrare, dacă ai nevoie de mai mult timp.</li>
 </ul>
-<p><a href="${escapeHtml(input.eventUrl)}">Deschide pagina evenimentului</a></p>
-<p>După ștergere, fișierele nu mai pot fi recuperate.</p>
-</body></html>`;
+<p style="${emailStyle.p}"><a href="${escapeHtml(input.eventUrl)}" style="${emailStyle.button}">Deschide pagina evenimentului</a></p>
+<p style="${emailStyle.muted}">După ștergere, fișierele nu mai pot fi recuperate.</p>`);
   return { subject, text, html };
 }

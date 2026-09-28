@@ -16,11 +16,11 @@ export function renderMarkdown(source: string): ReactNode[] {
     const key = `b${String(index)}`;
     const lines = block.split("\n");
     const first = lines[0] ?? "";
-    if (first.startsWith("## ")) return <h2 key={key} className="mt-4 text-xl font-semibold">{inline(first.slice(3), key)}</h2>;
-    if (first.startsWith("# ")) return <h1 key={key} className="text-2xl font-bold">{inline(first.slice(2), key)}</h1>;
+    if (first.startsWith("## ")) return <h2 key={key} className="mt-6 font-serif text-2xl leading-tight">{inline(first.slice(3), key)}</h2>;
+    if (first.startsWith("# ")) return <h1 key={key} className="font-serif text-4xl leading-[1.05] tracking-tight sm:text-5xl">{inline(first.slice(2), key)}</h1>;
     if (lines.every((l) => l.startsWith("> "))) {
       return (
-        <blockquote key={key} className="rounded-lg border-l-4 border-brand-600 bg-brand-50 p-3">
+        <blockquote key={key} className="rounded-xs border border-rule bg-paper-raised p-4">
           {inline(lines.map((l) => l.slice(2)).join(" "), key)}
         </blockquote>
       );

@@ -5,6 +5,7 @@ import { Button, Form, Input, Label, TextField } from "react-aria-components";
 import { useRouter } from "next/navigation";
 import { enrollTotp, verifyTotp, type TotpEnrollment } from "@/lib/actions/auth";
 import { t } from "@/lib/i18n";
+import { ui } from "@/lib/ui";
 
 /** Înrolare TOTP (cod QR + secret ca text) sau verificarea unui factor existent (FR-006a). */
 export function MfaForm({ factorId: existingFactorId }: { factorId: string | null }) {
@@ -27,25 +28,26 @@ export function MfaForm({ factorId: existingFactorId }: { factorId: string | nul
   const factorId = existingFactorId ?? enrollment?.factorId ?? null;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       {existingFactorId === null && (
-        <section aria-labelledby="enroll-title" className="flex flex-col gap-3">
-          <h2 id="enroll-title" className="text-lg font-semibold">
+        <section aria-labelledby="enroll-title" className={ui.section}>
+          <h2 id="enroll-title" className={ui.kicker}>
             {t("mfa.enrollTitle")}
           </h2>
-          <p className="text-muted">{t("mfa.enrollIntro")}</p>
+          <p className="leading-relaxed text-ink-muted">{t("mfa.enrollIntro")}</p>
           {enrollment && (
             <>
+              {/* Codul QR rămâne pe alb pur, pentru scanare. */}
               <img
                 src={enrollment.qrCodeDataUrl}
                 alt={t("mfa.qrAlt")}
                 width={200}
                 height={200}
-                className="rounded-lg border border-gray-300 bg-white p-2"
+                className="rounded-xs border border-ink p-2"
               />
               <p>
                 {t("mfa.secretLabel")}{" "}
-                <code data-testid="totp-secret" className="break-all rounded bg-gray-100 px-2 py-1 font-mono">
+                <code data-testid="totp-secret" className={`${ui.data} break-all border border-rule bg-paper-raised px-2 py-1`}>
                   {enrollment.secret}
                 </code>
               </p>
@@ -55,7 +57,7 @@ export function MfaForm({ factorId: existingFactorId }: { factorId: string | nul
       )}
 
       <Form
-        className="flex flex-col gap-4"
+        className="flex flex-col gap-5"
         onSubmit={(e) => {
           e.preventDefault();
           if (factorId === null) return;
@@ -69,20 +71,16 @@ export function MfaForm({ factorId: existingFactorId }: { factorId: string | nul
           });
         }}
       >
-        <TextField name="code" isRequired inputMode="numeric" autoComplete="one-time-code" className="flex flex-col gap-1">
-          <Label className="font-medium">{t("mfa.codeLabel")}</Label>
-          <Input maxLength={6} className="min-h-11 rounded-lg border border-gray-400 px-3 font-mono text-lg tracking-widest" />
+        <TextField name="code" isRequired inputMode="numeric" autoComplete="one-time-code" className="flex flex-col gap-1.5">
+          <Label className={ui.label}>{t("mfa.codeLabel")}</Label>
+          <Input maxLength={6} className={ui.codeInput} />
         </TextField>
         {error !== null && (
-          <p role="alert" className="text-sm text-danger">
+          <p role="alert" className={ui.fieldError}>
             {error}
           </p>
         )}
-        <Button
-          type="submit"
-          isDisabled={pending || factorId === null}
-          className="min-h-11 rounded-lg bg-brand-600 px-4 font-semibold text-white disabled:opacity-60"
-        >
+        <Button type="submit" isDisabled={pending || factorId === null} className={ui.buttonPrimary}>
           {t("mfa.verify")}
         </Button>
       </Form>

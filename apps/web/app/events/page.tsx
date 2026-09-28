@@ -1,16 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { formatDate, t, type MessageKey } from "@/lib/i18n";
+import { StatusStamp } from "@/components/ui/StatusStamp";
+import { formatDate, t } from "@/lib/i18n";
 import { throwIfDbError } from "@/lib/actions/result";
 import { serverSupabase } from "@/lib/supabase/server";
+import { ui } from "@/lib/ui";
 
 export const metadata: Metadata = { title: "Evenimentele mele" };
-
-const BADGE: Record<string, string> = {
-  awaiting_activation: "bg-amber-100 text-amber-900",
-  active: "bg-green-100 text-green-900",
-  suspended: "bg-red-100 text-red-900",
-};
 
 /**
  * Lista evenimentelor organizatorului (001/FR-009, 002/FR-012): RLS întoarce toate evenimentele
@@ -27,39 +23,37 @@ export default async function OrganizerEventsPage({ searchParams }: { searchPara
   const events = data ?? [];
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">{t("organizer.myEvents")}</h1>
-        <Link href="/events/new" className="inline-flex min-h-11 items-center rounded-lg bg-brand-600 px-4 font-semibold text-white">
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <h1 className={ui.pageTitle}>{t("organizer.myEvents")}</h1>
+        <Link href="/events/new" className={ui.buttonPrimary}>
           {t("organizer.newEvent")}
         </Link>
       </div>
       {params.limit === "1" && (
-        <p role="alert" className="rounded-lg border border-amber-500 bg-amber-50 p-4">
+        <p role="alert" className={ui.caution}>
           {t("organizer.limitReached")}
         </p>
       )}
       {events.length === 0 ? (
-        <p className="text-muted">{t("organizer.noEvents")}</p>
+        <p className="text-ink-muted">{t("organizer.noEvents")}</p>
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2">
+        <ul className="flex flex-col border-t border-ink">
           {events.map((e) => (
-            <li key={e.id} className="flex flex-col gap-1 rounded-lg border border-gray-200 p-4">
-              <Link href={`/events/${e.id ?? ""}`} className="text-lg font-semibold text-brand-700 underline underline-offset-4">
-                {e.name}
-              </Link>
-              {e.event_date && <span className="text-muted">{formatDate(e.event_date)}</span>}
-              {e.status && (
-                <span className={`self-start rounded px-2 py-0.5 text-sm ${BADGE[e.status] ?? "bg-gray-200"}`}>
-                  {t(`status.${e.status}` as MessageKey)}
-                </span>
-              )}
-              {e.status === "active" && e.purge_at && (
-                <span className="text-sm">{t("organizer.purgeOn", { date: formatDate(e.purge_at) })}</span>
-              )}
-              {e.status === "awaiting_activation" && e.pending_purge_at && (
-                <span className="text-sm">{t("organizer.pendingPurgeOn", { date: formatDate(e.pending_purge_at) })}</span>
-              )}
+            <li key={e.id} className="grid gap-x-8 gap-y-2 border-b border-rule py-5 sm:grid-cols-[9rem_minmax(0,1fr)_auto] sm:items-baseline">
+              {e.event_date && <span className={`${ui.data} text-sm text-ink-muted`}>{formatDate(e.event_date)}</span>}
+              <div className="flex flex-col gap-1">
+                <Link href={`/events/${e.id ?? ""}`} className="font-serif text-2xl leading-tight underline decoration-rule underline-offset-4 hover:decoration-ink">
+                  {e.name}
+                </Link>
+                {e.status === "active" && e.purge_at && (
+                  <span className="text-sm text-ink-muted">{t("organizer.purgeOn", { date: formatDate(e.purge_at) })}</span>
+                )}
+                {e.status === "awaiting_activation" && e.pending_purge_at && (
+                  <span className="text-sm text-ink-muted">{t("organizer.pendingPurgeOn", { date: formatDate(e.pending_purge_at) })}</span>
+                )}
+              </div>
+              {e.status && <StatusStamp status={e.status} />}
             </li>
           ))}
         </ul>

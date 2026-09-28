@@ -3,6 +3,8 @@
 import { useState, useTransition } from "react";
 import { requestActivation } from "@/lib/actions/organizer";
 import { formatDateTime, t } from "@/lib/i18n";
+import { ui } from "@/lib/ui";
+import { CheckIcon } from "../ui/icons";
 
 /** „Solicită activarea” (002: FR-018a): după trimitere arată data cererii; o nouă cerere după 24 h. */
 export function RequestActivationButton({ eventId, lastRequestAt }: { eventId: string; lastRequestAt: string | null }) {
@@ -14,14 +16,15 @@ export function RequestActivationButton({ eventId, lastRequestAt }: { eventId: s
   const retryAt = nextAllowed !== null && nextAllowed.getTime() > Date.now() ? nextAllowed : null;
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
       {requestedAt !== null && (
-        <p role="status" className="rounded-lg bg-green-50 p-3 text-green-900">
+        <p role="status" className="flex items-start gap-2 text-success">
+          <CheckIcon className="mt-1 size-4 shrink-0" />
           {t("activation.requested", { date: formatDateTime(requestedAt) })}
         </p>
       )}
       {retryAt !== null ? (
-        <p className="text-sm text-muted">{t("activation.retryAt", { date: formatDateTime(retryAt) })}</p>
+        <p className={ui.hint}>{t("activation.retryAt", { date: formatDateTime(retryAt) })}</p>
       ) : (
         <button
           type="button"
@@ -34,13 +37,13 @@ export function RequestActivationButton({ eventId, lastRequestAt }: { eventId: s
               else setError(t(`errors.${result.error}`));
             });
           }}
-          className="min-h-11 self-start rounded-lg bg-brand-600 px-4 font-semibold text-white disabled:opacity-60"
+          className={`${ui.buttonPrimary} self-start`}
         >
           {pending ? t("activation.requesting") : t("activation.request")}
         </button>
       )}
       {error !== null && (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className={ui.fieldError}>
           {error}
         </p>
       )}

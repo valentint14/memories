@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { MfaForm } from "@/components/auth/MfaForm";
+import { NarrowPage } from "@/components/ui/NarrowPage";
 import { adminAccess } from "@/lib/admin/guard";
 import { t } from "@/lib/i18n";
 import { serverSupabase } from "@/lib/supabase/server";
@@ -18,9 +19,8 @@ export default async function MfaPage() {
   const verified = data?.totp[0] ?? null;
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 p-6">
-      <h1 className="text-2xl font-bold">{t("mfa.title")}</h1>
+    <NarrowPage title={t("mfa.title")}>
       <MfaForm factorId={verified?.id ?? null} />
-    </main>
+    </NarrowPage>
   );
 }

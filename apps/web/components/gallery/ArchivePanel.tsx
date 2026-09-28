@@ -7,6 +7,7 @@ import { formatDateTime, t, tp } from "@/lib/i18n";
 import type { ArchiveState } from "@/lib/organizer/archive";
 import { authorizeRealtime } from "@/lib/realtime/auth";
 import { browserSupabase } from "@/lib/supabase/browser";
+import { ui } from "@/lib/ui";
 
 interface ReadyArchive {
   url: string;
@@ -91,29 +92,31 @@ export function ArchivePanel({
   const empty = readyFiles === 0;
 
   return (
-    <section aria-labelledby="archive-title" className="flex flex-col gap-3 rounded-lg border border-gray-200 p-4">
-      <h2 id="archive-title" className="text-lg font-semibold">
+    <section aria-labelledby="archive-title" className="flex flex-col gap-4 py-5">
+      <h2 id="archive-title" className={ui.kicker}>
         {t("archive.title")}
       </h2>
-      <div aria-live="polite" className="flex flex-col gap-2">
-        {empty && <p className="text-muted">{t("archive.empty")}</p>}
-        {inProgress && <p>{t("archive.preparing")}</p>}
+      <div aria-live="polite" className="flex flex-col gap-3">
+        {empty && <p className="text-ink-muted">{t("archive.empty")}</p>}
+        {inProgress && (
+          <p className="flex items-center gap-2">
+            <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-accent" />
+            {t("archive.preparing")}
+          </p>
+        )}
         {archive?.status === "failed" && <p className="text-danger">{t("archive.failed")}</p>}
-        {archive?.status === "expired" && <p className="text-muted">{t("archive.expired")}</p>}
+        {archive?.status === "expired" && <p className="text-ink-muted">{t("archive.expired")}</p>}
         {ready && (
           <>
-            <a
-              href={ready.url}
-              className="inline-flex min-h-11 self-start items-center rounded-lg bg-brand-600 px-4 font-semibold text-white"
-            >
+            <a href={ready.url} className={`${ui.buttonPrimary} self-start`}>
               {t("archive.download", { files: tp("plural.files", ready.fileCount) })}
             </a>
             {ready.skippedCount > 0 && <p className="text-sm">{tp("plural.archiveSkipped", ready.skippedCount)}</p>}
-            <p className="text-sm text-muted">{t("archive.validUntil", { date: formatDateTime(ready.expiresAt) })}</p>
+            <p className={ui.hint}>{t("archive.validUntil", { date: formatDateTime(ready.expiresAt) })}</p>
           </>
         )}
         {error !== null && (
-          <p role="alert" className="text-sm text-danger">
+          <p role="alert" className={ui.fieldError}>
             {error}
           </p>
         )}
@@ -129,7 +132,7 @@ export function ArchivePanel({
               else setError(t(`errors.${result.error}`));
             });
           }}
-          className="min-h-11 self-start rounded-lg border border-brand-600 px-4 font-semibold text-brand-700 disabled:opacity-50"
+          className={ready ? `${ui.buttonText} self-start` : `${ui.buttonSecondary} self-start`}
         >
           {ready ? t("archive.again") : t("archive.downloadAll")}
         </Button>

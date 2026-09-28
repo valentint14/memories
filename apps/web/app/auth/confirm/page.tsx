@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ConfirmButton } from "@/components/self-service/ConfirmButton";
+import { NarrowPage } from "@/components/ui/NarrowPage";
 import { t } from "@/lib/i18n";
 import { safeNextPath } from "@/lib/security/redirect";
 import { adminSupabase } from "@/lib/supabase/admin";
+import { ui } from "@/lib/ui";
 
 export const metadata: Metadata = { title: "Confirmare" };
 
@@ -32,30 +34,29 @@ export default async function ConfirmPage({
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 p-6">
-      <h1 className="text-2xl font-bold">{purpose === "create" ? t("confirm.createTitle") : t("confirm.loginTitle")}</h1>
+    <NarrowPage title={purpose === "create" ? t("confirm.createTitle") : t("confirm.loginTitle")}>
       {usable ? (
         <>
           {purpose === "create" && eventName !== null ? (
-            <div className="flex flex-col gap-1">
-              <p>{t("confirm.createIntro")}</p>
-              <p className="text-xl font-semibold">{eventName}</p>
+            <div className="flex flex-col gap-2 border-y border-rule py-4">
+              <p className="text-ink-muted">{t("confirm.createIntro")}</p>
+              <p className={ui.sectionTitle}>{eventName}</p>
             </div>
           ) : (
-            <p>{t("confirm.loginIntro")}</p>
+            <p className="leading-relaxed">{t("confirm.loginIntro")}</p>
           )}
           <ConfirmButton requestId={requestId} tokenHash={tokenHash} next={safeNextPath(params.next)} />
         </>
       ) : (
-        <div className="flex flex-col gap-3">
-          <p role="alert" className="rounded-lg border border-danger p-3 text-danger">
+        <div className="flex flex-col gap-4">
+          <p role="alert" className={ui.alert}>
             {t("confirm.invalid")}
           </p>
-          <Link href="/login" className="font-semibold text-brand-700 underline">
+          <Link href="/login" className={ui.link}>
             {t("confirm.newRequest")}
           </Link>
         </div>
       )}
-    </main>
+    </NarrowPage>
   );
 }

@@ -3,6 +3,7 @@ import { PackageForm } from "@/components/admin/PackageForm";
 import { getPackageSettings } from "@/lib/admin/package";
 import { listActiveRetentionOptions } from "@/lib/admin/queries";
 import { t } from "@/lib/i18n";
+import { ui } from "@/lib/ui";
 
 export const metadata: Metadata = { title: "Pachetul complet" };
 
@@ -10,9 +11,9 @@ export const metadata: Metadata = { title: "Pachetul complet" };
 export default async function AdminPackagePage() {
   const [settings, options] = await Promise.all([getPackageSettings(), listActiveRetentionOptions()]);
   return (
-    <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold">{t("admin.package.title")}</h1>
-      <p className="max-w-2xl text-muted">{t("admin.package.intro")}</p>
+    <div className="flex flex-col gap-6">
+      <h1 className={ui.pageTitle}>{t("admin.package.title")}</h1>
+      <p className="max-w-2xl leading-relaxed text-ink-muted">{t("admin.package.intro")}</p>
       <PackageForm initial={settings} options={options.map((o) => ({ id: o.id, months: o.months }))} />
     </div>
   );

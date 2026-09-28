@@ -4,6 +4,11 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { deleteRetentionOption, upsertRetentionOption } from "@/lib/actions/admin";
 import { t, tp, type MessageKey } from "@/lib/i18n";
+import { ui } from "@/lib/ui";
+
+const smallInput = "min-h-12 w-28 rounded-xs border border-field bg-paper-raised px-2.5 font-mono text-base tabular-nums text-ink";
+const smallButton =
+  "inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xs px-3 font-medium disabled:cursor-not-allowed disabled:opacity-50";
 
 export interface CatalogRow {
   id: string;
@@ -27,11 +32,11 @@ function OptionRow({ option }: { option: CatalogRow }) {
   const label = tp("plural.months", option.months);
 
   return (
-    <tr className="border-b border-gray-200">
-      <th scope="row" className="p-2 font-medium">
+    <tr className={ui.row}>
+      <th scope="row" className={`${ui.td} font-medium`}>
         {label}
       </th>
-      <td className="p-2">
+      <td className={ui.td}>
         <label className="sr-only" htmlFor={`surcharge-${option.id}`}>
           {t("admin.retentionPage.surcharge")}
         </label>
@@ -46,10 +51,10 @@ function OptionRow({ option }: { option: CatalogRow }) {
           onChange={(e) => {
             setSurcharge(e.target.value);
           }}
-          className="min-h-11 w-28 rounded-lg border border-gray-400 px-2"
+          className={smallInput}
         />
       </td>
-      <td className="p-2">
+      <td className={ui.td}>
         <input
           type="checkbox"
           aria-label={t("admin.retentionPage.active")}
@@ -57,11 +62,11 @@ function OptionRow({ option }: { option: CatalogRow }) {
           onChange={(e) => {
             setActive(e.target.checked);
           }}
-          className="h-6 w-6"
+          className="mt-3 size-6 accent-ink"
         />
       </td>
-      <td className="p-2">{option.usedBy}</td>
-      <td className="p-2">
+      <td className={`${ui.td} ${ui.data} pt-4`}>{option.usedBy}</td>
+      <td className={ui.td}>
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
@@ -78,7 +83,7 @@ function OptionRow({ option }: { option: CatalogRow }) {
                 if (result.ok) router.refresh();
               });
             }}
-            className="min-h-11 rounded-lg border border-brand-600 px-3 font-semibold text-brand-700"
+            className={`${smallButton} border border-ink text-ink`}
           >
             {t("admin.retentionPage.save")}
           </button>
@@ -96,7 +101,7 @@ function OptionRow({ option }: { option: CatalogRow }) {
                   });
               });
             }}
-            className="min-h-11 rounded-lg border border-danger px-3 font-semibold text-danger"
+            className={`${smallButton} border border-danger text-danger`}
           >
             {t("admin.retentionPage.delete")}
           </button>
@@ -122,14 +127,14 @@ export function RetentionCatalog({ options }: { options: CatalogRow[] }) {
   return (
     <div className="flex flex-col gap-6">
       <div className="overflow-x-auto" tabIndex={0} role="region" aria-label={t("admin.retention")}>
-        <table className="w-full min-w-[640px] border-collapse text-left">
+        <table className={`${ui.table} min-w-[640px]`}>
           <thead>
-            <tr className="border-b border-gray-300">
-              <th scope="col" className="p-2">{t("admin.retentionPage.months")}</th>
-              <th scope="col" className="p-2">{t("admin.retentionPage.surcharge")}</th>
-              <th scope="col" className="p-2">{t("admin.retentionPage.active")}</th>
-              <th scope="col" className="p-2">{t("admin.retentionPage.usedBy")}</th>
-              <th scope="col" className="p-2">{t("admin.retentionPage.actions")}</th>
+            <tr className={ui.theadRow}>
+              <th scope="col" className={ui.th}>{t("admin.retentionPage.months")}</th>
+              <th scope="col" className={ui.th}>{t("admin.retentionPage.surcharge")}</th>
+              <th scope="col" className={ui.th}>{t("admin.retentionPage.active")}</th>
+              <th scope="col" className={ui.th}>{t("admin.retentionPage.usedBy")}</th>
+              <th scope="col" className={ui.th}>{t("admin.retentionPage.actions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -141,7 +146,7 @@ export function RetentionCatalog({ options }: { options: CatalogRow[] }) {
       </div>
 
       <form
-        className="flex flex-wrap items-end gap-3"
+        className="flex flex-col gap-3 border-t border-ink pt-4"
         onSubmit={(e) => {
           e.preventDefault();
           setError(null);
@@ -158,8 +163,8 @@ export function RetentionCatalog({ options }: { options: CatalogRow[] }) {
         }}
       >
         <fieldset className="flex flex-wrap items-end gap-3">
-          <legend className="mb-2 font-semibold">{t("admin.retentionPage.add")}</legend>
-          <label className="flex flex-col gap-1">
+          <legend className={`${ui.kicker} mb-3`}>{t("admin.retentionPage.add")}</legend>
+          <label className="flex flex-col gap-1.5">
             {t("admin.retentionPage.monthsInput")}
             <input
               type="number"
@@ -169,10 +174,10 @@ export function RetentionCatalog({ options }: { options: CatalogRow[] }) {
               onChange={(e) => {
                 setMonths(e.target.value);
               }}
-              className="min-h-11 w-28 rounded-lg border border-gray-400 px-2"
+              className={smallInput}
             />
           </label>
-          <label className="flex flex-col gap-1">
+          <label className="flex flex-col gap-1.5">
             {t("admin.retentionPage.surcharge")}
             <input
               type="number"
@@ -182,10 +187,10 @@ export function RetentionCatalog({ options }: { options: CatalogRow[] }) {
               onChange={(e) => {
                 setSurcharge(e.target.value);
               }}
-              className="min-h-11 w-28 rounded-lg border border-gray-400 px-2"
+              className={smallInput}
             />
           </label>
-          <button type="submit" disabled={pending} className="min-h-11 rounded-lg bg-brand-600 px-4 font-semibold text-white">
+          <button type="submit" disabled={pending} className={ui.buttonPrimary}>
             {t("admin.retentionPage.create")}
           </button>
         </fieldset>

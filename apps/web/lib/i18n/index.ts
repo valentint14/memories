@@ -40,6 +40,10 @@ export function formatDate(value: Date | string): string {
   return dateFormat.format(new Date(value));
 }
 
+export function formatTime(value: Date | string): string {
+  return timeFormat.format(new Date(value));
+}
+
 export function formatDateTime(value: Date | string): string {
   const date = new Date(value);
   return `${dateFormat.format(date)}, ${timeFormat.format(date)}`;

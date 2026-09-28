@@ -20,6 +20,8 @@ import {
 import { createEvent, updateEvent } from "@/lib/actions/admin";
 import { isoToLocalInput, localInputToIso } from "@/lib/dates";
 import { formatDateTime, formatMoney, t, type MessageKey } from "@/lib/i18n";
+import { ui } from "@/lib/ui";
+import { ChevronDownIcon } from "../ui/icons";
 
 export interface RetentionOptionView {
   id: string;
@@ -42,9 +44,9 @@ export interface EventFormInitial {
 }
 
 const MB = 1024 * 1024;
-const fieldClass = "flex flex-col gap-1";
-const inputClass = "min-h-11 rounded-lg border border-gray-400 px-3 text-base invalid:border-danger";
-const errorClass = "text-sm text-danger";
+const fieldClass = "flex flex-col gap-1.5";
+const inputClass = ui.input;
+const errorClass = ui.fieldError;
 
 function optionLabel(o: RetentionOptionView): string {
   return o.surchargeMinor === 0
@@ -173,7 +175,7 @@ export function EventForm({ options, initial }: { options: RetentionOptionView[]
       >
         <Label className="font-medium">{t("admin.form.maxPhotoMb")}</Label>
         <Input className={inputClass} min={1} max={50} step="any" />
-        <Text slot="description" className="text-sm text-muted">
+        <Text slot="description" className={ui.hint}>
           {t("admin.form.maxPhotoHint")}
         </Text>
         <FieldError className={errorClass} />
@@ -187,7 +189,7 @@ export function EventForm({ options, initial }: { options: RetentionOptionView[]
       >
         <Label className="font-medium">{t("admin.form.maxVideoMb")}</Label>
         <Input className={inputClass} min={1} max={1024} step="any" />
-        <Text slot="description" className="text-sm text-muted">
+        <Text slot="description" className={ui.hint}>
           {t("admin.form.maxVideoHint")}
         </Text>
         <FieldError className={errorClass} />
@@ -208,19 +210,19 @@ export function EventForm({ options, initial }: { options: RetentionOptionView[]
         className={fieldClass}
       >
         <Label className="font-medium">{t("admin.form.retention")}</Label>
-        <Button className={`${inputClass} flex items-center justify-between gap-2 text-left`}>
+        <Button className={`${inputClass} flex cursor-pointer items-center justify-between gap-2 text-left`}>
           <SelectValue />
-          <span aria-hidden="true">▾</span>
+          <ChevronDownIcon />
         </Button>
         <FieldError className={errorClass} />
-        <Popover className="min-w-(--trigger-width) rounded-lg border border-gray-300 bg-white shadow-lg">
+        <Popover className="min-w-(--trigger-width) rounded-xs border border-ink bg-paper-raised shadow-dialog">
           <ListBox className="p-1">
             {options.map((o) => (
               <ListBoxItem
                 key={o.id}
                 id={o.id}
                 textValue={optionLabel(o)}
-                className="cursor-pointer rounded px-3 py-2 outline-none data-focused:bg-brand-50 data-selected:font-semibold"
+                className="min-h-11 cursor-pointer content-center rounded-xs px-3 py-2 outline-none data-focused:bg-paper data-selected:font-semibold"
               >
                 {optionLabel(o)}
               </ListBoxItem>
@@ -229,14 +231,18 @@ export function EventForm({ options, initial }: { options: RetentionOptionView[]
         </Popover>
       </Select>
 
-      <div className="rounded-lg bg-brand-50 p-4 sm:col-span-2" aria-live="polite">
+      <div className="flex flex-col gap-1 border-y border-ink py-4 sm:col-span-2" aria-live="polite">
         <p>
           {t("admin.form.finalPrice")}{" "}
-          <strong data-testid="price-preview">{preview.price}</strong>
+          <strong data-testid="price-preview" className={ui.data}>
+            {preview.price}
+          </strong>
         </p>
         <p>
           {t("admin.form.purgeAt")}{" "}
-          <strong data-testid="purge-preview">{preview.purgeAt}</strong>
+          <strong data-testid="purge-preview" className={ui.data}>
+            {preview.purgeAt}
+          </strong>
         </p>
       </div>
 
@@ -247,11 +253,8 @@ export function EventForm({ options, initial }: { options: RetentionOptionView[]
       )}
 
       <div className="sm:col-span-2">
-        <Button
-          type="submit"
-          isDisabled={pending}
-          className="min-h-11 rounded-lg bg-brand-600 px-6 font-semibold text-white disabled:opacity-60"
-        >
+        {/* La editare, pagina are deja acțiunea principală (starea evenimentului). */}
+        <Button type="submit" isDisabled={pending} className={initial ? ui.buttonSecondary : ui.buttonPrimary}>
           {initial ? t("admin.form.save") : t("admin.form.create")}
         </Button>
       </div>

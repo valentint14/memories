@@ -6,6 +6,7 @@ import { Button, Dialog, DialogTrigger, Heading, Label, Modal, ModalOverlay, Tex
 import { activateEvent, reactivateEvent, suspendEvent } from "@/lib/actions/admin";
 import type { ActionResult } from "@/lib/actions/result";
 import { t, type MessageKey } from "@/lib/i18n";
+import { ui } from "@/lib/ui";
 
 type StateAction = "activate" | "suspend" | "reactivate";
 
@@ -34,31 +35,27 @@ function StateActionDialog({ eventId, action }: { eventId: string; action: State
 
   return (
     <DialogTrigger>
-      <Button
-        className={`min-h-11 rounded-lg px-4 font-semibold text-white ${danger ? "bg-danger" : "bg-brand-600"}`}
-      >
-        {t(`admin.state.${action}` as MessageKey)}
-      </Button>
-      <ModalOverlay isDismissable className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-        <Modal className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+      <Button className={danger ? ui.buttonDanger : ui.buttonPrimary}>{t(`admin.state.${action}` as MessageKey)}</Button>
+      <ModalOverlay isDismissable className={ui.overlay}>
+        <Modal className={ui.dialog}>
           <Dialog role="alertdialog" className="flex flex-col gap-4 outline-none">
             {({ close }) => (
               <>
-                <Heading slot="title" className="text-xl font-bold">
+                <Heading slot="title" className={ui.dialogTitle}>
                   {t(`admin.state.${action}Title` as MessageKey)}
                 </Heading>
-                <p>{t(`admin.state.${action}Explain` as MessageKey)}</p>
-                <TextField value={reason} onChange={setReason} isRequired maxLength={500} autoFocus className="flex flex-col gap-1">
-                  <Label className="font-medium">{t("admin.state.reason")}</Label>
-                  <TextArea rows={3} className="rounded-lg border border-gray-400 p-3" />
+                <p className="leading-relaxed">{t(`admin.state.${action}Explain` as MessageKey)}</p>
+                <TextField value={reason} onChange={setReason} isRequired maxLength={500} autoFocus className="flex flex-col gap-1.5">
+                  <Label className={ui.label}>{t("admin.state.reason")}</Label>
+                  <TextArea rows={3} className={ui.textarea} />
                 </TextField>
                 {error !== null && (
-                  <p role="alert" className="text-sm text-danger">
+                  <p role="alert" className={ui.fieldError}>
                     {error}
                   </p>
                 )}
-                <div className="flex flex-wrap justify-end gap-3">
-                  <Button onPress={close} className="min-h-11 rounded-lg border border-gray-400 px-4">
+                <div className={ui.dialogActions}>
+                  <Button onPress={close} className={ui.buttonSecondary}>
                     {t("common.cancel")}
                   </Button>
                   <Button
@@ -75,7 +72,7 @@ function StateActionDialog({ eventId, action }: { eventId: string; action: State
                         }
                       });
                     }}
-                    className={`min-h-11 rounded-lg px-4 font-semibold text-white disabled:opacity-50 ${danger ? "bg-danger" : "bg-brand-600"}`}
+                    className={danger ? ui.buttonDangerSolid : ui.buttonPrimary}
                   >
                     {t(`admin.state.${action}Confirm` as MessageKey)}
                   </Button>

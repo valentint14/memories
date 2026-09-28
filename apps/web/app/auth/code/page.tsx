@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { CodeForm } from "@/components/self-service/CodeForm";
+import { NarrowPage } from "@/components/ui/NarrowPage";
 import { t } from "@/lib/i18n";
 import { safeNextPath } from "@/lib/security/redirect";
+import { ui } from "@/lib/ui";
 
 export const metadata: Metadata = { title: "Verifică-ți emailul" };
 
@@ -17,13 +19,12 @@ export default async function CodePage({
   const params = await searchParams;
   const requestId = /^[0-9a-f-]{36}$/i.test(params.request ?? "") ? (params.request ?? "") : "";
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 p-6">
-      <h1 className="text-2xl font-bold">{t("code.title")}</h1>
-      <p role="status" className="rounded-lg bg-brand-50 p-4 text-ink">
+    <NarrowPage title={t("code.title")}>
+      <p role="status" className={ui.notice}>
         {params.resent === "1" ? t("code.resent") : t("code.intro")}
       </p>
-      <p className="text-muted">{t("code.otherDevice")}</p>
+      <p className="leading-relaxed text-ink-muted">{t("code.otherDevice")}</p>
       <CodeForm requestId={requestId} next={safeNextPath(params.next)} />
-    </main>
+    </NarrowPage>
   );
 }

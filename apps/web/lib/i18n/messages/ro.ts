@@ -230,6 +230,12 @@ export const ro = {
   "home.loggedInAs": "Ești autentificat ca {email}. Evenimentul se creează direct în contul tău.",
   "home.haveAccount": "Ai deja un cont?",
   "home.login": "Intră în cont",
+  "home.headline": "Pozele invitaților, într-un singur loc.",
+  "home.stepsLabel": "Cum funcționează",
+  "home.step1": "Creezi evenimentul și descarci codul QR pentru mese.",
+  "home.step2": "Invitații scanează codul și încarcă din browser. Fără cont, fără instalare.",
+  "home.step3": "Tu vezi totul pe măsură ce vine, descarci originalele și ștergi ce nu vrei.",
+  "home.footnote": "Datele sunt găzduite în Uniunea Europeană. Fișierele se șterg automat la sfârșitul perioadei de păstrare alese.",
   "code.title": "Verifică-ți emailul",
   "code.intro": "Dacă adresa poate primi un cod, ți-am trimis un email cu un cod de 6 cifre și un link. Codul este valabil 15 minute.",
   "code.otherDevice": "Poți introduce codul aici, chiar dacă ai deschis emailul pe alt dispozitiv, sau poți apăsa pe linkul din email.",
@@ -302,6 +308,8 @@ export const ro = {
   "gallery.previous": "Anteriorul",
   "gallery.next": "Următorul",
   "gallery.download": "Descarcă originalul",
+  "gallery.live": "Live — fișierele noi apar automat",
+  "gallery.selected": "{count} selectate",
 
   // Retenție și preț
   "retention.title": "Păstrarea fișierelor",

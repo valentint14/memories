@@ -4,6 +4,7 @@ import { useActionState, type ReactNode } from "react";
 import { requestLoginForm } from "@/lib/actions/auth";
 import type { FormState } from "@/lib/actions/self-service";
 import { t } from "@/lib/i18n";
+import { ui } from "@/lib/ui";
 
 /**
  * Formular nativ cu Server Action: funcționează și înainte de hidratare (conexiuni lente). După
@@ -15,10 +16,10 @@ export function LoginForm({ next, turnstile }: { next?: string | undefined; turn
   const values = state.status === "error" ? (state.values ?? {}) : {};
 
   return (
-    <form action={action} noValidate className="flex flex-col gap-4">
+    <form action={action} noValidate className="flex flex-col gap-5">
       {next !== undefined && <input type="hidden" name="next" value={next} />}
-      <div className="flex flex-col gap-1">
-        <label htmlFor="login-email" className="font-medium">
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="login-email" className={ui.label}>
           {t("login.email")}
         </label>
         <input
@@ -30,25 +31,21 @@ export function LoginForm({ next, turnstile }: { next?: string | undefined; turn
           autoComplete="email"
           aria-invalid={emailError}
           aria-describedby={emailError ? "login-email-error" : undefined}
-          className="min-h-11 rounded-lg border border-gray-400 px-3 text-base"
+          className={ui.input}
         />
         {emailError && (
-          <p id="login-email-error" className="text-sm text-danger">
+          <p id="login-email-error" className={ui.fieldError}>
             {t("validation.email")}
           </p>
         )}
       </div>
       {turnstile}
       {state.status === "error" && !emailError && (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className={ui.fieldError}>
           {t(`errors.${state.error}`)}
         </p>
       )}
-      <button
-        type="submit"
-        disabled={pending}
-        className="min-h-11 rounded-lg bg-brand-600 px-4 font-semibold text-white disabled:opacity-60"
-      >
+      <button type="submit" disabled={pending} className={ui.buttonPrimary}>
         {pending ? t("login.sending") : t("login.submit")}
       </button>
     </form>

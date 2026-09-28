@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
+import { Wordmark } from "@/components/ui/Wordmark";
 import { t } from "@/lib/i18n";
 import { serverSupabase } from "@/lib/supabase/server";
+import { ui } from "@/lib/ui";
 
 /** Zona organizatorului: cere autentificare (FR-008, FR-009). */
 export default async function EventsLayout({ children }: { children: ReactNode }) {
@@ -14,16 +16,17 @@ export default async function EventsLayout({ children }: { children: ReactNode }
 
   return (
     <div className="min-h-dvh">
-      <header className="border-b border-gray-200 bg-white">
-        <nav aria-label={t("organizer.nav")} className="mx-auto flex max-w-6xl items-center gap-4 p-4">
-          <Link href="/events" className="font-bold text-brand-700">
+      <header className="border-b border-rule">
+        <nav aria-label={t("organizer.nav")} className="mx-auto flex min-h-16 max-w-6xl items-center gap-8 px-4 sm:px-8">
+          <Wordmark />
+          <Link href="/events" className={ui.link}>
             {t("organizer.myEvents")}
           </Link>
         </nav>
       </header>
-      <main className="mx-auto flex max-w-6xl flex-col gap-4 p-4 sm:p-6">
+      <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-8 sm:py-10">
         {isAdminUser === true && (
-          <p role="status" className="rounded-lg bg-amber-50 p-4 text-amber-900">
+          <p role="status" className={ui.caution}>
             {t("organizer.adminSession", { email: data.user.email ?? "" })}
           </p>
         )}

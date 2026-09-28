@@ -5,8 +5,7 @@ import { useActionState } from "react";
 import { createEventForm } from "@/lib/actions/organizer";
 import type { FormState } from "@/lib/actions/self-service";
 import { t, type MessageKey } from "@/lib/i18n";
-
-const inputClass = "min-h-11 rounded-lg border border-gray-400 px-3 text-base aria-[invalid=true]:border-danger";
+import { ui } from "@/lib/ui";
 
 /**
  * Crearea unui eveniment de către un organizator autentificat, fără email (002: FR-005). Caseta de
@@ -28,15 +27,15 @@ export function OrganizerCreateForm({
   const values = state.status === "error" ? (state.values ?? {}) : {};
 
   return (
-    <form action={action} noValidate className="flex flex-col gap-4">
+    <form action={action} noValidate className="flex flex-col gap-5">
       {versions !== null && (
         <>
           <input type="hidden" name="termsVersion" value={versions.terms} />
           <input type="hidden" name="privacyVersion" value={versions.privacy} />
         </>
       )}
-      <div className="flex flex-col gap-1">
-        <label htmlFor="oc-name" className="font-medium">
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="oc-name" className={ui.label}>
           {t("home.name")}
         </label>
         <input
@@ -48,16 +47,16 @@ export function OrganizerCreateForm({
           maxLength={120}
           aria-invalid={fields.name !== undefined}
           aria-describedby="oc-name-error"
-          className={inputClass}
+          className={ui.input}
         />
         {fields.name !== undefined && (
-          <p id="oc-name-error" className="text-sm text-danger">
+          <p id="oc-name-error" className={ui.fieldError}>
             {t(fields.name as MessageKey)}
           </p>
         )}
       </div>
-      <div className="flex flex-col gap-1">
-        <label htmlFor="oc-date" className="font-medium">
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="oc-date" className={ui.label}>
           {t("home.date")}
         </label>
         <input
@@ -70,16 +69,16 @@ export function OrganizerCreateForm({
           max={maxDate}
           aria-invalid={fields.eventDate !== undefined}
           aria-describedby="oc-date-error"
-          className={inputClass}
+          className={`${ui.input} ${ui.data}`}
         />
         {fields.eventDate !== undefined && (
-          <p id="oc-date-error" className="text-sm text-danger">
+          <p id="oc-date-error" className={ui.fieldError}>
             {t(fields.eventDate as MessageKey)}
           </p>
         )}
       </div>
       {versions !== null && (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           <div className="flex items-start gap-3">
             <input
               id="oc-accept"
@@ -89,36 +88,32 @@ export function OrganizerCreateForm({
               required
               aria-invalid={fields.accepted !== undefined}
               aria-describedby="oc-accept-error"
-              className="mt-1 size-5 shrink-0 accent-brand-600"
+              className={`${ui.checkbox} mt-0.5`}
             />
-            <label htmlFor="oc-accept">
+            <label htmlFor="oc-accept" className="leading-snug">
               {t("home.acceptBefore")}
-              <Link href="/terms" target="_blank" className="text-brand-700 underline">
+              <Link href="/terms" target="_blank" className={ui.link}>
                 {t("home.terms")}
               </Link>
               {t("home.acceptMiddle")}
-              <Link href="/privacy" target="_blank" className="text-brand-700 underline">
+              <Link href="/privacy" target="_blank" className={ui.link}>
                 {t("home.privacy")}
               </Link>
             </label>
           </div>
           {fields.accepted !== undefined && (
-            <p id="oc-accept-error" className="text-sm text-danger">
+            <p id="oc-accept-error" className={ui.fieldError}>
               {t(fields.accepted as MessageKey)}
             </p>
           )}
         </div>
       )}
       {general !== undefined && (
-        <p role="alert" className="rounded-lg border border-danger p-3 text-danger">
+        <p role="alert" className={ui.alert}>
           {t(`errors.${general}`)}
         </p>
       )}
-      <button
-        type="submit"
-        disabled={pending}
-        className="min-h-11 rounded-lg bg-brand-600 px-4 font-semibold text-white disabled:opacity-60"
-      >
+      <button type="submit" disabled={pending} className={ui.buttonPrimary}>
         {pending ? t("home.submitting") : t("home.submit")}
       </button>
     </form>

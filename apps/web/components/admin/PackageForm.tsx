@@ -4,9 +4,10 @@ import { useState, useTransition } from "react";
 import { updatePackage } from "@/lib/actions/admin";
 import { t, tp, type MessageKey } from "@/lib/i18n";
 import type { PackageSettings } from "@/lib/admin/package";
+import { ui } from "@/lib/ui";
 
 const MB = 1024 * 1024;
-const inputClass = "min-h-11 rounded-lg border border-gray-400 px-3 aria-[invalid=true]:border-danger";
+const inputClass = ui.input;
 
 /** Configurarea pachetului complet și a limitei de evenimente în așteptare (002: FR-015). */
 export function PackageForm({
@@ -24,13 +25,13 @@ export function PackageForm({
   function field(id: string, name: string, label: MessageKey, props: React.InputHTMLAttributes<HTMLInputElement>) {
     const message = fields[name];
     return (
-      <div className="flex flex-col gap-1">
-        <label htmlFor={id} className="font-medium">
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor={id} className={ui.label}>
           {t(label)}
         </label>
         <input id={id} name={name} aria-invalid={message !== undefined} aria-describedby={`${id}-error`} className={inputClass} {...props} />
         {message !== undefined && (
-          <p id={`${id}-error`} className="text-sm text-danger">
+          <p id={`${id}-error`} className={ui.fieldError}>
             {t(message as MessageKey)}
           </p>
         )}
@@ -41,7 +42,7 @@ export function PackageForm({
   return (
     <form
       noValidate
-      className="flex max-w-xl flex-col gap-4"
+      className="flex max-w-xl flex-col gap-5 border-t border-ink pt-6"
       onSubmit={(e) => {
         e.preventDefault();
         const data = new FormData(e.currentTarget);
@@ -75,8 +76,8 @@ export function PackageForm({
       {field("pk-files", "maxFilesPerGuest", "admin.package.maxFiles", { type: "number", min: 1, max: 1000, defaultValue: initial.maxFilesPerGuest })}
       {field("pk-photo", "maxPhotoMb", "admin.package.maxPhotoMb", { type: "number", min: 1, max: 50, defaultValue: initial.maxPhotoBytes / MB })}
       {field("pk-video", "maxVideoMb", "admin.package.maxVideoMb", { type: "number", min: 1, max: 1024, defaultValue: initial.maxVideoBytes / MB })}
-      <div className="flex flex-col gap-1">
-        <label htmlFor="pk-option" className="font-medium">
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="pk-option" className={ui.label}>
           {t("admin.package.retention")}
         </label>
         <select
@@ -95,7 +96,7 @@ export function PackageForm({
             </option>
           ))}
         </select>
-        {fields.retentionOptionId !== undefined && <p className="text-sm text-danger">{t(fields.retentionOptionId as MessageKey)}</p>}
+        {fields.retentionOptionId !== undefined && <p className={ui.fieldError}>{t(fields.retentionOptionId as MessageKey)}</p>}
       </div>
       {field("pk-awaiting", "maxAwaitingEventsPerOrganizer", "admin.package.maxAwaiting", {
         type: "number",
@@ -104,7 +105,7 @@ export function PackageForm({
         defaultValue: initial.maxAwaitingEventsPerOrganizer,
       })}
       {saved && (
-        <p role="status" className="text-green-800">
+        <p role="status" className="text-success">
           {t("admin.package.saved")}
         </p>
       )}
@@ -113,7 +114,7 @@ export function PackageForm({
           {error}
         </p>
       )}
-      <button type="submit" disabled={pending} className="min-h-11 self-start rounded-lg bg-brand-600 px-4 font-semibold text-white disabled:opacity-60">
+      <button type="submit" disabled={pending} className={`${ui.buttonPrimary} self-start`}>
         {t("admin.package.save")}
       </button>
     </form>

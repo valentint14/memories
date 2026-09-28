@@ -1,26 +1,50 @@
 @import "tailwindcss";
 
+/*
+ * Limbajul vizual „Foaie de contact” (docs/propunere-design.md). Paleta, razele, umbrele și
+ * fonturile implicite ale Tailwind sunt șterse: în afara tokenilor de mai jos nu există alte
+ * utilitare de culoare, rază sau umbră. `tests/unit/design-language.test.ts` verifică restul.
+ */
 @theme {
-  --color-brand-50: #f5f3ff;
-  --color-brand-100: #ede9fe;
-  --color-brand-600: #5b21b6;
-  --color-brand-700: #4c1d95;
-  --color-ink: #1f2937;
-  --color-muted: #4b5563;
-  --color-danger: #b91c1c;
-  --color-success: #15803d;
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --color-*: initial;
+  --color-paper: #f3eee4;
+  --color-paper-raised: #fbf8f2;
+  --color-ink: #1b1a17;
+  --color-ink-muted: #5e584e;
+  --color-rule: #d6cebf;
+  --color-field: #7a7366;
+  --color-accent: #b4441f;
+  --color-danger: #8a1f14;
+  --color-success: #2f5d3a;
+
+  --radius-*: initial;
+  --radius-xs: 2px;
+
+  --shadow-*: initial;
+  --shadow-dialog: 0 16px 40px rgb(27 26 23 / 0.18);
+
+  --font-*: initial;
+  --font-serif: var(--font-newsreader), Georgia, serif;
+  --font-sans: var(--font-plex-sans), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 }
 
 html {
   color: var(--color-ink);
-  background: #ffffff;
+  background: var(--color-paper);
   -webkit-text-size-adjust: 100%;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Plex Sans e încărcat până la 600: îngroșarea nu trebuie să ceară 700. */
+b,
+strong {
+  font-weight: 600;
 }
 
 /* WCAG 2.2: focus vizibil pentru navigarea din tastatură. */
 :focus-visible {
-  outline: 3px solid var(--color-brand-600);
+  outline: 2px solid var(--color-ink);
   outline-offset: 2px;
 }
 

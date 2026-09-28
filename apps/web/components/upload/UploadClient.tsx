@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { reserveUpload, startGuestSession } from "@/lib/actions/guest";
 import { formatBytes, t } from "@/lib/i18n";
 import { UploadQueue, type QueueLimits } from "@/lib/upload/queue";
+import { ui } from "@/lib/ui";
+import { CameraIcon, PlusIcon } from "../ui/icons";
 import { FileRow } from "./FileRow";
 import { KeepOpenNotice } from "./KeepOpenNotice";
 import { NetworkBanner } from "./NetworkBanner";
@@ -17,11 +19,14 @@ export function UploadClient({
   token,
   limits,
   initialName = "",
+  privacy,
 }: {
   token: string;
   limits: QueueLimits;
   /** Numele salvat în sesiunea dispozitivului, după o reîncărcare. */
   initialName?: string;
+  /** Nota de informare, afișată deasupra butoanelor fixate jos. */
+  privacy?: ReactNode;
 }) {
   const [name, setName] = useState(initialName);
   const nameRef = useRef(name);
@@ -75,9 +80,9 @@ export function UploadClient({
   };
 
   return (
-    <div className="flex flex-1 flex-col gap-4">
-      <div className="flex flex-col gap-1">
-        <label htmlFor="guest-name" className="font-medium">
+    <div className="flex flex-1 flex-col gap-6">
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="guest-name" className={ui.label}>
           {t("guest.nameLabel")}
         </label>
         <input
@@ -88,7 +93,7 @@ export function UploadClient({
           }}
           maxLength={50}
           autoComplete="name"
-          className="min-h-11 rounded-lg border border-gray-400 px-3 text-base"
+          className={ui.input}
         />
       </div>
 
@@ -99,27 +104,40 @@ export function UploadClient({
         }}
       />
       <NetworkBanner offline={offline} />
-      <KeepOpenNotice active={queue.hasActiveUploads()} />
 
       {items.length > 0 && (
-        <ul aria-label={t("guest.filesList")} className="flex flex-col gap-2">
-          {items.map((item) => (
-            <FileRow
-              key={item.id}
-              item={item}
-              onRetry={(id) => {
-                queue.retry(id);
-              }}
-            />
-          ))}
-        </ul>
+        <section aria-labelledby="files-title" className="flex flex-col">
+          <div className="flex items-baseline justify-between border-b border-ink pb-2">
+            <h2 id="files-title" className={ui.kicker}>
+              {t("guest.filesList")}
+            </h2>
+            <span className={`${ui.data} text-xs text-ink-muted`}>
+              {summary.done} / {items.length}
+            </span>
+          </div>
+          <ul aria-label={t("guest.filesList")} className="flex flex-col">
+            {items.map((item) => (
+              <FileRow
+                key={item.id}
+                item={item}
+                onRetry={(id) => {
+                  queue.retry(id);
+                }}
+              />
+            ))}
+          </ul>
+          <KeepOpenNotice active={queue.hasActiveUploads()} />
+        </section>
       )}
 
       {items.length > 0 && summary.inProgress === 0 && <UploadSummary done={summary.done} failed={summary.failed} />}
 
+      {privacy}
+
       {/* Acțiunile principale în treimea de jos a ecranului (FR-036). */}
-      <div className="sticky bottom-0 mt-auto flex flex-col gap-3 bg-white pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
-        <label className="flex min-h-14 cursor-pointer items-center justify-center rounded-xl bg-brand-600 px-4 text-lg font-semibold text-white focus-within:outline focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-brand-700">
+      <div className="sticky bottom-0 -mx-5 mt-auto flex flex-col gap-2.5 border-t border-rule bg-paper px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3.5">
+        <label className={`${ui.buttonPrimaryLarge} focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ink`}>
+          <PlusIcon />
           {t("guest.pick")}
           <input
             type="file"
@@ -132,7 +150,8 @@ export function UploadClient({
             }}
           />
         </label>
-        <label className="flex min-h-12 cursor-pointer items-center justify-center rounded-xl border-2 border-brand-600 px-4 font-semibold text-brand-700 focus-within:outline focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-brand-700">
+        <label className={`${ui.buttonSecondary} focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ink`}>
+          <CameraIcon />
           {t("guest.camera")}
           <input
             type="file"

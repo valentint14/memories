@@ -1,12 +1,26 @@
-# Propunere de design — direcția „Foaie de contact”
+# Limbajul vizual — direcția „Foaie de contact”
 
-Stare: propunere, neimplementată. Machetele interactive sunt pe canvasul
-„Memories — propunere de design” (pagina principală, pagina invitatului, galeria organizatorului,
-card de masă cu QR și sistemul vizual).
+Stare: implementat în `apps/web` și în emailuri (worker, șablonul Supabase). Machetele sunt pe
+canvasul „Memories — propunere de design”; cardul de masă cu QR a rămas propunere.
 
-## De ce arată acum „AI-style”
+## Cum se respectă
 
-Interfața actuală e corectă funcțional și accesibilă, dar are exact semnele unui șablon generat:
+- **Tokenii** sunt singurele culori, raze, umbre și fonturi care există: `app/globals.css` șterge
+  paleta implicită Tailwind (`--color-*: initial` etc.), deci `bg-gray-100` sau `rounded-lg` nu mai
+  generează nimic.
+- **Clasele comune** stau în `apps/web/lib/ui.ts` (butoane, câmpuri, secțiuni, dialoguri, tabele),
+  plus `components/ui/` (`StatusStamp`, `Wordmark`, `NarrowPage`, iconițe). Ecranele le compun; o
+  mărime diferită e o variantă nouă în `ui.ts`, nu o suprascriere.
+- **Testul** `apps/web/tests/unit/design-language.test.ts` rulează în CI (`pnpm test:unit`) și pică
+  la: culori din paleta Tailwind, hex/rgb în afara tokenilor (inclusiv în emailuri), alte raze decât
+  `rounded-xs`/`rounded-full`, umbre în afara dialogurilor, `font-bold`, gradiente sau blur, alte
+  fonturi, culori în `style`, emoji; verifică și contrastul WCAG al perechilor de tokeni.
+- **„Un singur buton plin pe ecran”** nu se poate verifica static: e o regulă de review. Butonul
+  plin e `ui.buttonPrimary` (sau `ui.buttonDangerSolid` într-un dialog de ștergere).
+
+## De ce arăta „AI-style”
+
+Interfața de dinainte era corectă funcțional și accesibilă, dar avea exact semnele unui șablon generat:
 
 | Semn | Unde |
 | --- | --- |
@@ -44,12 +58,13 @@ Accentul și pericolul diferă și prin luminozitate, nu doar prin nuanță; st�
 
 - **Newsreader** (400, fără bold) — titluri, numele evenimentului, wordmark-ul „Memories”.
 - **IBM Plex Sans** (400/500/600) — text și formulare.
-- **IBM Plex Mono** (500) — tot ce e număr: codul de 6 cifre, date, procente, dimensiuni,
+- **IBM Plex Mono** (400/500) — tot ce e număr: codul de 6 cifre, date, procente, dimensiuni,
   numere de cadru, ștampile de stare.
 
-Toate trei au diacriticele românești corecte (ș, ț cu virgulă). Se încarcă prin `next/font/google`,
-care le găzduiește local la build: CSP-ul rămâne `font-src 'self'`, fără cereri externe, iar pe
-pagina invitatului se încarcă doar subsetul `latin-ext` (bugetul LCP < 2,5 s pe 4G).
+Toate trei au diacriticele românești corecte (ș, ț cu virgulă). Se încarcă prin `next/font/google`
+(`app/layout.tsx`), care le descarcă la build și le servește de pe domeniul propriu: CSP-ul rămâne
+`font-src 'self'`. Subseturile sunt `latin` + `latin-ext`, cu `unicode-range`, deci browserul cere
+doar ce folosește pagina; Plex Mono nu se preîncarcă (bugetul LCP < 2,5 s pe 4G).
 
 ### Reguli
 
@@ -70,18 +85,12 @@ pagina invitatului se încarcă doar subsetul `latin-ext` (bugetul LCP < 2,5 s p
 - **Galeria** (`components/gallery/GalleryGrid.tsx`): foaie de contact — cadre pătrate fără
   chenar, sub fiecare `#0147 · Nume · 21:43`; cadrul selectat primește contur de cerneală de 2 px,
   video are eticheta `VIDEO 0:42`. Arhiva și păstrarea devin o bandă cu două coloane, nu două carduri.
-- **Lista evenimentelor** (`app/events/page.tsx`): tabel/registru cu ștampile în loc de pastile.
-- **Card de masă cu QR** (nou, opțional): format A6 tipăribil, generat lângă `qr.png`/`qr.svg`,
-  cu numele evenimentului, data și nota scurtă de confidențialitate.
-- **Emailurile** (`apps/worker/src/email/html.ts`): aceleași culori și codul în mono; fără imagini.
-
-## Implementare propusă
-
-1. `globals.css`: înlocuiește `--color-brand-*` cu tokenii de mai sus în `@theme`, `--radius-*`
-   la 2 px, fundal `paper`; `:focus-visible` în `ink`.
-2. `app/layout.tsx`: fonturile prin `next/font/google` ca variabile CSS; `themeColor: "#F3EEE4"`.
-3. Înlocuire mecanică `brand-600/700` → `ink`, `brand-50` → `paper-raised` + `border-rule`,
-   `rounded-lg`/`rounded-xl`/`rounded-2xl` → `rounded-xs`, eliminarea `shadow-sm`.
-4. O componentă `StatusStamp` care înlocuiește hărțile `BADGE` din paginile organizatorului.
-5. Galeria și lista de upload după machete.
-6. Testele e2e existente (`a11y.spec.ts`, `lcp.spec.ts`) confirmă contrastul și bugetul LCP.
+- **Lista evenimentelor** (`app/events/page.tsx`): registru cu linii, data în mono, numele în
+  Newsreader și starea ca ștampilă.
+- **Autentificare, cod, confirmare, MFA** (`components/ui/NarrowPage.tsx`): pagină îngustă, codul
+  de 6 cifre în mono mare.
+- **Administrare**: aceleași secțiuni deschise cu linie de cerneală, tabele cu antet mono și
+  ștampile de stare în lista evenimentelor.
+- **Emailurile** (`apps/worker/src/email/html.ts`, `supabase/templates/magic_link.html`): hârtie
+  caldă, foaia pe mijloc, „Memories” în serif, codul în mono, acțiunea ca singurul buton plin.
+- **Card de masă cu QR** (propunere, neimplementat): format A6 tipăribil, lângă `qr.png`/`qr.svg`.
