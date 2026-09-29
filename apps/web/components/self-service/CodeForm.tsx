@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { resendCodeForm, submitCodeForm, type FormState } from "@/lib/actions/self-service";
 import { t } from "@/lib/i18n";
 import { ui } from "@/lib/ui";
+import { SheetActions } from "../ui/SheetActions";
 import { Sheet } from "../ui/Sheet";
 
 /**
@@ -16,8 +17,8 @@ export function CodeForm({ requestId, next }: { requestId: string; next: string 
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-      <Sheet id="code-form-title" title={t("code.sheet.code")} className={ui.sheetFormFill}>
-        <form action={action} className="flex flex-col gap-5">
+      <Sheet id="code-form-title" title={t("code.sheet.code")}>
+        <form action={action} className={ui.sheetForm}>
           <input type="hidden" name="requestId" value={requestId} />
           {next !== undefined && <input type="hidden" name="next" value={next} />}
           <div className="flex flex-col gap-1.5">
@@ -40,25 +41,32 @@ export function CodeForm({ requestId, next }: { requestId: string; next: string 
               {t("code.otherDevice")}
             </p>
           </div>
-          {state.status === "error" && (
-            <p id="code-error" role="alert" className={ui.fieldError}>
-              {t(`errors.${state.error}`)}
-            </p>
-          )}
-          <button type="submit" disabled={pending} className={ui.buttonPrimary}>
-            {pending ? t("code.submitting") : t("code.submit")}
-          </button>
+          <SheetActions
+            status={
+              state.status === "error" && (
+                <p id="code-error" role="alert" className={ui.fieldError}>
+                  {t(`errors.${state.error}`)}
+                </p>
+              )
+            }
+          >
+            <button type="submit" disabled={pending} className={ui.buttonPrimary}>
+              {pending ? t("code.submitting") : t("code.submit")}
+            </button>
+          </SheetActions>
         </form>
       </Sheet>
 
-      <Sheet id="code-resend-title" title={t("code.sheet.resend")} className={ui.sheetFormFill}>
-        <form action={resend} className="flex flex-col gap-5">
+      <Sheet id="code-resend-title" title={t("code.sheet.resend")}>
+        <form action={resend} className={ui.sheetForm}>
           <input type="hidden" name="requestId" value={requestId} />
           {next !== undefined && <input type="hidden" name="next" value={next} />}
           <p className="leading-relaxed">{t("code.noEmail")}</p>
-          <button type="submit" disabled={resending} className={ui.buttonSecondary}>
-            {t("code.resend")}
-          </button>
+          <SheetActions>
+            <button type="submit" disabled={resending} className={ui.buttonSecondary}>
+              {t("code.resend")}
+            </button>
+          </SheetActions>
         </form>
       </Sheet>
     </div>

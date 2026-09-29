@@ -10,6 +10,7 @@ import { formatDateTime, formatMoney, t, type MessageKey } from "@/lib/i18n";
 import { ui } from "@/lib/ui";
 import { SelectField } from "../ui/SelectField";
 import { Sheet } from "../ui/Sheet";
+import { SheetActions } from "../ui/SheetActions";
 
 export interface RetentionOptionView {
   id: string;
@@ -55,7 +56,7 @@ export function EventForm({
 }: {
   options: RetentionOptionView[];
   initial?: EventFormInitial;
-  /** Într-o foaie: formularul umple foaia, iar butonul stă la dreapta. */
+  /** Într-o foaie: formularul umple lățimea foii (altfel, cel mult `max-w-3xl`). */
   fill?: boolean;
   layout?: "grid" | "sheets";
 }) {
@@ -250,16 +251,20 @@ export function EventForm({
               {previewBox}
             </Sheet>
           </div>
-          <div className="flex flex-wrap items-center justify-end gap-3">
-            {formError !== null && (
-              <p role="alert" className="mr-auto text-sm text-danger">
-                {formError}
-              </p>
-            )}
-            <Button type="submit" isDisabled={pending} className={ui.buttonPrimaryCompact}>
+          {/* Sub foi, după aceeași regulă ca bara de acțiuni a unei foi. */}
+          <SheetActions
+            status={
+              formError !== null && (
+                <p role="alert" className={ui.fieldError}>
+                  {formError}
+                </p>
+              )
+            }
+          >
+            <Button type="submit" isDisabled={pending} className={ui.buttonPrimary}>
               {submitLabel}
             </Button>
-          </div>
+          </SheetActions>
         </>
       ) : (
         <>
@@ -279,11 +284,13 @@ export function EventForm({
               {formError}
             </p>
           )}
-          <div className={`sm:col-span-2 ${fill ? "flex justify-end" : ""}`}>
-            {/* La editare, pagina are deja acțiunea principală (starea evenimentului). */}
-            <Button type="submit" isDisabled={pending} className={initial ? ui.buttonSecondary : ui.buttonPrimary}>
-              {submitLabel}
-            </Button>
+          <div className="sm:col-span-2">
+            <SheetActions>
+              {/* La editare, pagina are deja acțiunea principală (starea evenimentului). */}
+              <Button type="submit" isDisabled={pending} className={initial ? ui.buttonSecondary : ui.buttonPrimary}>
+                {submitLabel}
+              </Button>
+            </SheetActions>
           </div>
         </>
       )}

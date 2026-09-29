@@ -5,6 +5,7 @@ import { useActionState, type ReactNode } from "react";
 import { requestEventCreationForm, type FormState } from "@/lib/actions/self-service";
 import { t, type MessageKey } from "@/lib/i18n";
 import { ui } from "@/lib/ui";
+import { SheetActions } from "../ui/SheetActions";
 
 function FieldError({ id, message }: { id: string; message: string | undefined }) {
   if (message === undefined) return null;
@@ -38,7 +39,7 @@ export function CreateEventForm({
   const values = state.status === "error" ? (state.values ?? {}) : {};
 
   return (
-    <form action={action} noValidate className="flex flex-col gap-5">
+    <form action={action} noValidate className={ui.sheetForm}>
       <input type="hidden" name="termsVersion" value={termsVersion} />
       <input type="hidden" name="privacyVersion" value={privacyVersion} />
 
@@ -134,15 +135,19 @@ export function CreateEventForm({
 
       {turnstile}
 
-      {general !== undefined && (
-        <p role="alert" className={ui.alert}>
-          {t(`errors.${general}`)}
-        </p>
-      )}
-
-      <button type="submit" disabled={pending} className={ui.buttonPrimary}>
-        {pending ? t("home.submitting") : t("home.submit")}
-      </button>
+      <SheetActions
+        status={
+          general !== undefined && (
+            <p role="alert" className={ui.alert}>
+              {t(`errors.${general}`)}
+            </p>
+          )
+        }
+      >
+        <button type="submit" disabled={pending} className={ui.buttonPrimary}>
+          {pending ? t("home.submitting") : t("home.submit")}
+        </button>
+      </SheetActions>
     </form>
   );
 }

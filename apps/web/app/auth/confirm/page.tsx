@@ -4,6 +4,7 @@ import { ConfirmButton } from "@/components/self-service/ConfirmButton";
 import { AuthPage, authIntro } from "@/components/ui/AuthPage";
 import { StepList } from "@/components/ui/StepList";
 import { Sheet } from "@/components/ui/Sheet";
+import { SheetActions } from "@/components/ui/SheetActions";
 import { t } from "@/lib/i18n";
 import { safeNextPath } from "@/lib/security/redirect";
 import { adminSupabase } from "@/lib/supabase/admin";
@@ -45,9 +46,11 @@ export default async function ConfirmPage({
             <p role="alert" className="leading-relaxed">
               {t("confirm.invalid")}
             </p>
-            <Link href="/login" className={`${ui.buttonSecondary} mt-auto self-end`}>
-              {t("confirm.newRequest")}
-            </Link>
+            <SheetActions>
+              <Link href="/login" className={ui.buttonSecondary}>
+                {t("confirm.newRequest")}
+              </Link>
+            </SheetActions>
           </Sheet>
           <Sheet id="confirm-next-title" title={t("confirm.sheet.next")}>
             <StepList steps={[t("confirm.next1"), t("confirm.next2")]} />
@@ -67,7 +70,6 @@ export default async function ConfirmPage({
         <Sheet
           id="confirm-action-title"
           title={isCreate ? t("confirm.sheet.event") : t("confirm.sheet.login")}
-          className="[&_form]:mt-auto [&_form]:self-end"
         >
           {isCreate ? (
             <p className="font-serif text-2xl leading-tight">{eventName}</p>

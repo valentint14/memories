@@ -60,11 +60,11 @@ export default async function HomePage() {
 
         {/*
           Pe desktop, cardul are înălțimea coloanei din stânga (începe și se termină la fel), iar
-          butonul formularului coboară la marginea de jos a cardului.
+          bara de acțiuni a formularului coboară la marginea de jos a cardului.
         */}
         <section
           aria-labelledby="create-title"
-          className="flex flex-col gap-5 rounded-xs border border-rule bg-paper-raised p-5 sm:p-8 lg:col-span-5 lg:[&>form]:flex-1 lg:[&>form>button:last-child]:mt-auto"
+          className="flex flex-col gap-5 rounded-xs border border-rule bg-paper-raised p-5 sm:p-8 lg:col-span-5"
         >
           <div className="flex flex-col items-center gap-2.5">
             <h2 id="create-title" className={`${ui.sectionTitle} text-center`}>

@@ -28,9 +28,7 @@ export function EventStatusPanel({
       </p>
       {pendingPurgeAt !== null && <p className={ui.hint}>{t("activation.pendingPurge", { date: formatDate(pendingPurgeAt) })}</p>}
       <p className="leading-relaxed">{t("activation.how")}</p>
-      <div className="mt-auto border-t border-rule pt-4">
-        <RequestActivationButton eventId={eventId} lastRequestAt={info.lastRequestAt} />
-      </div>
+      <RequestActivationButton eventId={eventId} lastRequestAt={info.lastRequestAt} />
     </Sheet>
   );
 }

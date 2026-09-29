@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArchivePanel } from "@/components/gallery/ArchivePanel";
 import { GalleryGrid } from "@/components/gallery/GalleryGrid";
@@ -20,23 +19,17 @@ import { ui } from "@/lib/ui";
 export const metadata: Metadata = { title: "Galerie" };
 
 /**
- * Antetul evenimentului, ca în fișa din administrare: firul de navigare, numele în stânga, starea ca
- * ștampilă în dreapta (pe telefon, pe toată lățimea, dedesubt).
+ * Antetul evenimentului: numele în stânga, starea ca ștampilă în dreapta (pe telefon, numele
+ * centrat și ștampila pe toată lățimea, dedesubt). De la `sm`, titlul e tăiat la majuscule și la linia de bază, iar ștampila
+ * (40 px) coboară cu 4 px, ca să stea centrată pe literele ultimului rând (majuscule de 32 px).
  */
 function EventHeader({ name, status }: { name: string | null; status: string }) {
   return (
-    <header className="flex flex-col gap-3">
-      <p className={`${ui.kicker} text-ink-muted`}>
-        <Link href="/events" className="underline decoration-rule underline-offset-4 hover:decoration-ink">
-          {t("organizer.myEvents")}
-        </Link>
-      </p>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <h1 className={ui.pageTitle}>{name}</h1>
-        <span className="grid shrink-0 sm:block">
-          <StatusStamp status={status} size="bar" />
-        </span>
-      </div>
+    <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <h1 className={`${ui.pageTitle} text-center sm:text-left sm:[text-box:trim-both_cap_alphabetic]`}>{name}</h1>
+      <span className="grid shrink-0 sm:-mb-1 sm:block">
+        <StatusStamp status={status} size="bar" />
+      </span>
     </header>
   );
 }

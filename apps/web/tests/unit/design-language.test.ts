@@ -140,6 +140,14 @@ describe("interfața web folosește doar limbajul vizual", () => {
   it("fără emoji în interfață și în texte", () => {
     expect(violations(UI_SOURCES, /\p{Extended_Pictographic}/gu)).toEqual([]);
   });
+
+  it("butoanele se aliniază doar prin bara de acțiuni (SheetActions) sau a dialogului", () => {
+    // Alinierea unui buton pe cont propriu (stânga, dreapta, coborât în formular) rupe regula comună:
+    // `justify-end` există doar în `ui.sheetActions` și `ui.dialogActions`.
+    const UI_TS = join(WEB, "lib/ui.ts");
+    const pattern = /(?<![-\w])(?:justify-end|self-start|self-end)\b|\[&(?:_|>)form[^\]]*\]/g;
+    expect(violations(UI_SOURCES.filter((f) => f !== UI_TS), pattern)).toEqual([]);
+  });
 });
 
 describe("emailurile folosesc aceiași tokeni", () => {

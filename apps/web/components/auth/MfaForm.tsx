@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { enrollTotp, verifyTotp, type TotpEnrollment } from "@/lib/actions/auth";
 import { t } from "@/lib/i18n";
 import { ui } from "@/lib/ui";
+import { SheetActions } from "../ui/SheetActions";
 import { Sheet } from "../ui/Sheet";
 import { StepList } from "../ui/StepList";
 
@@ -34,9 +35,9 @@ export function MfaForm({ factorId: existingFactorId }: { factorId: string | nul
   const factorId = existingFactorId ?? enrollment?.factorId ?? null;
 
   const codeSheet = (
-    <Sheet id="mfa-code-title" title={t("mfa.sheet.code")} className={ui.sheetFormFill}>
+    <Sheet id="mfa-code-title" title={t("mfa.sheet.code")}>
       <Form
-        className="flex flex-col gap-5"
+        className={ui.sheetForm}
         onSubmit={(e) => {
           e.preventDefault();
           if (factorId === null) return;
@@ -59,14 +60,19 @@ export function MfaForm({ factorId: existingFactorId }: { factorId: string | nul
             </Text>
           )}
         </TextField>
-        {error !== null && (
-          <p role="alert" className={ui.fieldError}>
-            {error}
-          </p>
-        )}
-        <Button type="submit" isDisabled={pending || factorId === null} className={ui.buttonPrimary}>
-          {t("mfa.verify")}
-        </Button>
+        <SheetActions
+          status={
+            error !== null && (
+              <p role="alert" className={ui.fieldError}>
+                {error}
+              </p>
+            )
+          }
+        >
+          <Button type="submit" isDisabled={pending || factorId === null} className={ui.buttonPrimary}>
+            {t("mfa.verify")}
+          </Button>
+        </SheetActions>
       </Form>
     </Sheet>
   );

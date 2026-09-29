@@ -6,6 +6,7 @@ import { createEventForm } from "@/lib/actions/organizer";
 import type { FormState } from "@/lib/actions/self-service";
 import { t, type MessageKey } from "@/lib/i18n";
 import { ui } from "@/lib/ui";
+import { SheetActions } from "../ui/SheetActions";
 
 /**
  * Crearea unui eveniment de către un organizator autentificat, fără email (002: FR-005). Caseta de
@@ -27,7 +28,7 @@ export function OrganizerCreateForm({
   const values = state.status === "error" ? (state.values ?? {}) : {};
 
   return (
-    <form action={action} noValidate className="flex flex-col gap-5">
+    <form action={action} noValidate className={ui.sheetForm}>
       {versions !== null && (
         <>
           <input type="hidden" name="termsVersion" value={versions.terms} />
@@ -108,14 +109,19 @@ export function OrganizerCreateForm({
           )}
         </div>
       )}
-      {general !== undefined && (
-        <p role="alert" className={ui.alert}>
-          {t(`errors.${general}`)}
-        </p>
-      )}
-      <button type="submit" disabled={pending} className={ui.buttonPrimary}>
-        {pending ? t("home.submitting") : t("home.submit")}
-      </button>
+      <SheetActions
+        status={
+          general !== undefined && (
+            <p role="alert" className={ui.alert}>
+              {t(`errors.${general}`)}
+            </p>
+          )
+        }
+      >
+        <button type="submit" disabled={pending} className={ui.buttonPrimary}>
+          {pending ? t("home.submitting") : t("home.submit")}
+        </button>
+      </SheetActions>
     </form>
   );
 }

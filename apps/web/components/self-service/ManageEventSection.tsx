@@ -1,5 +1,6 @@
 import { t } from "@/lib/i18n";
 import { Sheet } from "../ui/Sheet";
+import { SheetActions } from "../ui/SheetActions";
 import { DeleteEventDialog } from "./DeleteEventDialog";
 import { EditEventForm } from "./EditEventForm";
 
@@ -27,9 +28,9 @@ export function ManageEventSection({
       )}
       <Sheet id="delete-title" title={t("admin.delete.section")} danger className={canEdit ? "" : "lg:col-span-2"}>
         <p className={canEdit ? "" : "max-w-2xl"}>{t("organizer.delete.explain")}</p>
-        <div className="mt-auto">
+        <SheetActions>
           <DeleteEventDialog eventId={eventId} eventName={name} />
-        </div>
+        </SheetActions>
       </Sheet>
     </div>
   );

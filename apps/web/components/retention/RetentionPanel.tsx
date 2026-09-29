@@ -8,6 +8,7 @@ import { formatDate, formatDateTime, formatMoney, t, tp } from "@/lib/i18n";
 import type { RetentionOptionQuote } from "@/lib/organizer/retention";
 import { ui } from "@/lib/ui";
 import { Sheet } from "../ui/Sheet";
+import { SheetActions } from "../ui/SheetActions";
 import { ExtendRetentionDialog } from "./ExtendRetentionDialog";
 
 /**
@@ -76,18 +77,6 @@ export function RetentionPanel({
         ))}
       </RadioGroup>
 
-      <Button
-        isDisabled={selected === null || !selected.selectable}
-        onPress={() => {
-          setPriceChanged(false);
-          setError(null);
-          setDialogOpen(true);
-        }}
-        className={`${ui.buttonSecondary} self-start`}
-      >
-        {t("retention.extend")}
-      </Button>
-
       <ExtendRetentionDialog
         option={selected}
         currentPriceMinor={state.finalPriceMinor}
@@ -119,7 +108,19 @@ export function RetentionPanel({
           });
         }}
       />
-      <p className={`${ui.hint} mt-auto`}>{t("retention.notices", { date: formatDateTime(state.purgeAt) })}</p>
+      <SheetActions status={<p className={ui.hint}>{t("retention.notices", { date: formatDateTime(state.purgeAt) })}</p>}>
+        <Button
+          isDisabled={selected === null || !selected.selectable}
+          onPress={() => {
+            setPriceChanged(false);
+            setError(null);
+            setDialogOpen(true);
+          }}
+          className={ui.buttonSecondary}
+        >
+          {t("retention.extend")}
+        </Button>
+      </SheetActions>
     </Sheet>
   );
 }

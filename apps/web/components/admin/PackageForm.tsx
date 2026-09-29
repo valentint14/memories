@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Sheet } from "@/components/ui/Sheet";
 import { SelectField } from "@/components/ui/SelectField";
+import { SheetActions } from "@/components/ui/SheetActions";
 import { updatePackage } from "@/lib/actions/admin";
 import { t, tp, type MessageKey } from "@/lib/i18n";
 import type { PackageSettings } from "@/lib/admin/package";
@@ -111,21 +112,27 @@ export function PackageForm({
         </Sheet>
       </div>
 
-      <div className="flex flex-wrap items-center justify-end gap-3 border-t border-rule pt-4">
-        {saved && (
-          <p role="status" className="mr-auto text-sm text-success">
-            {t("admin.package.saved")}
-          </p>
-        )}
-        {error !== null && (
-          <p role="alert" className="mr-auto text-sm text-danger">
-            {error}
-          </p>
-        )}
-        <button type="submit" disabled={pending} className={ui.buttonPrimaryCompact}>
+      {/* Sub foi, după aceeași regulă ca bara de acțiuni a unei foi. */}
+      <SheetActions
+        status={
+          <>
+            {saved && (
+              <p role="status" className="text-sm text-success">
+                {t("admin.package.saved")}
+              </p>
+            )}
+            {error !== null && (
+              <p role="alert" className={ui.fieldError}>
+                {error}
+              </p>
+            )}
+          </>
+        }
+      >
+        <button type="submit" disabled={pending} className={ui.buttonPrimary}>
           {t("admin.package.save")}
         </button>
-      </div>
+      </SheetActions>
     </form>
   );
 }

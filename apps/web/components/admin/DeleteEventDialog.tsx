@@ -17,7 +17,7 @@ export function DeleteEventDialog({ eventId, eventName }: { eventId: string; eve
 
   return (
     <DialogTrigger>
-      <Button className={`${ui.buttonDanger} self-start`}>{t("admin.delete.open")}</Button>
+      <Button className={ui.buttonDanger}>{t("admin.delete.open")}</Button>
       <ModalOverlay isDismissable className={ui.overlay}>
         <Modal className={ui.dialog}>
           <Dialog role="alertdialog" className="flex flex-col gap-4 outline-none">

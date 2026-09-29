@@ -79,8 +79,16 @@ export const ui = {
   /** Ca `sheetBar`, în teracotă: grupa care cere atenție (cererile de activare). */
   sheetBarAccent:
     "flex min-h-12 items-center justify-between gap-3 border-b border-rule px-4 font-mono text-xs font-medium uppercase tracking-[0.08em] text-accent",
-  /** Pe o foaie cu formular: formularul umple foaia, iar ultimul buton coboară jos, la dreapta. */
-  sheetFormFill: "[&_form]:flex-1 [&_form>button:last-child]:mt-auto [&_form>button:last-child]:self-end",
+  /**
+   * Bara de acțiuni a unei foi (singurul loc al butoanelor dintr-o foaie): la baza foii; pe ecrane
+   * late la dreapta, cu acțiunea principală ultima; pe telefon pe toată lățimea, principala sus.
+   * Fără linie deasupra: separarea o face spațiul. Se folosește prin `SheetActions`. Fără butoane
+   * (de ex. cererea de activare trimisă), bara dispare, ca foaia să nu aibă spațiu gol jos.
+   */
+  sheetActions:
+    "mt-auto flex flex-col-reverse gap-3 pt-2 empty:hidden sm:flex-row sm:flex-wrap sm:items-center sm:justify-end [&>*]:w-full sm:[&>*]:w-auto",
+  /** Un formular care umple foaia, ca bara lui de acțiuni să coboare la baza foii. */
+  sheetForm: "flex flex-1 flex-col gap-5",
 
   overlay: "fixed inset-0 z-50 flex items-center justify-center bg-ink/60 p-4",
   dialog: "w-full max-w-md rounded-xs border border-ink bg-paper-raised p-6 shadow-dialog",

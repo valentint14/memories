@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SheetActions } from "@/components/ui/SheetActions";
 import { StatBand } from "@/components/ui/StatBand";
 import { StatusStamp } from "@/components/ui/StatusStamp";
 import { ChevronRightIcon, PlusIcon } from "@/components/ui/icons";
@@ -45,7 +46,8 @@ function EventSheet({ event }: { event: EventRow }) {
           </Link>
         </h2>
         {fact !== null && <p className="text-sm leading-relaxed text-ink-muted">{fact}</p>}
-        <div className="mt-auto flex justify-end border-t border-rule pt-3">
+        {/* Legătură text, nu buton: rămâne în dreapta pe toate ecranele, fără linie deasupra. */}
+        <div className="mt-auto text-right">
           <Link href={href} className={`${ui.buttonText} gap-1 text-sm`} aria-hidden="true" tabIndex={-1}>
             {t("organizer.list.open")}
             <ChevronRightIcon className="size-4" />
@@ -118,11 +120,11 @@ export default async function OrganizerEventsPage({ searchParams }: { searchPara
           <div className={ui.sheetBody}>
             <p className="font-serif text-2xl leading-tight">{t(events.length === 0 ? "organizer.list.firstTitle" : "organizer.list.newTitle")}</p>
             <p className="text-sm leading-relaxed text-ink-muted">{t("organizer.list.newText")}</p>
-            <div className="mt-auto flex justify-end border-t border-rule pt-3">
-              <Link href="/events/new" className={ui.buttonPrimaryCompact}>
+            <SheetActions>
+              <Link href="/events/new" className={ui.buttonPrimary}>
                 {t("organizer.newEvent")}
               </Link>
-            </div>
+            </SheetActions>
           </div>
         </li>
       </ul>

@@ -29,7 +29,7 @@ export default async function LoginPage({
         </p>
       )}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Sheet id="login-form-title" title={t("login.sheet.form")} className={ui.sheetFormFill}>
+        <Sheet id="login-form-title" title={t("login.sheet.form")}>
           <LoginForm next={safeNextPath(params.next)} turnstile={<TurnstileField />} />
         </Sheet>
         <Sheet id="login-steps-title" title={t("login.sheet.steps")}>

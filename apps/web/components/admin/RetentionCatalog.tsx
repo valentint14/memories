@@ -6,6 +6,7 @@ import { deleteRetentionOption, upsertRetentionOption } from "@/lib/actions/admi
 import { t, tp, type MessageKey } from "@/lib/i18n";
 import { ui } from "@/lib/ui";
 import { Sheet } from "../ui/Sheet";
+import { SheetActions } from "../ui/SheetActions";
 
 export interface CatalogRow {
   id: string;
@@ -70,12 +71,15 @@ function OptionSheet({ option }: { option: CatalogRow }) {
         </span>
       </div>
 
-      <div className="mt-auto flex flex-wrap items-center justify-end gap-3 border-t border-rule pt-4">
-        {message && (
-          <span role="status" className={`mr-auto text-sm ${message.ok ? "text-success" : "text-danger"}`}>
-            {message.text}
-          </span>
-        )}
+      <SheetActions
+        status={
+          message && (
+            <p role="status" className={`text-sm ${message.ok ? "text-success" : "text-danger"}`}>
+              {message.text}
+            </p>
+          )
+        }
+      >
         <button
           type="button"
           disabled={pending}
@@ -90,7 +94,7 @@ function OptionSheet({ option }: { option: CatalogRow }) {
                 });
             });
           }}
-          className={ui.buttonDangerCompact}
+          className={ui.buttonDanger}
         >
           {t("admin.retentionPage.delete")}
         </button>
@@ -109,11 +113,11 @@ function OptionSheet({ option }: { option: CatalogRow }) {
               if (result.ok) router.refresh();
             });
           }}
-          className={ui.buttonSecondaryCompact}
+          className={ui.buttonSecondary}
         >
           {t("admin.retentionPage.save")}
         </button>
-      </div>
+      </SheetActions>
     </Sheet>
   );
 }
@@ -139,7 +143,7 @@ export function RetentionCatalog({ options }: { options: CatalogRow[] }) {
 
       <Sheet id="add-option-title" title={t("admin.retentionPage.add")} className={options.length % 2 === 0 ? "lg:col-span-2" : ""}>
         <form
-          className="flex flex-1 flex-col gap-4"
+          className={ui.sheetForm}
           onSubmit={(e) => {
             e.preventDefault();
             setError(null);
@@ -189,16 +193,19 @@ export function RetentionCatalog({ options }: { options: CatalogRow[] }) {
               />
             </div>
           </div>
-          <div className="mt-auto flex flex-wrap items-center justify-end gap-3 border-t border-rule pt-4">
-            {error !== null && (
-              <p role="alert" className="mr-auto text-sm text-danger">
-                {error}
-              </p>
-            )}
-            <button type="submit" disabled={pending} className={ui.buttonPrimaryCompact}>
+          <SheetActions
+            status={
+              error !== null && (
+                <p role="alert" className={ui.fieldError}>
+                  {error}
+                </p>
+              )
+            }
+          >
+            <button type="submit" disabled={pending} className={ui.buttonPrimary}>
               {t("admin.retentionPage.create")}
             </button>
-          </div>
+          </SheetActions>
         </form>
       </Sheet>
     </div>

@@ -5,6 +5,7 @@ import { requestLoginForm } from "@/lib/actions/auth";
 import type { FormState } from "@/lib/actions/self-service";
 import { t } from "@/lib/i18n";
 import { ui } from "@/lib/ui";
+import { SheetActions } from "../ui/SheetActions";
 
 /**
  * Formular nativ cu Server Action: funcționează și înainte de hidratare (conexiuni lente). După
@@ -16,7 +17,7 @@ export function LoginForm({ next, turnstile }: { next?: string | undefined; turn
   const values = state.status === "error" ? (state.values ?? {}) : {};
 
   return (
-    <form action={action} noValidate className="flex flex-col gap-5">
+    <form action={action} noValidate className={ui.sheetForm}>
       {next !== undefined && <input type="hidden" name="next" value={next} />}
       <div className="flex flex-col gap-1.5">
         <label htmlFor="login-email" className={ui.label}>
@@ -40,14 +41,20 @@ export function LoginForm({ next, turnstile }: { next?: string | undefined; turn
         )}
       </div>
       {turnstile}
-      {state.status === "error" && !emailError && (
-        <p role="alert" className={ui.fieldError}>
-          {t(`errors.${state.error}`)}
-        </p>
-      )}
-      <button type="submit" disabled={pending} className={ui.buttonPrimary}>
-        {pending ? t("login.sending") : t("login.submit")}
-      </button>
+      <SheetActions
+        status={
+          state.status === "error" &&
+          !emailError && (
+            <p role="alert" className={ui.fieldError}>
+              {t(`errors.${state.error}`)}
+            </p>
+          )
+        }
+      >
+        <button type="submit" disabled={pending} className={ui.buttonPrimary}>
+          {pending ? t("login.sending") : t("login.submit")}
+        </button>
+      </SheetActions>
     </form>
   );
 }

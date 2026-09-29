@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { OrganizerCreateForm } from "@/components/self-service/OrganizerCreateForm";
 import { Sheet } from "@/components/ui/Sheet";
 import { t } from "@/lib/i18n";
@@ -20,11 +19,6 @@ export default async function NewEventPage() {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-3">
-        <p className={`${ui.kicker} text-ink-muted`}>
-          <Link href="/events" className="underline decoration-rule underline-offset-4 hover:decoration-ink">
-            {t("organizer.myEvents")}
-          </Link>
-        </p>
         <h1 className={ui.pageTitle}>{t("organizer.newTitle")}</h1>
         <p className="max-w-2xl leading-relaxed text-ink-muted">{t("organizer.newIntro")}</p>
       </header>
@@ -33,7 +27,6 @@ export default async function NewEventPage() {
         <Sheet
           id="new-event-title"
           title={t("organizer.new.formSheet")}
-          className="[&_form]:flex-1 [&_form>button:last-child]:mt-auto [&_form>button:last-child]:self-end"
         >
           <OrganizerCreateForm {...props} />
         </Sheet>

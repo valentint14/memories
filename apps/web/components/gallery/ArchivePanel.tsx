@@ -9,6 +9,7 @@ import { authorizeRealtime } from "@/lib/realtime/auth";
 import { browserSupabase } from "@/lib/supabase/browser";
 import { ui } from "@/lib/ui";
 import { Sheet } from "../ui/Sheet";
+import { SheetActions } from "../ui/SheetActions";
 
 interface ReadyArchive {
   url: string;
@@ -95,47 +96,51 @@ export function ArchivePanel({
   return (
     <Sheet id="archive-title" title={t("archive.title")}>
       <p className="leading-relaxed">{t("archive.intro")}</p>
-      <div aria-live="polite" className="flex flex-col gap-3">
-        {empty && <p className="text-ink-muted">{t("archive.empty")}</p>}
-        {inProgress && (
-          <p className="flex items-center gap-2">
-            <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-accent" />
-            {t("archive.preparing")}
-          </p>
+      <SheetActions
+        status={
+          <div aria-live="polite" className="flex flex-col gap-3 empty:hidden">
+            {empty && <p className="text-ink-muted">{t("archive.empty")}</p>}
+            {inProgress && (
+              <p className="flex items-center gap-2">
+                <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-accent" />
+                {t("archive.preparing")}
+              </p>
+            )}
+            {archive?.status === "failed" && <p className="text-danger">{t("archive.failed")}</p>}
+            {archive?.status === "expired" && <p className="text-ink-muted">{t("archive.expired")}</p>}
+            {ready && ready.skippedCount > 0 && <p className="text-sm">{tp("plural.archiveSkipped", ready.skippedCount)}</p>}
+            {ready && <p className={ui.hint}>{t("archive.validUntil", { date: formatDateTime(ready.expiresAt) })}</p>}
+            {error !== null && (
+              <p role="alert" className={ui.fieldError}>
+                {error}
+              </p>
+            )}
+          </div>
+        }
+      >
+        {/* Pregătirea (din nou) e secundară; descărcarea arhivei gata e acțiunea principală, ultima. */}
+        {!inProgress && (
+          <Button
+            isDisabled={empty || pending}
+            onPress={() => {
+              setError(null);
+              startTransition(async () => {
+                const result = await requestArchive(eventId);
+                if (result.ok) setArchive(result.data);
+                else setError(t(`errors.${result.error}`));
+              });
+            }}
+            className={ui.buttonSecondary}
+          >
+            {ready ? t("archive.again") : t("archive.downloadAll")}
+          </Button>
         )}
-        {archive?.status === "failed" && <p className="text-danger">{t("archive.failed")}</p>}
-        {archive?.status === "expired" && <p className="text-ink-muted">{t("archive.expired")}</p>}
         {ready && (
-          <>
-            <a href={ready.url} className={`${ui.buttonPrimary} self-start`}>
-              {t("archive.download", { files: tp("plural.files", ready.fileCount) })}
-            </a>
-            {ready.skippedCount > 0 && <p className="text-sm">{tp("plural.archiveSkipped", ready.skippedCount)}</p>}
-            <p className={ui.hint}>{t("archive.validUntil", { date: formatDateTime(ready.expiresAt) })}</p>
-          </>
+          <a href={ready.url} className={ui.buttonPrimary}>
+            {t("archive.download", { files: tp("plural.files", ready.fileCount) })}
+          </a>
         )}
-        {error !== null && (
-          <p role="alert" className={ui.fieldError}>
-            {error}
-          </p>
-        )}
-      </div>
-      {!inProgress && (
-        <Button
-          isDisabled={empty || pending}
-          onPress={() => {
-            setError(null);
-            startTransition(async () => {
-              const result = await requestArchive(eventId);
-              if (result.ok) setArchive(result.data);
-              else setError(t(`errors.${result.error}`));
-            });
-          }}
-          className={ready ? `${ui.buttonText} mt-auto self-start` : `${ui.buttonSecondary} mt-auto self-start`}
-        >
-          {ready ? t("archive.again") : t("archive.downloadAll")}
-        </Button>
-      )}
+      </SheetActions>
     </Sheet>
   );
 }

@@ -6,6 +6,7 @@ import { EventStateActions } from "@/components/admin/EventStateActions";
 import { PendingEventForm } from "@/components/admin/PendingEventForm";
 import { StatusHistory } from "@/components/admin/StatusHistory";
 import { Sheet } from "@/components/ui/Sheet";
+import { SheetActions } from "@/components/ui/SheetActions";
 import { StatBand } from "@/components/ui/StatBand";
 import { StatusStamp } from "@/components/ui/StatusStamp";
 import { getEvent, listActiveRetentionOptions, listRetentionChanges, listStatusChanges } from "@/lib/admin/queries";
@@ -187,9 +188,9 @@ export default async function AdminEventPage({ params }: { params: Promise<{ eve
 
         <Sheet id="danger-title" title={t("admin.delete.section")} danger>
           <p>{t("admin.delete.explain")}</p>
-          <div className="mt-auto">
+          <SheetActions>
             <DeleteEventDialog eventId={event.id} eventName={event.name} />
-          </div>
+          </SheetActions>
         </Sheet>
       </div>
     </div>
