@@ -97,7 +97,9 @@ export async function verifyTotp(input: { factorId: string; code: string }): Pro
   });
 }
 
+/** „Ieși din cont” din bara de navigare: funcționează și ca formular simplu, fără JavaScript. */
 export async function signOut(): Promise<void> {
   const supabase = await serverSupabase();
   await supabase.auth.signOut();
+  redirect("/");
 }

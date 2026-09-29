@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { requestActivation } from "@/lib/actions/organizer";
 import { formatDateTime, t } from "@/lib/i18n";
@@ -8,6 +9,7 @@ import { CheckIcon } from "../ui/icons";
 
 /** „Solicită activarea” (002: FR-018a): după trimitere arată data cererii; o nouă cerere după 24 h. */
 export function RequestActivationButton({ eventId, lastRequestAt }: { eventId: string; lastRequestAt: string | null }) {
+  const router = useRouter();
   const [requestedAt, setRequestedAt] = useState(lastRequestAt);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -33,8 +35,11 @@ export function RequestActivationButton({ eventId, lastRequestAt }: { eventId: s
             setError(null);
             startTransition(async () => {
               const result = await requestActivation(eventId);
-              if (result.ok) setRequestedAt(result.data.requestedAt);
-              else setError(t(`errors.${result.error}`));
+              if (result.ok) {
+                setRequestedAt(result.data.requestedAt);
+                // Banda de sus („Cerere de activare”) se citește din nou.
+                router.refresh();
+              } else setError(t(`errors.${result.error}`));
             });
           }}
           className={`${ui.buttonPrimary} self-start`}

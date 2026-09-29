@@ -7,6 +7,7 @@ import { extendRetention, getRetentionQuote } from "@/lib/actions/organizer";
 import { formatDate, formatDateTime, formatMoney, t, tp } from "@/lib/i18n";
 import type { RetentionOptionQuote } from "@/lib/organizer/retention";
 import { ui } from "@/lib/ui";
+import { Sheet } from "../ui/Sheet";
 import { ExtendRetentionDialog } from "./ExtendRetentionDialog";
 
 /**
@@ -39,10 +40,7 @@ export function RetentionPanel({
   };
 
   return (
-    <section aria-labelledby="retention-title" className="flex flex-col gap-4 py-5">
-      <h2 id="retention-title" className={ui.kicker}>
-        {t("retention.title")}
-      </h2>
+    <Sheet id="retention-title" title={t("retention.title")}>
       <p className="leading-relaxed">
         {t("retention.current", {
           months: tp("plural.months", state.months),
@@ -121,7 +119,7 @@ export function RetentionPanel({
           });
         }}
       />
-      <p className={ui.hint}>{t("retention.notices", { date: formatDateTime(state.purgeAt) })}</p>
-    </section>
+      <p className={`${ui.hint} mt-auto`}>{t("retention.notices", { date: formatDateTime(state.purgeAt) })}</p>
+    </Sheet>
   );
 }

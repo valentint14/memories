@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { connection } from "next/server";
+import { SiteHeader } from "@/components/nav/SiteHeader";
 import { TurnstileField } from "@/components/security/TurnstileField";
 import { CreateEventForm } from "@/components/self-service/CreateEventForm";
 import { OrganizerCreateForm } from "@/components/self-service/OrganizerCreateForm";
-import { Wordmark } from "@/components/ui/Wordmark";
 import { t } from "@/lib/i18n";
 import { currentLegalVersions } from "@/lib/legal";
 import { organizerCreateFormProps } from "@/lib/organizer/create";
@@ -19,7 +18,7 @@ const STEPS = ["home.step1", "home.step2", "home.step3"] as const;
 function Steps({ className }: { className: string }) {
   return (
     <section aria-label={t("home.stepsLabel")} className={`flex-col gap-6 ${className}`}>
-      <ol className="flex flex-col border-t border-ink">
+      <ol className="flex flex-col">
         {STEPS.map((key, i) => (
           <li key={key} className="flex gap-6 border-b border-rule py-4">
             <span className={`${ui.data} pt-0.5 text-sm text-accent`}>{String(i + 1).padStart(2, "0")}</span>
@@ -46,25 +45,7 @@ export default async function HomePage() {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="border-b border-rule">
-        <div className="mx-auto flex min-h-16 max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3 sm:px-8">
-          <Wordmark />
-          <p className="text-sm text-ink-muted">
-            {organizerProps === null ? (
-              <>
-                {t("home.haveAccount")}{" "}
-                <Link href="/login" className={ui.link}>
-                  {t("home.login")}
-                </Link>
-              </>
-            ) : (
-              <Link href="/events" className={ui.link}>
-                {t("organizer.myEvents")}
-              </Link>
-            )}
-          </p>
-        </div>
-      </header>
+      <SiteHeader context="public" email={signedInEmail} />
 
       <main className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-10 sm:px-8 sm:py-14 lg:grid-cols-12 lg:gap-8">
         <div className="flex flex-col gap-6 lg:col-span-7 lg:pr-12">
@@ -74,16 +55,28 @@ export default async function HomePage() {
           </h1>
           <p className="max-w-xl text-lg leading-relaxed">{t("home.intro")}</p>
 
-          <Steps className="hidden max-w-xl lg:flex" />
+          <Steps className="flex max-w-xl" />
         </div>
 
+        {/*
+          Pe desktop, cardul are înălțimea coloanei din stânga (începe și se termină la fel), iar
+          butonul formularului coboară la marginea de jos a cardului.
+        */}
         <section
           aria-labelledby="create-title"
-          className="flex flex-col gap-5 self-start rounded-xs border border-rule bg-paper-raised p-5 sm:p-8 lg:col-span-5"
+          className="flex flex-col gap-5 rounded-xs border border-rule bg-paper-raised p-5 sm:p-8 lg:col-span-5 lg:[&>form]:flex-1 lg:[&>form>button:last-child]:mt-auto"
         >
-          <h2 id="create-title" className={ui.sectionTitle}>
-            {t("home.formTitle")}
-          </h2>
+          <div className="flex flex-col items-center gap-2.5">
+            <h2 id="create-title" className={`${ui.sectionTitle} text-center`}>
+              {t("home.formTitle")}
+            </h2>
+            {/* Ornament tipografic sub titlu: două linii fine în teracotă, cu un romb între ele. */}
+            <span aria-hidden="true" className="flex items-center gap-2">
+              <span className="h-px w-10 bg-accent" />
+              <span className="size-1.5 rotate-45 bg-accent" />
+              <span className="h-px w-10 bg-accent" />
+            </span>
+          </div>
           {organizerProps === null ? (
             <CreateEventForm
               termsVersion={versions.terms}
@@ -99,9 +92,6 @@ export default async function HomePage() {
             </>
           )}
         </section>
-
-        {/* Pe ecrane mici, pașii vin după formular: acțiunea rămâne sus. */}
-        <Steps className="flex lg:hidden" />
       </main>
     </div>
   );

@@ -36,7 +36,7 @@ export function ConfirmButton({
       <input type="hidden" name="requestId" value={requestId} />
       <input type="hidden" name="tokenHash" value={tokenHash} />
       {next !== undefined && <input type="hidden" name="next" value={next} />}
-      <button type="submit" disabled={pending} className={`${ui.buttonPrimary} w-full`}>
+      <button type="submit" disabled={pending} className={ui.buttonPrimary}>
         {t("confirm.submit")}
       </button>
     </form>

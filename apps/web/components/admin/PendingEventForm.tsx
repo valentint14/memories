@@ -15,7 +15,7 @@ export function PendingEventForm({ eventId, name, eventDate }: { eventId: string
 
   return (
     <form
-      className="grid max-w-3xl gap-5 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]"
+      className="grid gap-5 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]"
       onSubmit={(e) => {
         e.preventDefault();
         const data = new FormData(e.currentTarget);
@@ -54,15 +54,15 @@ export function PendingEventForm({ eventId, name, eventDate }: { eventId: string
         <input id="pe-date" name="eventDate" type="date" defaultValue={eventDate} required className={`${ui.input} ${ui.data}`} />
         {fields.eventDate !== undefined && <p className={ui.fieldError}>{t(fields.eventDate as MessageKey)}</p>}
       </div>
-      <div className="flex flex-wrap items-center gap-4 sm:col-span-2">
-        <button type="submit" disabled={pending} className={ui.buttonSecondary}>
-          {t("admin.pendingEdit.save")}
-        </button>
+      <div className="flex flex-wrap items-center justify-end gap-4 sm:col-span-2">
         {saved && (
           <p role="status" className="text-sm text-success">
             {t("admin.pendingEdit.saved")}
           </p>
         )}
+        <button type="submit" disabled={pending} className={ui.buttonSecondary}>
+          {t("admin.pendingEdit.save")}
+        </button>
       </div>
     </form>
   );

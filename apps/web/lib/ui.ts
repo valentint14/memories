@@ -40,6 +40,8 @@ export const ui = {
 
   /** Acțiunea principală: singurul buton plin de pe ecran. */
   buttonPrimary: `${primary} min-h-12`,
+  /** Acțiunea principală pe o bară (antetul fișei unui eveniment), la înălțimea lui `inputCompact`. */
+  buttonPrimaryCompact: `${primary} min-h-10 text-sm`,
   /** Acțiunea principală a invitatului, în banda fixată jos. */
   buttonPrimaryLarge: `${primary} min-h-14 text-lg`,
   /** Acțiuni secundare: contur de cerneală. */
@@ -65,6 +67,20 @@ export const ui = {
   alert: "rounded-xs border border-danger bg-paper-raised p-4 text-danger",
   /** Secțiune: se deschide cu o linie de cerneală, nu cu o cutie. */
   section: "flex flex-col gap-4 border-t border-ink pt-4",
+  /** Foaie: ramă subțire cu o bandă de titlu sus (galeria, fișa unui eveniment). */
+  sheet: "flex flex-col rounded-xs border border-rule bg-paper-raised",
+  sheetDanger: "flex flex-col rounded-xs border border-danger bg-paper-raised",
+  sheetTitle: "font-mono text-xs font-medium uppercase tracking-[0.08em] border-b border-rule px-4 py-3 text-ink-muted",
+  sheetTitleDanger: "font-mono text-xs font-medium uppercase tracking-[0.08em] border-b border-danger px-4 py-3 text-danger",
+  sheetBody: "flex flex-1 flex-col gap-4 p-4",
+  /** Banda unei foi cu înălțime fixă (48 px), pentru foi alăturate cu sau fără ștampilă în bandă. */
+  sheetBar:
+    "flex min-h-12 items-center justify-between gap-3 border-b border-rule px-4 font-mono text-xs font-medium uppercase tracking-[0.08em] text-ink-muted",
+  /** Ca `sheetBar`, în teracotă: grupa care cere atenție (cererile de activare). */
+  sheetBarAccent:
+    "flex min-h-12 items-center justify-between gap-3 border-b border-rule px-4 font-mono text-xs font-medium uppercase tracking-[0.08em] text-accent",
+  /** Pe o foaie cu formular: formularul umple foaia, iar ultimul buton coboară jos, la dreapta. */
+  sheetFormFill: "[&_form]:flex-1 [&_form>button:last-child]:mt-auto [&_form>button:last-child]:self-end",
 
   overlay: "fixed inset-0 z-50 flex items-center justify-center bg-ink/60 p-4",
   dialog: "w-full max-w-md rounded-xs border border-ink bg-paper-raised p-6 shadow-dialog",

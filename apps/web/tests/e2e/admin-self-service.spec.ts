@@ -88,9 +88,9 @@ test("editează numele înainte de activare, apoi activează după confirmare; i
   await expect(admin.getByRole("status").filter({ hasText: "salvate" })).toBeVisible();
 
   await confirmActivation(admin, name);
-  await expect(admin.getByText("Activ · Self-service")).toBeVisible();
+  await expect(admin.getByTestId("event-status")).toHaveText("Activ");
 
-  const history = admin.getByRole("table", { name: "Istoricul stărilor" });
+  const history = admin.getByRole("list", { name: "Istoricul stărilor" });
   await expect(history).toContainText("În așteptarea activării → Activ");
   await expect(history).toContainText("Administrator");
 
@@ -106,7 +106,7 @@ test("editează numele înainte de activare, apoi activează după confirmare; i
 test("suspendarea oprește uploadurile și lasă organizatorului doar vizualizarea, descărcarea și ștergerea", async () => {
   await gotoHydrated(admin, `/admin/events/${eventId}`);
   await confirmState(admin, "Suspendă", "conținut raportat", "Suspendă");
-  await expect(admin.getByText("Suspendat · Self-service")).toBeVisible();
+  await expect(admin.getByTestId("event-status")).toHaveText("Suspendat");
 
   await gotoHydrated(organizer, `/events/${eventId}`);
   await expect(organizer.getByRole("alert").filter({ hasText: "Evenimentul este suspendat" })).toBeVisible();
@@ -114,6 +114,6 @@ test("suspendarea oprește uploadurile și lasă organizatorului doar vizualizar
 
   await gotoHydrated(admin, `/admin/events/${eventId}`);
   await confirmState(admin, "Reactivează", "verificat, totul în regulă", "Reactivează");
-  await expect(admin.getByText("Activ · Self-service")).toBeVisible();
-  await expect(admin.getByRole("table", { name: "Istoricul stărilor" })).toContainText("Suspendat → Activ");
+  await expect(admin.getByTestId("event-status")).toHaveText("Activ");
+  await expect(admin.getByRole("list", { name: "Istoricul stărilor" })).toContainText("Suspendat → Activ");
 });

@@ -71,20 +71,20 @@ export function EditEventForm({ eventId, name, eventDate }: { eventId: string; n
         />
         {fields.eventDate !== undefined && <p className={ui.fieldError}>{t(fields.eventDate as MessageKey)}</p>}
       </div>
-      <div className="flex flex-wrap items-center gap-4 sm:col-span-2">
-        <button type="submit" disabled={pending} className={ui.buttonSecondary}>
-          {t("organizer.edit.save")}
-        </button>
+      <div className="flex flex-wrap items-center justify-end gap-4 border-t border-rule pt-4 sm:col-span-2">
         {saved && (
-          <p role="status" className="text-sm text-success">
+          <p role="status" className="mr-auto text-sm text-success">
             {t("organizer.edit.saved")}
           </p>
         )}
         {error !== null && (
-          <p role="alert" className={ui.fieldError}>
+          <p role="alert" className={`mr-auto ${ui.fieldError}`}>
             {error}
           </p>
         )}
+        <button type="submit" disabled={pending} className={ui.buttonSecondaryCompact}>
+          {t("organizer.edit.save")}
+        </button>
       </div>
     </form>
   );

@@ -8,6 +8,7 @@ import type { ArchiveState } from "@/lib/organizer/archive";
 import { authorizeRealtime } from "@/lib/realtime/auth";
 import { browserSupabase } from "@/lib/supabase/browser";
 import { ui } from "@/lib/ui";
+import { Sheet } from "../ui/Sheet";
 
 interface ReadyArchive {
   url: string;
@@ -92,10 +93,8 @@ export function ArchivePanel({
   const empty = readyFiles === 0;
 
   return (
-    <section aria-labelledby="archive-title" className="flex flex-col gap-4 py-5">
-      <h2 id="archive-title" className={ui.kicker}>
-        {t("archive.title")}
-      </h2>
+    <Sheet id="archive-title" title={t("archive.title")}>
+      <p className="leading-relaxed">{t("archive.intro")}</p>
       <div aria-live="polite" className="flex flex-col gap-3">
         {empty && <p className="text-ink-muted">{t("archive.empty")}</p>}
         {inProgress && (
@@ -132,11 +131,11 @@ export function ArchivePanel({
               else setError(t(`errors.${result.error}`));
             });
           }}
-          className={ready ? `${ui.buttonText} self-start` : `${ui.buttonSecondary} self-start`}
+          className={ready ? `${ui.buttonText} mt-auto self-start` : `${ui.buttonSecondary} mt-auto self-start`}
         >
           {ready ? t("archive.again") : t("archive.downloadAll")}
         </Button>
       )}
-    </section>
+    </Sheet>
   );
 }

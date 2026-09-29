@@ -1,6 +1,8 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { Sheet } from "@/components/ui/Sheet";
 import { SelectField } from "@/components/ui/SelectField";
 import { updatePackage } from "@/lib/actions/admin";
 import { t, tp, type MessageKey } from "@/lib/i18n";
@@ -18,6 +20,7 @@ export function PackageForm({
   initial: PackageSettings;
   options: { id: string; months: number }[];
 }) {
+  const router = useRouter();
   const [fields, setFields] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +46,7 @@ export function PackageForm({
   return (
     <form
       noValidate
-      className="flex max-w-xl flex-col gap-5 border-t border-ink pt-6"
+      className="flex flex-col gap-6"
       onSubmit={(e) => {
         e.preventDefault();
         const data = new FormData(e.currentTarget);
@@ -65,6 +68,8 @@ export function PackageForm({
           if (result.ok) {
             setFields({});
             setSaved(true);
+            // Banda de deasupra arată valorile salvate: o citim din nou.
+            router.refresh();
           } else if (result.fields) {
             setFields(result.fields);
           } else {
@@ -73,40 +78,54 @@ export function PackageForm({
         });
       }}
     >
-      {field("pk-price", "priceLei", "admin.package.price", { type: "number", min: 0, step: "0.01", defaultValue: initial.priceMinor / 100 })}
-      {field("pk-files", "maxFilesPerGuest", "admin.package.maxFiles", { type: "number", min: 1, max: 1000, defaultValue: initial.maxFilesPerGuest })}
-      {field("pk-photo", "maxPhotoMb", "admin.package.maxPhotoMb", { type: "number", min: 1, max: 50, defaultValue: initial.maxPhotoBytes / MB })}
-      {field("pk-video", "maxVideoMb", "admin.package.maxVideoMb", { type: "number", min: 1, max: 1024, defaultValue: initial.maxVideoBytes / MB })}
-      <div className="flex flex-col gap-1.5">
-        <SelectField
-          name="retentionOptionId"
-          label={t("admin.package.retention")}
-          placeholder={t("admin.package.choose")}
-          defaultValue={initial.retentionOptionId ?? undefined}
-          isInvalid={fields.retentionOptionId !== undefined}
-          options={options.map((o) => ({ id: o.id, label: tp("plural.months", o.months) }))}
-        />
-        {fields.retentionOptionId !== undefined && <p className={ui.fieldError}>{t(fields.retentionOptionId as MessageKey)}</p>}
+      {/* Trei foi egale, pe un rând pe ecrane late; un singur formular, salvat o dată. */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Sheet id="pk-pricing-title" title={t("admin.package.sheet.pricing")}>
+          {field("pk-price", "priceLei", "admin.package.price", { type: "number", min: 0, step: "0.01", defaultValue: initial.priceMinor / 100 })}
+          <div className="flex flex-col gap-1.5">
+            <SelectField
+              name="retentionOptionId"
+              label={t("admin.package.retention")}
+              placeholder={t("admin.package.choose")}
+              defaultValue={initial.retentionOptionId ?? undefined}
+              isInvalid={fields.retentionOptionId !== undefined}
+              options={options.map((o) => ({ id: o.id, label: tp("plural.months", o.months) }))}
+            />
+            {fields.retentionOptionId !== undefined && <p className={ui.fieldError}>{t(fields.retentionOptionId as MessageKey)}</p>}
+          </div>
+        </Sheet>
+
+        <Sheet id="pk-limits-title" title={t("admin.package.sheet.limits")}>
+          {field("pk-files", "maxFilesPerGuest", "admin.package.maxFiles", { type: "number", min: 1, max: 1000, defaultValue: initial.maxFilesPerGuest })}
+          {field("pk-photo", "maxPhotoMb", "admin.package.maxPhotoMb", { type: "number", min: 1, max: 50, defaultValue: initial.maxPhotoBytes / MB })}
+          {field("pk-video", "maxVideoMb", "admin.package.maxVideoMb", { type: "number", min: 1, max: 1024, defaultValue: initial.maxVideoBytes / MB })}
+        </Sheet>
+
+        <Sheet id="pk-self-service-title" title={t("admin.package.sheet.selfService")}>
+          {field("pk-awaiting", "maxAwaitingEventsPerOrganizer", "admin.package.maxAwaiting", {
+            type: "number",
+            min: 1,
+            max: 20,
+            defaultValue: initial.maxAwaitingEventsPerOrganizer,
+          })}
+        </Sheet>
       </div>
-      {field("pk-awaiting", "maxAwaitingEventsPerOrganizer", "admin.package.maxAwaiting", {
-        type: "number",
-        min: 1,
-        max: 20,
-        defaultValue: initial.maxAwaitingEventsPerOrganizer,
-      })}
-      {saved && (
-        <p role="status" className="text-success">
-          {t("admin.package.saved")}
-        </p>
-      )}
-      {error !== null && (
-        <p role="alert" className="text-danger">
-          {error}
-        </p>
-      )}
-      <button type="submit" disabled={pending} className={`${ui.buttonPrimary} self-start`}>
-        {t("admin.package.save")}
-      </button>
+
+      <div className="flex flex-wrap items-center justify-end gap-3 border-t border-rule pt-4">
+        {saved && (
+          <p role="status" className="mr-auto text-sm text-success">
+            {t("admin.package.saved")}
+          </p>
+        )}
+        {error !== null && (
+          <p role="alert" className="mr-auto text-sm text-danger">
+            {error}
+          </p>
+        )}
+        <button type="submit" disabled={pending} className={ui.buttonPrimaryCompact}>
+          {t("admin.package.save")}
+        </button>
+      </div>
     </form>
   );
 }

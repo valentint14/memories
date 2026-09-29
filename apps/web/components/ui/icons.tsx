@@ -49,6 +49,23 @@ export function ChevronRightIcon({ className = "size-5" }: { className?: string 
   );
 }
 
+export function SearchIcon({ className = "size-4" }: { className?: string }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+      <circle cx="7" cy="7" r="4.25" />
+      <path d="M10.2 10.2 13.5 13.5" />
+    </svg>
+  );
+}
+
+export function MenuIcon({ className = "size-5" }: { className?: string }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+      <path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11" />
+    </svg>
+  );
+}
+
 export function CloseIcon({ className = "size-5" }: { className?: string }) {
   return (
     <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { connection } from "next/server";
-import { Wordmark } from "@/components/ui/Wordmark";
+import { SiteHeader } from "@/components/nav/SiteHeader";
 import { formatDate, t } from "@/lib/i18n";
 import { currentLegalVersions, legalText, type LegalKind } from "@/lib/legal";
 import { renderMarkdown } from "@/lib/markdown";
@@ -14,9 +14,9 @@ export async function LegalPage({ kind }: { kind: LegalKind }) {
   const version = versions[kind];
   const source = await legalText(kind, version);
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-10 px-4 py-6 sm:px-6">
-      <Wordmark />
-      <main className="flex flex-col gap-4 leading-relaxed">
+    <div className="flex min-h-dvh flex-col">
+      <SiteHeader context="public" />
+      <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-4 py-10 leading-relaxed sm:px-6">
         {renderMarkdown(source)}
         <p className={`${ui.kicker} mt-6 border-t border-rule pt-4 text-ink-muted`}>
           {t("legal.version", { date: formatDate(versions.effectiveAt[kind]) })}

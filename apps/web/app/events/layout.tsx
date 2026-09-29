@@ -1,7 +1,6 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import { Wordmark } from "@/components/ui/Wordmark";
+import { SiteHeader } from "@/components/nav/SiteHeader";
 import { t } from "@/lib/i18n";
 import { serverSupabase } from "@/lib/supabase/server";
 import { ui } from "@/lib/ui";
@@ -16,14 +15,7 @@ export default async function EventsLayout({ children }: { children: ReactNode }
 
   return (
     <div className="min-h-dvh">
-      <header className="border-b border-rule">
-        <nav aria-label={t("organizer.nav")} className="mx-auto flex min-h-16 max-w-6xl items-center gap-8 px-4 sm:px-8">
-          <Wordmark />
-          <Link href="/events" className={ui.link}>
-            {t("organizer.myEvents")}
-          </Link>
-        </nav>
-      </header>
+      <SiteHeader context="organizer" email={data.user.email ?? null} />
       <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-8 sm:py-10">
         {isAdminUser === true && (
           <p role="status" className={ui.caution}>

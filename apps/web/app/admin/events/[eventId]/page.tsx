@@ -5,8 +5,11 @@ import { EventForm } from "@/components/admin/EventForm";
 import { EventStateActions } from "@/components/admin/EventStateActions";
 import { PendingEventForm } from "@/components/admin/PendingEventForm";
 import { StatusHistory } from "@/components/admin/StatusHistory";
+import { Sheet } from "@/components/ui/Sheet";
+import { StatBand } from "@/components/ui/StatBand";
+import { StatusStamp } from "@/components/ui/StatusStamp";
 import { getEvent, listActiveRetentionOptions, listRetentionChanges, listStatusChanges } from "@/lib/admin/queries";
-import { formatBytes, formatDate, formatDateTime, formatMoney, t, tp, type MessageKey } from "@/lib/i18n";
+import { formatBytes, formatDateShort, formatDateTime, formatDayMonthTime, formatMoney, t, tp, type MessageKey } from "@/lib/i18n";
 import { ui } from "@/lib/ui";
 
 export const metadata: Metadata = { title: "Eveniment" };
@@ -37,159 +40,158 @@ export default async function AdminEventPage({ params }: { params: Promise<{ eve
         ];
 
   const title = event.name ?? t("admin.anonymizedEvent");
+  const activated = event.status !== "awaiting_activation";
+  const none = t("admin.detail.none");
+  const linkActive = event.status === "active" || event.status === "awaiting_activation" || event.status === "suspended";
+  // Formularul complet de editare: doar pentru evenimentele active, cu toate câmpurile comerciale.
+  const editInitial =
+    event.status === "active" &&
+    event.name !== null &&
+    event.organizerEmail !== null &&
+    event.uploadStartsAt !== null &&
+    event.uploadEndsAt !== null &&
+    event.basePriceMinor !== null &&
+    event.retentionOptionId !== null
+      ? {
+          eventId: event.id,
+          name: event.name,
+          eventDate: event.eventDate,
+          organizerEmail: event.organizerEmail,
+          uploadStartsAt: event.uploadStartsAt,
+          uploadEndsAt: event.uploadEndsAt,
+          maxFilesPerGuest: event.maxFilesPerGuest,
+          maxPhotoBytes: event.maxPhotoBytes,
+          maxVideoBytes: event.maxVideoBytes,
+          basePriceMinor: event.basePriceMinor,
+          retentionOptionId: event.retentionOptionId,
+        }
+      : null;
+
+  // Banda cu patru cifre: pentru un eveniment activat, ce s-a încărcat și cât costă; pentru unul
+  // neactivat, momentele care contează până la activare.
+  const stats: { label: MessageKey; value: string; accent?: boolean }[] = activated
+    ? [
+        { label: "admin.detail.stat.files", value: `${String(event.fileCount)} · ${formatBytes(event.totalBytes)}` },
+        { label: "admin.detail.stat.price", value: formatMoney(event.finalPriceMinor) },
+        { label: "admin.detail.stat.retention", value: tp("plural.months", event.retentionMonths) },
+        { label: "admin.detail.stat.purgeAt", value: event.purgeAt === null ? none : formatDateShort(event.purgeAt) },
+      ]
+    : [
+        { label: "admin.detail.stat.eventDate", value: formatDateShort(event.eventDate) },
+        { label: "admin.detail.stat.created", value: formatDateShort(event.createdAt) },
+        {
+          label: "admin.detail.stat.requested",
+          value: event.lastActivationRequestAt === null ? none : formatDayMonthTime(event.lastActivationRequestAt),
+          accent: event.lastActivationRequestAt !== null,
+        },
+        { label: "admin.detail.stat.pendingPurge", value: event.pendingPurgeAt === null ? none : formatDateShort(event.pendingPurgeAt) },
+      ];
 
   return (
-    <div className="flex flex-col gap-10">
-      <header className="flex flex-col gap-3">
-        <h1 className={ui.pageTitle}>{title}</h1>
-        <p className={`${ui.data} text-sm text-ink-muted`}>
-          {t(`admin.status.${event.status}` as MessageKey)} · {t(`admin.origin.${event.origin}`)}
-          {event.organizerEmail !== null && <> · {event.organizerEmail}</>}
-        </p>
-        {event.lastActivationRequestAt !== null && event.status === "awaiting_activation" && (
-          <p role="status" className={ui.caution}>
-            {t("admin.detail.activationRequested", { date: formatDateTime(event.lastActivationRequestAt) })}
+    <div className="flex flex-col gap-6">
+      {/* Antetul: numele și organizatorul în stânga, starea și acțiunea ei în dreapta. */}
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 flex-col gap-2">
+          <h1 className={ui.pageTitle}>{title}</h1>
+          <p className={`${ui.data} text-sm break-all text-ink-muted`}>
+            {t(`admin.origin.${event.origin}`)}
+            {event.organizerEmail !== null && <> · {event.organizerEmail}</>}
           </p>
-        )}
-        {event.status === "awaiting_activation" && event.pendingPurgeAt !== null && (
-          <p className={ui.hint}>{t("admin.pendingPurge", { date: formatDate(event.pendingPurgeAt) })}</p>
-        )}
+        </div>
+        {/* Pe telefon: ștampila și acțiunea pe toată lățimea, una sub alta; pe ecrane late, pe un rând. */}
+        <div className="grid shrink-0 gap-2 sm:flex sm:items-center sm:gap-3 [&_button]:w-full sm:[&_button]:w-auto">
+          <span data-testid="event-status" className="grid sm:block">
+            <StatusStamp status={event.status} prefix="admin.status" size="bar" />
+          </span>
+          <EventStateActions eventId={event.id} subject={{ name: title, organizerEmail: event.organizerEmail }} status={event.status} />
+        </div>
       </header>
 
-      <section aria-labelledby="state-title" className={ui.section}>
-        <h2 id="state-title" className={ui.kicker}>
-          {t("admin.state.title")}
-        </h2>
-        <EventStateActions eventId={event.id} subject={{ name: title, organizerEmail: event.organizerEmail }} status={event.status} />
-      </section>
-
-      {event.status === "awaiting_activation" && event.name !== null && (
-        <section aria-labelledby="pending-edit-title" className={ui.section}>
-          <h2 id="pending-edit-title" className={ui.kicker}>
-            {t("admin.detail.edit")}
-          </h2>
-          <PendingEventForm eventId={event.id} name={event.name} eventDate={event.eventDate} />
-        </section>
-      )}
-
-      <section aria-labelledby="links-title" className={ui.section}>
-        <h2 id="links-title" className={ui.kicker}>
-          {t("admin.detail.links")}
-        </h2>
-        {event.status === "active" || event.status === "awaiting_activation" || event.status === "suspended" ? (
-          <>
-            <p className="break-all">
-              {t("admin.detail.uploadUrl")}{" "}
-              <a href={event.uploadUrl} data-testid="upload-url" className={`${ui.link} ${ui.data} text-sm`}>
-                {event.uploadUrl}
-              </a>
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <a href={`/admin/events/${event.id}/qr.png`} download className={ui.buttonSecondary}>
-                {t("admin.detail.downloadPng")}
-              </a>
-              <a href={`/admin/events/${event.id}/qr.svg`} download className={ui.buttonSecondary}>
-                {t("admin.detail.downloadSvg")}
-              </a>
-            </div>
-          </>
-        ) : (
-          <p className="text-ink-muted">{t("admin.detail.linkInactive")}</p>
-        )}
-        <p>
-          {t("admin.detail.stats", { files: tp("plural.files", event.fileCount), size: formatBytes(event.totalBytes) })}
+      {event.lastActivationRequestAt !== null && event.status === "awaiting_activation" && (
+        <p role="status" className={ui.caution}>
+          {t("admin.detail.activationRequested", { date: formatDateTime(event.lastActivationRequestAt) })}
         </p>
-        {event.purgeAt !== null && (
-          <p>
-            {t("admin.detail.priceLine", {
-              price: formatMoney(event.finalPriceMinor),
-              months: tp("plural.months", event.retentionMonths),
-              date: formatDateTime(event.purgeAt),
-            })}
-          </p>
-        )}
-      </section>
-
-      {event.status === "active" &&
-        event.name !== null &&
-        event.organizerEmail !== null &&
-        event.uploadStartsAt !== null &&
-        event.uploadEndsAt !== null &&
-        event.basePriceMinor !== null &&
-        event.retentionOptionId !== null && (
-        <section aria-labelledby="edit-title" className={ui.section}>
-          <h2 id="edit-title" className={ui.kicker}>
-            {t("admin.detail.edit")}
-          </h2>
-          <EventForm
-            options={formOptions}
-            initial={{
-              eventId: event.id,
-              name: event.name,
-              eventDate: event.eventDate,
-              organizerEmail: event.organizerEmail,
-              uploadStartsAt: event.uploadStartsAt,
-              uploadEndsAt: event.uploadEndsAt,
-              maxFilesPerGuest: event.maxFilesPerGuest,
-              maxPhotoBytes: event.maxPhotoBytes,
-              maxVideoBytes: event.maxVideoBytes,
-              basePriceMinor: event.basePriceMinor,
-              retentionOptionId: event.retentionOptionId,
-            }}
-          />
-        </section>
       )}
 
-      <section aria-labelledby="status-history-title" className={ui.section}>
-        <h2 id="status-history-title" className={ui.kicker}>
-          {t("admin.statusHistory.title")}
-        </h2>
-        <StatusHistory rows={statusChanges} />
-      </section>
+      <StatBand label={t("admin.detail.summary")} stats={stats.map((s) => ({ ...s, label: t(s.label) }))} />
 
-      <section aria-labelledby="history-title" className={ui.section}>
-        <h2 id="history-title" className={ui.kicker}>
-          {t("admin.history.title")}
-        </h2>
-        <div className="overflow-x-auto" tabIndex={0} role="region" aria-label={t("admin.history.title")}>
-          <table className={`${ui.table} min-w-[640px]`}>
-            <thead>
-              <tr className={ui.theadRow}>
-                <th scope="col" className={ui.th}>{t("admin.history.when")}</th>
-                <th scope="col" className={ui.th}>{t("admin.history.who")}</th>
-                <th scope="col" className={ui.th}>{t("admin.history.retention")}</th>
-                <th scope="col" className={ui.th}>{t("admin.history.price")}</th>
-                <th scope="col" className={ui.th}>{t("admin.history.purgeAt")}</th>
-              </tr>
-            </thead>
-            <tbody>
+      {/* Foile pe o grilă de două coloane egale; cele late ocupă tot rândul. */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Sheet id="links-title" title={t("admin.detail.links")}>
+          {linkActive ? (
+            <>
+              <p className="flex flex-col gap-1">
+                <span className="text-sm text-ink-muted">{t("admin.detail.uploadUrl")}</span>
+                <a href={event.uploadUrl} data-testid="upload-url" className={`${ui.link} ${ui.data} text-sm break-all`}>
+                  {event.uploadUrl}
+                </a>
+              </p>
+              <div className="mt-auto grid gap-3 sm:grid-cols-2">
+                <a href={`/admin/events/${event.id}/qr.png`} download className={ui.buttonSecondary}>
+                  {t("admin.detail.downloadPng")}
+                </a>
+                <a href={`/admin/events/${event.id}/qr.svg`} download className={ui.buttonSecondary}>
+                  {t("admin.detail.downloadSvg")}
+                </a>
+              </div>
+            </>
+          ) : (
+            <p className="text-ink-muted">{t("admin.detail.linkInactive")}</p>
+          )}
+        </Sheet>
+
+        <Sheet id="status-history-title" title={t("admin.statusHistory.title")}>
+          <StatusHistory rows={statusChanges} />
+        </Sheet>
+
+        {event.status === "awaiting_activation" && event.name !== null && (
+          <Sheet id="pending-edit-title" title={t("admin.detail.edit")} className="lg:col-span-2">
+            <PendingEventForm eventId={event.id} name={event.name} eventDate={event.eventDate} />
+          </Sheet>
+        )}
+
+        {editInitial !== null && (
+          <Sheet id="edit-title" title={t("admin.detail.edit")} className="lg:col-span-2">
+            <EventForm fill options={formOptions} initial={editInitial} />
+          </Sheet>
+        )}
+
+        <Sheet id="history-title" title={t("admin.history.title")}>
+          {history.length === 0 ? (
+            <p className="text-ink-muted">{t("admin.history.empty")}</p>
+          ) : (
+            <ol aria-label={t("admin.history.title")} className="flex flex-col">
               {history.map((h) => (
-                <tr key={`${h.at}-${String(h.toMonths)}`} className={ui.row}>
-                  <td className={`${ui.td} ${ui.data} text-sm`}>{formatDateTime(h.at)}</td>
-                  <td className={ui.td}>{t(`admin.actor.${h.actorKind}`)}</td>
-                  <td className={ui.td}>
+                <li
+                  key={`${h.at}-${String(h.toMonths)}`}
+                  className="flex flex-col gap-0.5 border-b border-rule py-3 first:pt-0 last:border-b-0 last:pb-0"
+                >
+                  <span className={`${ui.data} text-xs text-ink-muted`}>{formatDateTime(h.at)}</span>
+                  <span>
                     {h.fromMonths === null ? "" : `${tp("plural.months", h.fromMonths)} → `}
                     {tp("plural.months", h.toMonths)}
-                  </td>
-                  <td className={`${ui.td} ${ui.data} text-sm`}>
-                    {h.fromFinalPriceMinor === null ? "" : `${formatMoney(h.fromFinalPriceMinor)} → `}
-                    {formatMoney(h.toFinalPriceMinor)}
-                  </td>
-                  <td className={`${ui.td} ${ui.data} text-sm`}>{formatDateTime(h.toPurgeAt)}</td>
-                </tr>
+                    <span className={ui.data}>
+                      {" · "}
+                      {h.fromFinalPriceMinor === null ? "" : `${formatMoney(h.fromFinalPriceMinor)} → `}
+                      {formatMoney(h.toFinalPriceMinor)}
+                    </span>
+                  </span>
+                  <span className="text-sm text-ink-muted">
+                    {t(`admin.actor.${h.actorKind}`)} · {t("admin.history.purgeLine", { date: formatDateShort(h.toPurgeAt) })}
+                  </span>
+                </li>
               ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+            </ol>
+          )}
+        </Sheet>
 
-      <section aria-labelledby="danger-title" className="flex flex-col gap-4 border-t border-danger pt-4">
-        <h2 id="danger-title" className={`${ui.kicker} text-danger`}>
-          {t("admin.delete.section")}
-        </h2>
-        <p>{t("admin.delete.explain")}</p>
-        <DeleteEventDialog eventId={event.id} eventName={event.name} />
-      </section>
+        <Sheet id="danger-title" title={t("admin.delete.section")} danger>
+          <p>{t("admin.delete.explain")}</p>
+          <div className="mt-auto">
+            <DeleteEventDialog eventId={event.id} eventName={event.name} />
+          </div>
+        </Sheet>
+      </div>
     </div>
   );
 }

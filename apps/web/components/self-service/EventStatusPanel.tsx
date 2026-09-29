@@ -1,6 +1,7 @@
 import { formatDate, formatMoney, t, tp } from "@/lib/i18n";
 import type { ActivationInfo } from "@/lib/organizer/activation";
 import { ui } from "@/lib/ui";
+import { Sheet } from "../ui/Sheet";
 import { RequestActivationButton } from "./RequestActivationButton";
 
 /**
@@ -18,10 +19,7 @@ export function EventStatusPanel({
 }) {
   const files = String(info.maxFilesPerGuest);
   return (
-    <section aria-labelledby="activation-title" className={ui.section}>
-      <h2 id="activation-title" className={ui.kicker}>
-        {t("activation.title")}
-      </h2>
+    <Sheet id="activation-title" title={t("activation.title")}>
       <p className={`${ui.data} text-2xl font-medium`}>{t("activation.price", { price: formatMoney(info.priceMinor) })}</p>
       <p className="leading-relaxed">
         {info.retentionMonths === null
@@ -30,7 +28,9 @@ export function EventStatusPanel({
       </p>
       {pendingPurgeAt !== null && <p className={ui.hint}>{t("activation.pendingPurge", { date: formatDate(pendingPurgeAt) })}</p>}
       <p className="leading-relaxed">{t("activation.how")}</p>
-      <RequestActivationButton eventId={eventId} lastRequestAt={info.lastRequestAt} />
-    </section>
+      <div className="mt-auto border-t border-rule pt-4">
+        <RequestActivationButton eventId={eventId} lastRequestAt={info.lastRequestAt} />
+      </div>
+    </Sheet>
   );
 }

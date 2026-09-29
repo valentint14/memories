@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation";
 import { SelectField, type SelectOption } from "@/components/ui/SelectField";
 import { t } from "@/lib/i18n";
-import { ui } from "@/lib/ui";
 
 /**
  * Filtrul registrului: grupa aleasă se aplică imediat. Stă în formularul de căutare, deci fără
@@ -15,10 +14,17 @@ export function LedgerViewSelect({ view, query, options }: { view: string; query
     <SelectField
       name="view"
       label={t("admin.ledger.filter")}
-      labelClassName={`${ui.kicker} text-ink-muted`}
-      className="flex items-center gap-2"
-      triggerClassName="min-w-52"
+      labelClassName="sr-only"
+      className="flex min-w-0 sm:w-48"
+      triggerClassName="w-full"
       compact
+      triggerText={
+        <>
+          {t("admin.ledger.filterButton")}
+          {/* O grupă aleasă (alta decât „Toate”) se vede printr-un punct teracotă. */}
+          {view !== "all" && <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-accent" />}
+        </>
+      }
       value={view}
       onChange={(next) => {
         const params = new URLSearchParams();

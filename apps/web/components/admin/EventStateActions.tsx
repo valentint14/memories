@@ -47,7 +47,7 @@ function StateActionDialog({
   subject: EventSubject;
   action: StateAction;
   /** Declanșator discret (text subliniat), pentru rândurile din registru. */
-  trigger?: { label: string; ariaLabel: string };
+  trigger?: { label: string; ariaLabel: string; className?: string | undefined };
 }) {
   const router = useRouter();
   const [reason, setReason] = useState("");
@@ -60,11 +60,12 @@ function StateActionDialog({
   return (
     <DialogTrigger>
       {trigger ? (
-        <Button aria-label={trigger.ariaLabel} className={ui.buttonText}>
+        <Button aria-label={trigger.ariaLabel} className={trigger.className ?? ui.buttonText}>
           {trigger.label}
         </Button>
       ) : (
-        <Button className={danger ? ui.buttonDanger : ui.buttonPrimary}>{t(`admin.state.${action}` as MessageKey)}</Button>
+        // În antetul fișei, lângă ștampila de stare: aceeași înălțime (40 px).
+        <Button className={danger ? ui.buttonDangerCompact : ui.buttonPrimaryCompact}>{t(`admin.state.${action}` as MessageKey)}</Button>
       )}
       <ModalOverlay isDismissable className={ui.overlay}>
         <Modal className={ui.dialog}>
@@ -123,13 +124,13 @@ function StateActionDialog({
 }
 
 /** Activarea direct din registru, cu același dialog de confirmare ca pe pagina evenimentului. */
-export function ActivateFromLedger({ eventId, subject }: { eventId: string; subject: EventSubject }) {
+export function ActivateFromLedger({ eventId, subject, className }: { eventId: string; subject: EventSubject; className?: string }) {
   return (
     <StateActionDialog
       eventId={eventId}
       subject={subject}
       action="activate"
-      trigger={{ label: t("admin.ledger.activate"), ariaLabel: t("admin.ledger.activateEvent", { name: subject.name }) }}
+      trigger={{ label: t("admin.ledger.activate"), ariaLabel: t("admin.ledger.activateEvent", { name: subject.name }), className }}
     />
   );
 }

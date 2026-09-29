@@ -110,7 +110,7 @@ test("administratorul editează catalogul fără efect asupra evenimentelor exis
   try {
     await loginAsNewAdmin(admin, await createAdmin());
     await gotoHydrated(admin, "/admin/retention");
-    const row = admin.getByRole("row", { name: /12 luni/ });
+    const row = admin.getByRole("region", { name: "12 luni" });
     await row.getByLabel("Supliment (lei)").fill("149");
     await row.getByRole("button", { name: "Salvează" }).click();
     await expect(row.getByText("Salvat")).toBeVisible();

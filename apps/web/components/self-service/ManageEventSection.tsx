@@ -1,11 +1,11 @@
 import { t } from "@/lib/i18n";
-import { ui } from "@/lib/ui";
+import { Sheet } from "../ui/Sheet";
 import { DeleteEventDialog } from "./DeleteEventDialog";
 import { EditEventForm } from "./EditEventForm";
 
 /**
- * Modificarea și ștergerea evenimentului de către organizator (002: FR-033, FR-035). În suspendare
- * se poate doar șterge (FR-028a).
+ * Modificarea și ștergerea evenimentului de către organizator (002: FR-033, FR-035), ca două foi
+ * alăturate. În suspendare se poate doar șterge (FR-028a): foaia de ștergere ocupă tot rândul.
  */
 export function ManageEventSection({
   eventId,
@@ -19,15 +19,18 @@ export function ManageEventSection({
   canEdit: boolean;
 }) {
   return (
-    <section aria-labelledby="manage-title" className={ui.section}>
-      <h2 id="manage-title" className={ui.kicker}>
-        {t("organizer.manage.title")}
-      </h2>
-      {canEdit && <EditEventForm eventId={eventId} name={name} eventDate={eventDate} />}
-      <div className="flex flex-col gap-3 border-t border-rule pt-4">
-        <p className={ui.hint}>{t("organizer.delete.explain")}</p>
-        <DeleteEventDialog eventId={eventId} eventName={name} />
-      </div>
-    </section>
+    <div className="grid gap-6 lg:grid-cols-2">
+      {canEdit && (
+        <Sheet id="manage-title" title={t("organizer.manage.title")}>
+          <EditEventForm eventId={eventId} name={name} eventDate={eventDate} />
+        </Sheet>
+      )}
+      <Sheet id="delete-title" title={t("admin.delete.section")} danger className={canEdit ? "" : "lg:col-span-2"}>
+        <p className={canEdit ? "" : "max-w-2xl"}>{t("organizer.delete.explain")}</p>
+        <div className="mt-auto">
+          <DeleteEventDialog eventId={eventId} eventName={name} />
+        </div>
+      </Sheet>
+    </div>
   );
 }

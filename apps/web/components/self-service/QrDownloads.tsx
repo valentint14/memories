@@ -4,7 +4,7 @@ import { ui } from "@/lib/ui";
 /** Descărcarea codului QR de către organizator (002/FR-009). */
 export function QrDownloads({ eventId }: { eventId: string }) {
   return (
-    <div className="flex flex-wrap gap-3">
+    <div className="grid gap-3">
       <a href={`/events/${eventId}/qr.png`} download className={ui.buttonSecondary}>
         {t("organizer.qrPng")}
       </a>

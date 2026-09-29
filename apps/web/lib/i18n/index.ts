@@ -49,6 +49,20 @@ export function formatDateTime(value: Date | string): string {
   return `${dateFormat.format(date)}, ${timeFormat.format(date)}`;
 }
 
+const shortDateFormat = new Intl.DateTimeFormat(LOCALE, { timeZone: APP_TIME_ZONE, day: "2-digit", month: "2-digit", year: "numeric" });
+const dayMonthFormat = new Intl.DateTimeFormat(LOCALE, { timeZone: APP_TIME_ZONE, day: "2-digit", month: "2-digit" });
+
+/** Data scurtă, pentru rândurile compacte: „08.11.2026”. */
+export function formatDateShort(value: Date | string): string {
+  return shortDateFormat.format(new Date(value));
+}
+
+/** Ziua, luna și ora, pentru momente recente: „29.09, 06:15”. */
+export function formatDayMonthTime(value: Date | string): string {
+  const date = new Date(value);
+  return `${dayMonthFormat.format(date)}, ${timeFormat.format(date)}`;
+}
+
 export function formatBytes(bytes: number): string {
   const units = ["B", "KB", "MB", "GB"] as const;
   let value = bytes;

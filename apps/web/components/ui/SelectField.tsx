@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import type { Key } from "react-aria-components";
 import { Button, FieldError, Label, ListBox, ListBoxItem, Popover, Select, SelectValue } from "react-aria-components";
 import { ui } from "@/lib/ui";
@@ -17,6 +18,7 @@ export function SelectField({
   labelClassName = ui.label,
   triggerClassName = "",
   compact = false,
+  triggerText,
   options,
   errorMessage,
   ...props
@@ -27,6 +29,8 @@ export function SelectField({
   triggerClassName?: string;
   /** Înălțimea lui `ui.inputCompact`, pentru barele de instrumente. */
   compact?: boolean;
+  /** Text fix pe buton în locul valorii alese (de ex. „Filtrează” pe bara registrului). */
+  triggerText?: ReactNode;
   options: SelectOption[];
   errorMessage?: string;
   name?: string;
@@ -48,7 +52,9 @@ export function SelectField({
     >
       <Label className={labelClassName}>{label}</Label>
       <Button className={`${compact ? ui.inputCompact : ui.input} flex cursor-pointer items-center justify-between gap-3 text-left ${triggerClassName}`}>
-        <SelectValue className="truncate data-placeholder:text-ink-muted" />
+        {/* Cu `triggerText`, butonul arată un text fix; valoarea aleasă rămâne în numele accesibil. */}
+        <SelectValue className={triggerText === undefined ? "truncate data-placeholder:text-ink-muted" : "sr-only"} />
+        {triggerText !== undefined && <span className="flex min-w-0 items-center gap-2 truncate">{triggerText}</span>}
         <ChevronDownIcon className="size-4 shrink-0" />
       </Button>
       <FieldError className={ui.fieldError}>{errorMessage}</FieldError>
