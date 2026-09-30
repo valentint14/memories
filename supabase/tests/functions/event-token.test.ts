@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, it } from "vitest";
-import { closePool, createTestEvent, randomEmail, serviceClient, sql } from "../support/clients.ts";
+import { adminClient, closePool, createTestEvent, randomEmail, retentionOptionId, serviceClient, sql } from "../support/clients.ts";
 
 // Linkul invitatului lizibil (FR-004): slug din nume + sufix aleator de 6 caractere.
 afterAll(closePool);
@@ -37,6 +37,27 @@ describe("tokenul unui eveniment nou", () => {
     expect(a.public_token).toMatch(new RegExp(`^nunta-ana-mihai-${SUFFIX}$`));
     expect(b.public_token).toMatch(new RegExp(`^nunta-ana-mihai-${SUFFIX}$`));
     expect(a.public_token).not.toBe(b.public_token);
+  });
+
+  it("se generează și când adminul creează evenimentul cu clientul lui (rolul authenticated)", async () => {
+    const { client } = await adminClient({ aal2: true });
+    const now = Date.now();
+    const { data, error } = await client
+      .from("events")
+      .insert({
+        name: "Cununie civilă Dan",
+        event_date: new Date(now).toISOString().slice(0, 10),
+        organizer_email: randomEmail("token"),
+        upload_starts_at: new Date(now - 3_600_000).toISOString(),
+        upload_ends_at: new Date(now + 86_400_000).toISOString(),
+        base_price_minor: 29_900,
+        retention_option_id: await retentionOptionId(3),
+      })
+      .select("id")
+      .single();
+    expect(error).toBeNull();
+    const [row] = await sql<{ public_token: string }>("select public_token from public.events where id = $1", [data?.id]);
+    expect(row?.public_token).toMatch(new RegExp(`^cununie-civila-dan-${SUFFIX}$`));
   });
 
   it("deschide pagina invitatului", async () => {

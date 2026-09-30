@@ -62,9 +62,12 @@ revoke all on function public.event_slug(text) from public, anon, authenticated;
 revoke all on function public.new_event_token(text) from public, anon, authenticated;
 
 -- La creare, tokenul se derivă din nume (indiferent de calea de creare: admin, self-service).
+-- `security definer`: adminul inserează cu rolul `authenticated`, care nu poate apela
+-- `new_event_token` și nu vede toate evenimentele (verificarea de unicitate trebuie să le vadă).
 create or replace function public.events_readable_token()
 returns trigger
 language plpgsql
+security definer
 set search_path = ''
 as $$
 begin
