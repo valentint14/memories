@@ -6,6 +6,9 @@ import { Button, Label, RadioButton, RadioField, RadioGroup } from "react-aria-c
 import { extendRetention, getRetentionQuote } from "@/lib/actions/organizer";
 import { formatDate, formatDateTime, formatMoney, t, tp } from "@/lib/i18n";
 import type { RetentionOptionQuote } from "@/lib/organizer/retention";
+import { ui } from "@/lib/ui";
+import { Sheet } from "../ui/Sheet";
+import { SheetActions } from "../ui/SheetActions";
 import { ExtendRetentionDialog } from "./ExtendRetentionDialog";
 
 /**
@@ -38,11 +41,8 @@ export function RetentionPanel({
   };
 
   return (
-    <section aria-labelledby="retention-title" className="flex flex-col gap-3 rounded-lg border border-gray-200 p-4">
-      <h2 id="retention-title" className="text-lg font-semibold">
-        {t("retention.title")}
-      </h2>
-      <p>
+    <Sheet id="retention-title" title={t("retention.title")}>
+      <p className="leading-relaxed">
         {t("retention.current", {
           months: tp("plural.months", state.months),
           price: formatMoney(state.finalPriceMinor),
@@ -50,21 +50,19 @@ export function RetentionPanel({
         })}
       </p>
 
-      <RadioGroup
-        value={selectedId}
-        onChange={setSelectedId}
-        className="flex flex-col gap-2"
-      >
-        <Label className="font-medium">{t("retention.chooseLonger")}</Label>
+      <RadioGroup value={selectedId} onChange={setSelectedId} className="flex flex-col">
+        <Label className={`${ui.label} border-b border-ink pb-2`}>{t("retention.chooseLonger")}</Label>
         {options.map((o) => (
           <RadioField key={o.optionId} value={o.optionId} isDisabled={!o.selectable}>
-            <RadioButton className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-gray-300 px-3 py-2 data-disabled:cursor-not-allowed data-disabled:opacity-50 data-selected:border-brand-600 data-selected:bg-brand-50">
+            <RadioButton className="flex min-h-12 cursor-pointer items-center gap-3 border-b border-rule py-2 data-disabled:cursor-not-allowed data-disabled:text-ink-muted">
               {({ isSelected }) => (
                 <>
                   <span
                     aria-hidden="true"
-                    className={`h-5 w-5 shrink-0 rounded-full border-2 ${isSelected ? "border-brand-600 bg-brand-600" : "border-gray-500"}`}
-                  />
+                    className="flex size-5 shrink-0 items-center justify-center rounded-full border-[1.5px] border-ink"
+                  >
+                    {isSelected && <span className="size-2.5 rounded-full bg-ink" />}
+                  </span>
                   <span>
                     {t("retention.option", {
                       months: tp("plural.months", o.months),
@@ -78,18 +76,6 @@ export function RetentionPanel({
           </RadioField>
         ))}
       </RadioGroup>
-
-      <Button
-        isDisabled={selected === null || !selected.selectable}
-        onPress={() => {
-          setPriceChanged(false);
-          setError(null);
-          setDialogOpen(true);
-        }}
-        className="min-h-11 self-start rounded-lg bg-brand-600 px-4 font-semibold text-white disabled:opacity-50"
-      >
-        {t("retention.extend")}
-      </Button>
 
       <ExtendRetentionDialog
         option={selected}
@@ -122,7 +108,19 @@ export function RetentionPanel({
           });
         }}
       />
-      <p className="text-sm text-muted">{t("retention.notices", { date: formatDateTime(state.purgeAt) })}</p>
-    </section>
+      <SheetActions status={<p className={ui.hint}>{t("retention.notices", { date: formatDateTime(state.purgeAt) })}</p>}>
+        <Button
+          isDisabled={selected === null || !selected.selectable}
+          onPress={() => {
+            setPriceChanged(false);
+            setError(null);
+            setDialogOpen(true);
+          }}
+          className={ui.buttonSecondary}
+        >
+          {t("retention.extend")}
+        </Button>
+      </SheetActions>
+    </Sheet>
   );
 }

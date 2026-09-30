@@ -36,7 +36,8 @@ async function createEvent(page: Page, name: string): Promise<string> {
   await page.getByRole("button", { name: "Creează evenimentul" }).click();
   await expect(page.getByRole("heading", { name })).toBeVisible();
   const uploadUrl = await page.getByTestId("upload-url").innerText();
-  expect(uploadUrl).toMatch(/\/e\/[A-Za-z0-9_-]{22}$/);
+  // Slug din nume + sufix aleator de 6 caractere (FR-004).
+  expect(uploadUrl).toMatch(/\/e\/[a-z0-9]+(?:-[a-z0-9]+)*-[23456789abcdefghjkmnpqrstuvwxyz]{6}$/);
   return uploadUrl;
 }
 
@@ -80,16 +81,16 @@ test("creează evenimentul, arată prețul, data ștergerii și descarcă QR-ul"
   expect(svg.headers()["content-type"]).toContain("image/svg+xml");
   expect(await svg.text()).toMatch(/^<svg[\s\S]*<\/svg>\s*$/);
 
-  // Linkurile a două evenimente nu pot fi deduse unul din altul (FR-004).
+  // Linkurile a două evenimente diferă și prin sufixul aleator (FR-004).
   const url2 = await createEvent(page, uniqueName("Botezul lui Luca"));
   const token1 = url1.split("/e/")[1] ?? "";
   const token2 = url2.split("/e/")[1] ?? "";
   expect(token1).not.toBe(token2);
-  expect(token1.slice(0, 6)).not.toBe(token2.slice(0, 6));
+  expect(token1.slice(-6)).not.toBe(token2.slice(-6));
 
-  // Lista arată prețul final, retenția și data ștergerii.
+  // Registrul arată prețul final, retenția și data ștergerii.
   await page.goto("/admin/events");
-  const row = page.getByRole("row", { name: new RegExp(firstName) });
+  const row = page.getByRole("listitem").filter({ hasText: firstName });
   await expect(row).toContainText("299,00");
   await expect(row).toContainText("3 luni");
   await expect(row).toContainText("0 fișiere");

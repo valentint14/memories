@@ -4,17 +4,17 @@ import Link from "next/link";
 import { useActionState, type ReactNode } from "react";
 import { requestEventCreationForm, type FormState } from "@/lib/actions/self-service";
 import { t, type MessageKey } from "@/lib/i18n";
+import { ui } from "@/lib/ui";
+import { SheetActions } from "../ui/SheetActions";
 
 function FieldError({ id, message }: { id: string; message: string | undefined }) {
   if (message === undefined) return null;
   return (
-    <p id={id} className="text-sm text-danger">
+    <p id={id} className={ui.fieldError}>
       {t(message as MessageKey)}
     </p>
   );
 }
-
-const inputClass = "min-h-11 rounded-lg border border-gray-400 px-3 text-base aria-[invalid=true]:border-danger";
 
 /**
  * Formularul de creare de pe pagina principală (002: FR-001, FR-002): formular nativ cu Server
@@ -39,12 +39,12 @@ export function CreateEventForm({
   const values = state.status === "error" ? (state.values ?? {}) : {};
 
   return (
-    <form action={action} noValidate className="flex flex-col gap-4">
+    <form action={action} noValidate className={ui.sheetForm}>
       <input type="hidden" name="termsVersion" value={termsVersion} />
       <input type="hidden" name="privacyVersion" value={privacyVersion} />
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="ss-email" className="font-medium">
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="ss-email" className={ui.label}>
           {t("home.email")}
         </label>
         <input
@@ -56,16 +56,16 @@ export function CreateEventForm({
           autoComplete="email"
           aria-invalid={fields.email !== undefined}
           aria-describedby="ss-email-hint ss-email-error"
-          className={inputClass}
+          className={ui.input}
         />
-        <p id="ss-email-hint" className="text-sm text-muted">
+        <p id="ss-email-hint" className={ui.hint}>
           {t("home.emailHint")}
         </p>
         <FieldError id="ss-email-error" message={fields.email} />
       </div>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="ss-name" className="font-medium">
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="ss-name" className={ui.label}>
           {t("home.name")}
         </label>
         <input
@@ -77,13 +77,13 @@ export function CreateEventForm({
           maxLength={120}
           aria-invalid={fields.name !== undefined}
           aria-describedby="ss-name-error"
-          className={inputClass}
+          className={ui.input}
         />
         <FieldError id="ss-name-error" message={fields.name} />
       </div>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="ss-date" className="font-medium">
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="ss-date" className={ui.label}>
           {t("home.date")}
         </label>
         <input
@@ -96,7 +96,7 @@ export function CreateEventForm({
           max={maxDate}
           aria-invalid={fields.eventDate !== undefined}
           aria-describedby="ss-date-error"
-          className={inputClass}
+          className={`${ui.input} ${ui.data}`}
         />
         <FieldError id="ss-date-error" message={fields.eventDate} />
       </div>
@@ -107,7 +107,7 @@ export function CreateEventForm({
         <input id="ss-website" name="website" type="text" tabIndex={-1} autoComplete="off" />
       </div>
 
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         <div className="flex items-start gap-3">
           <input
             id="ss-accept"
@@ -117,15 +117,15 @@ export function CreateEventForm({
             required
             aria-invalid={fields.accepted !== undefined}
             aria-describedby="ss-accept-error"
-            className="mt-1 size-5 shrink-0 accent-brand-600"
+            className={`${ui.checkbox} mt-0.5`}
           />
-          <label htmlFor="ss-accept">
+          <label htmlFor="ss-accept" className="leading-snug">
             {t("home.acceptBefore")}
-            <Link href="/terms" target="_blank" className="text-brand-700 underline">
+            <Link href="/terms" target="_blank" className={ui.link}>
               {t("home.terms")}
             </Link>
             {t("home.acceptMiddle")}
-            <Link href="/privacy" target="_blank" className="text-brand-700 underline">
+            <Link href="/privacy" target="_blank" className={ui.link}>
               {t("home.privacy")}
             </Link>
           </label>
@@ -135,19 +135,19 @@ export function CreateEventForm({
 
       {turnstile}
 
-      {general !== undefined && (
-        <p role="alert" className="rounded-lg border border-danger p-3 text-danger">
-          {t(`errors.${general}`)}
-        </p>
-      )}
-
-      <button
-        type="submit"
-        disabled={pending}
-        className="min-h-11 rounded-lg bg-brand-600 px-4 font-semibold text-white disabled:opacity-60"
+      <SheetActions
+        status={
+          general !== undefined && (
+            <p role="alert" className={ui.alert}>
+              {t(`errors.${general}`)}
+            </p>
+          )
+        }
       >
-        {pending ? t("home.submitting") : t("home.submit")}
-      </button>
+        <button type="submit" disabled={pending} className={ui.buttonPrimary}>
+          {pending ? t("home.submitting") : t("home.submit")}
+        </button>
+      </SheetActions>
     </form>
   );
 }

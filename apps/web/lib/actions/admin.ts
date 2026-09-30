@@ -157,10 +157,11 @@ function revalidateEvent(eventId: string): void {
 }
 
 /** Activarea pachetului complet (002: FR-025, FR-028); aceeași funcție SQL o va folosi plata online. */
-export async function activateEvent(input: { eventId: string; reason: string }): Promise<ActionResult<{ alreadyActive: boolean }>> {
-  return runAction(stateActionSchema, input, async ({ eventId, reason }) => {
+/** Activarea nu cere motiv: confirmarea din dialog e verificarea (FR-028). */
+export async function activateEvent(input: { eventId: string }): Promise<ActionResult<{ alreadyActive: boolean }>> {
+  return runAction(z.object({ eventId: z.uuid() }), input, async ({ eventId }) => {
     const supabase = await requireAdmin();
-    const { data, error } = await supabase.rpc("activate_event", { p_event_id: eventId, p_source: "admin", p_reason: reason });
+    const { data, error } = await supabase.rpc("activate_event", { p_event_id: eventId, p_source: "admin" });
     throwIfDbError(error);
     revalidateEvent(eventId);
     return { alreadyActive: data?.[0]?.already_active ?? false };

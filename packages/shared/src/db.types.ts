@@ -862,7 +862,7 @@ export type Database = {
         Args: {
           p_event_id: string
           p_external_ref?: string
-          p_reason: string
+          p_reason?: string
           p_source: Database["public"]["Enums"]["status_change_source"]
         }
         Returns: {
@@ -948,6 +948,7 @@ export type Database = {
       enqueue_activation_notices: { Args: { p_now?: string }; Returns: number }
       enqueue_retention_notices: { Args: { p_now?: string }; Returns: number }
       event_organizer_email: { Args: { p_event_id: string }; Returns: string }
+      event_slug: { Args: { p_name: string }; Returns: string }
       expire_archives: { Args: never; Returns: number }
       expire_due_events: { Args: { p_now?: string }; Returns: number }
       extend_retention: {
@@ -1026,6 +1027,7 @@ export type Database = {
         }
         Returns: string
       }
+      new_event_token: { Args: { p_name: string }; Returns: string }
       organizer_event_token: { Args: { p_event_id: string }; Returns: string }
       organizer_needs_terms: { Args: never; Returns: boolean }
       organizer_owns_active_event: {

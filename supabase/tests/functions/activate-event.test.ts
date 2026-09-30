@@ -137,11 +137,20 @@ describe("activate_event (FR-025)", () => {
     expect(rows.at(-1)).toMatchObject({ from_status: "active", to_status: "active", note: "activare repetată" });
   });
 
-  it("cere motiv, admin aal2 pentru sursa admin și service role pentru plăți", async () => {
-    const eventId = await awaitingEvent(inDays(12));
-    expect((await admin.rpc("activate_event", { p_event_id: eventId, p_source: "admin", p_reason: " " })).error?.message).toBe(
-      "REASON_REQUIRED",
+  it("activează fără motiv; istoricul păstrează sursa și autorul, fără motiv (FR-028)", async () => {
+    const eventId = await awaitingEvent(inDays(11));
+    const { error } = await admin.rpc("activate_event", { p_event_id: eventId, p_source: "admin" });
+    expect(error).toBeNull();
+    const [change] = await sql<{ to_status: string; source: string; reason: string | null; actor_user_id: string | null }>(
+      "select to_status, source, reason, actor_user_id from public.event_status_changes where event_id = $1 order by id desc limit 1",
+      [eventId],
     );
+    expect(change).toMatchObject({ to_status: "active", source: "admin", reason: null });
+    expect(change?.actor_user_id).not.toBeNull();
+  });
+
+  it("cere admin aal2 pentru sursa admin și service role pentru plăți", async () => {
+    const eventId = await awaitingEvent(inDays(12));
     expect((await adminAal1.rpc("activate_event", { p_event_id: eventId, p_source: "admin", p_reason: "x" })).error?.message).toBe(
       "FORBIDDEN",
     );

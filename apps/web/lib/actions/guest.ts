@@ -5,13 +5,14 @@ import { cookies } from "next/headers";
 import { z } from "zod";
 import { publicEnv } from "../env";
 import { resolveGuestEvent } from "../guest/event";
+import { EVENT_TOKEN } from "../guest/token";
 import { hashedClientIp } from "../security/ip-hash";
 import { serverEnv } from "../server-env";
 import { adminSupabase } from "../supabase/admin";
 import { ActionError, runAction, throwIfDbError, type ActionResult } from "./result";
 
 const COOKIE = "mg_s";
-const tokenSchema = z.string().regex(/^[A-Za-z0-9_-]{22}$/);
+const tokenSchema = z.string().regex(EVENT_TOKEN);
 
 /** Cookie-ul are calea `/e/{token}`, deci ajunge doar la acțiunile paginii acelui eveniment. */
 async function sessionFromCookie(): Promise<string | undefined> {

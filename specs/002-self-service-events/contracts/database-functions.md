@@ -52,10 +52,11 @@ Intern (fără `execute` pentru clienți). Blochează rândul (`for update`), ve
 `event_status_transitions` (`INVALID_TRANSITION`), setează `app.status_transition = 'on'`
 local tranzacției, actualizează `status`, inserează în `event_status_changes`.
 
-### `activate_event(p_event_id uuid, p_source status_change_source, p_reason text, p_external_ref text default null) → table(already_active boolean)`
+### `activate_event(p_event_id uuid, p_source status_change_source, p_reason text default null, p_external_ref text default null) → table(already_active boolean)`
 
 Execuție: `authenticated` cu `is_admin()` pentru sursa `admin`; `service_role` pentru sursa
-`payment` (funcționalitate ulterioară). Pentru `awaiting_activation`:
+`payment` (funcționalitate ulterioară). `p_reason` e opțional (FR-028): administratorul
+confirmă activarea în interfață, fără motiv. Pentru `awaiting_activation`:
 - copiază pachetul în eveniment (`package_id`, preț, limite, `retention_option_id`);
 - calculează perioada de upload (FR-034) și `purge_at`;
 - setează `activated_at`, golește `pending_purge_at`;

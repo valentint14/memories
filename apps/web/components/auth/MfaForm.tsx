@@ -1,12 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { Button, Form, Input, Label, TextField } from "react-aria-components";
+import { Button, Form, Input, Label, Text, TextField } from "react-aria-components";
 import { useRouter } from "next/navigation";
 import { enrollTotp, verifyTotp, type TotpEnrollment } from "@/lib/actions/auth";
 import { t } from "@/lib/i18n";
+import { ui } from "@/lib/ui";
+import { SheetActions } from "../ui/SheetActions";
+import { Sheet } from "../ui/Sheet";
+import { StepList } from "../ui/StepList";
 
-/** Înrolare TOTP (cod QR + secret ca text) sau verificarea unui factor existent (FR-006a). */
+/**
+ * Înrolare TOTP (cod QR + secret ca text) sau verificarea unui factor existent (FR-006a), în două
+ * foi egale: la înrolare, configurarea și codul; la verificare, codul și unde se găsește.
+ */
 export function MfaForm({ factorId: existingFactorId }: { factorId: string | null }) {
   const router = useRouter();
   const [enrollment, setEnrollment] = useState<TotpEnrollment | null>(null);
@@ -24,38 +31,13 @@ export function MfaForm({ factorId: existingFactorId }: { factorId: string | nul
     });
   }, [existingFactorId]);
 
+  const enrolling = existingFactorId === null;
   const factorId = existingFactorId ?? enrollment?.factorId ?? null;
 
-  return (
-    <div className="flex flex-col gap-6">
-      {existingFactorId === null && (
-        <section aria-labelledby="enroll-title" className="flex flex-col gap-3">
-          <h2 id="enroll-title" className="text-lg font-semibold">
-            {t("mfa.enrollTitle")}
-          </h2>
-          <p className="text-muted">{t("mfa.enrollIntro")}</p>
-          {enrollment && (
-            <>
-              <img
-                src={enrollment.qrCodeDataUrl}
-                alt={t("mfa.qrAlt")}
-                width={200}
-                height={200}
-                className="rounded-lg border border-gray-300 bg-white p-2"
-              />
-              <p>
-                {t("mfa.secretLabel")}{" "}
-                <code data-testid="totp-secret" className="break-all rounded bg-gray-100 px-2 py-1 font-mono">
-                  {enrollment.secret}
-                </code>
-              </p>
-            </>
-          )}
-        </section>
-      )}
-
+  const codeSheet = (
+    <Sheet id="mfa-code-title" title={t("mfa.sheet.code")}>
       <Form
-        className="flex flex-col gap-4"
+        className={ui.sheetForm}
         onSubmit={(e) => {
           e.preventDefault();
           if (factorId === null) return;
@@ -69,23 +51,71 @@ export function MfaForm({ factorId: existingFactorId }: { factorId: string | nul
           });
         }}
       >
-        <TextField name="code" isRequired inputMode="numeric" autoComplete="one-time-code" className="flex flex-col gap-1">
-          <Label className="font-medium">{t("mfa.codeLabel")}</Label>
-          <Input maxLength={6} className="min-h-11 rounded-lg border border-gray-400 px-3 font-mono text-lg tracking-widest" />
+        <TextField name="code" isRequired inputMode="numeric" autoComplete="one-time-code" className="flex flex-col gap-1.5">
+          <Label className={ui.label}>{t("mfa.codeLabel")}</Label>
+          <Input maxLength={6} className={ui.codeInput} />
+          {enrolling && (
+            <Text slot="description" className={ui.hint}>
+              {t("mfa.codeHint")}
+            </Text>
+          )}
         </TextField>
-        {error !== null && (
-          <p role="alert" className="text-sm text-danger">
-            {error}
-          </p>
-        )}
-        <Button
-          type="submit"
-          isDisabled={pending || factorId === null}
-          className="min-h-11 rounded-lg bg-brand-600 px-4 font-semibold text-white disabled:opacity-60"
+        <SheetActions
+          status={
+            error !== null && (
+              <p role="alert" className={ui.fieldError}>
+                {error}
+              </p>
+            )
+          }
         >
-          {t("mfa.verify")}
-        </Button>
+          <Button type="submit" isDisabled={pending || factorId === null} className={ui.buttonPrimary}>
+            {t("mfa.verify")}
+          </Button>
+        </SheetActions>
       </Form>
+    </Sheet>
+  );
+
+  return (
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      {enrolling ? (
+        <>
+          <Sheet id="enroll-title" title={t("mfa.sheet.setup")}>
+            <p className="leading-relaxed">{t("mfa.enrollIntro")}</p>
+            {enrollment && (
+              <>
+                {/* Codul QR rămâne pe alb pur, pentru scanare. */}
+                <img
+                  src={enrollment.qrCodeDataUrl}
+                  alt={t("mfa.qrAlt")}
+                  width={200}
+                  height={200}
+                  className="self-center rounded-xs border border-ink p-2"
+                />
+                {/* Cheia rămâne pe un singur rând; pe ecrane foarte înguste se derulează orizontal. */}
+                <p className="flex flex-col gap-1.5">
+                  <span className={ui.label}>{t("mfa.secretLabel")}</span>
+                  <code
+                    data-testid="totp-secret"
+                    className={`${ui.data} block overflow-x-auto whitespace-nowrap rounded-xs border border-rule bg-paper px-2 py-1.5 text-center text-sm`}
+                  >
+                    {enrollment.secret}
+                  </code>
+                </p>
+              </>
+            )}
+          </Sheet>
+          {codeSheet}
+        </>
+      ) : (
+        <>
+          {codeSheet}
+          <Sheet id="mfa-steps-title" title={t("mfa.sheet.steps")}>
+            <StepList steps={[t("mfa.step1"), t("mfa.step2"), t("mfa.step3")]} />
+          </Sheet>
+        </>
+      )}
     </div>
   );
 }

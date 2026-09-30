@@ -170,9 +170,10 @@ Acolo găsești:
    `admin@example.test`, ia codul din Mailpit și confirmă.
 2. La prima autentificare scanezi codul QR TOTP cu aplicația de autentificare (Google
    Authenticator, Microsoft Authenticator, 1Password) și introduci codul de 6 cifre.
-3. În **Evenimente**, filtrează după **Doar cu activare solicitată**, deschide evenimentul și apasă
-   **Activează pachetul complet** (cu un motiv).
-4. Din aceeași pagină poți **Suspenda** și **Reactiva**; istoricul stărilor apare mai jos.
+3. În **Evenimente**, alege grupa **Cer activare** și apasă **Activează** pe rândul evenimentului
+   (sau **Activează pachetul complet** pe pagina lui); confirmi după numele evenimentului.
+4. Din pagina evenimentului poți **Suspenda** și **Reactiva** (cu un motiv); istoricul stărilor
+   apare mai jos.
 5. În **Pachet** (`/admin/package`) modifici prețul și limitele pachetului complet.
 
 ### C. Încarci poze ca invitat

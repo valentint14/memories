@@ -14,6 +14,12 @@ describe("scrub (beforeSend)", () => {
     expect(text).toContain("/e/[token]");
   });
 
+  it("elimină și linkurile lizibile, care conțin numele evenimentului (FR-004)", () => {
+    const text = scrubString("GET /e/nunta-ana-si-mihai-k7p2x9 și /e/ana-k7p2x9");
+    expect(text).not.toContain("ana");
+    expect(text).toBe("GET /e/[token] și /e/[token]");
+  });
+
   it("redactează câmpurile sensibile oriunde în eveniment", () => {
     const event = {
       message: "upload eșuat",

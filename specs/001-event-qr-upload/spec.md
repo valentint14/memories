@@ -372,8 +372,10 @@ expirat.
 - **FR-003**: Sistemul TREBUIE să permită administratorului să vadă lista evenimentelor și să
   modifice datele unui eveniment existent, inclusiv perioada de upload și limitele.
 - **FR-004**: Sistemul TREBUIE să genereze pentru fiecare eveniment un link public de upload
-  care conține un identificator aleator, imposibil de ghicit sau de derivat din linkul altui
-  eveniment.
+  lizibil, derivat din numele evenimentului și urmat de un sufix aleator (de ex.
+  `/e/nunta-ana-si-mihai-k7p2x9`), astfel încât să nu poată fi ghicit doar din nume sau derivat
+  din linkul altui eveniment. Linkul se fixează la creare și nu se schimbă la redenumire (codul
+  QR tipărit rămâne valid).
 - **FR-005**: Sistemul TREBUIE să ofere codul QR al linkului de upload pentru descărcare în
   format PNG (minim 2000×2000 px) și SVG.
 - **FR-006**: Doar administratorul TREBUIE să poată crea sau modifica evenimente; nu există

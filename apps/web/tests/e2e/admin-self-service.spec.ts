@@ -17,6 +17,16 @@ async function openPage(browser: Browser): Promise<Page> {
   return context.newPage();
 }
 
+/** Activarea: fără motiv, dar dialogul arată evenimentul, ca verificare înainte de confirmare. */
+async function confirmActivation(page: Page, eventName: string): Promise<void> {
+  await page.getByRole("button", { name: "Activează pachetul complet" }).click();
+  const dialog = page.getByRole("alertdialog");
+  await expect(dialog.getByTestId("state-subject")).toContainText(eventName);
+  await expect(dialog.getByLabel("Motiv (se păstrează în istoric)")).toHaveCount(0);
+  await dialog.getByRole("button", { name: "Activează", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+}
+
 async function confirmState(page: Page, button: string, reason: string, confirm: string): Promise<void> {
   await page.getByRole("button", { name: button }).click();
   const dialog = page.getByRole("alertdialog");
@@ -50,20 +60,26 @@ test.afterAll(async () => {
   await admin.context().close();
 });
 
-test("lista filtrează după activare solicitată și arată coloanele cerute (FR-027)", async () => {
-  await gotoHydrated(admin, "/admin/events?requested=1&origin=self_service");
-  const row = admin.getByRole("row", { name: new RegExp(name) });
+test("registrul arată cererea de activare în grupa ei, cu datele cerute (FR-027)", async () => {
+  await gotoHydrated(admin, "/admin/events?view=requested");
+  const group = admin.getByRole("region", { name: /Cer activare/ });
+  const row = group.getByRole("listitem").filter({ hasText: name });
   await expect(row).toBeVisible();
   await expect(row).toContainText("Self-service");
   await expect(row).toContainText("În așteptarea activării");
   await expect(row).toContainText("@example.test");
+  await expect(row).toContainText("activare cerută");
   await expect(row).toContainText("(dacă nu e activat)");
+  await expect(row.getByRole("button", { name: `Activează ${name}` })).toBeVisible();
 
-  await gotoHydrated(admin, "/admin/events?status=active");
-  await expect(admin.getByRole("row", { name: new RegExp(name) })).toHaveCount(0);
+  await gotoHydrated(admin, "/admin/events?view=active");
+  await expect(admin.getByRole("listitem").filter({ hasText: name })).toHaveCount(0);
+
+  await gotoHydrated(admin, `/admin/events?q=${encodeURIComponent(name)}`);
+  await expect(admin.getByRole("listitem").filter({ hasText: name })).toHaveCount(1);
 });
 
-test("editează numele înainte de activare, apoi activează cu motiv; istoricul arată schimbările", async () => {
+test("editează numele înainte de activare, apoi activează după confirmare; istoricul arată schimbările", async () => {
   await gotoHydrated(admin, `/admin/events/${eventId}`);
   await expect(admin.getByRole("status").filter({ hasText: "a cerut activarea" })).toBeVisible();
   name = `${name} (corectat)`;
@@ -71,12 +87,11 @@ test("editează numele înainte de activare, apoi activează cu motiv; istoricul
   await admin.getByRole("button", { name: "Salvează" }).click();
   await expect(admin.getByRole("status").filter({ hasText: "salvate" })).toBeVisible();
 
-  await confirmState(admin, "Activează pachetul complet", "plată primită prin transfer", "Activează");
-  await expect(admin.getByText("Activ · Self-service")).toBeVisible();
+  await confirmActivation(admin, name);
+  await expect(admin.getByTestId("event-status")).toHaveText("Activ");
 
-  const history = admin.getByRole("table", { name: "Istoricul stărilor" });
+  const history = admin.getByRole("list", { name: "Istoricul stărilor" });
   await expect(history).toContainText("În așteptarea activării → Activ");
-  await expect(history).toContainText("plată primită prin transfer");
   await expect(history).toContainText("Administrator");
 
   const { data } = await serviceClient().from("events").select("status, name, base_price_minor").eq("id", eventId).single();
@@ -91,7 +106,7 @@ test("editează numele înainte de activare, apoi activează cu motiv; istoricul
 test("suspendarea oprește uploadurile și lasă organizatorului doar vizualizarea, descărcarea și ștergerea", async () => {
   await gotoHydrated(admin, `/admin/events/${eventId}`);
   await confirmState(admin, "Suspendă", "conținut raportat", "Suspendă");
-  await expect(admin.getByText("Suspendat · Self-service")).toBeVisible();
+  await expect(admin.getByTestId("event-status")).toHaveText("Suspendat");
 
   await gotoHydrated(organizer, `/events/${eventId}`);
   await expect(organizer.getByRole("alert").filter({ hasText: "Evenimentul este suspendat" })).toBeVisible();
@@ -99,6 +114,6 @@ test("suspendarea oprește uploadurile și lasă organizatorului doar vizualizar
 
   await gotoHydrated(admin, `/admin/events/${eventId}`);
   await confirmState(admin, "Reactivează", "verificat, totul în regulă", "Reactivează");
-  await expect(admin.getByText("Activ · Self-service")).toBeVisible();
-  await expect(admin.getByRole("table", { name: "Istoricul stărilor" })).toContainText("Suspendat → Activ");
+  await expect(admin.getByTestId("event-status")).toHaveText("Activ");
+  await expect(admin.getByRole("list", { name: "Istoricul stărilor" })).toContainText("Suspendat → Activ");
 });
