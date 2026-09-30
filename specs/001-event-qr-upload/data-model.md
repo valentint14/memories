@@ -51,7 +51,7 @@ RLS: niciun acces din client; citit doar de funcția `is_admin()` (`SECURITY DEF
 | Câmp | Tip | Reguli / validare |
 | --- | --- | --- |
 | `id` | uuid PK | `gen_random_uuid()`; intern, nu apare în URL-uri publice |
-| `public_token` | text UNIQUE NOT NULL | 128 biți aleatori, base64url (22 caractere), generat în DB; FR-004 |
+| `public_token` | text UNIQUE NOT NULL | slug din nume (≤ 40 caractere) + `-` + 6 caractere aleatoare din 31 (fără 0/o, 1/l/i), generat în DB la inserare (`new_event_token`); fix la redenumire; evenimentele mai vechi păstrează tokenul aleator de 22 de caractere; FR-004 |
 | `name` | text NULL | 1–120 caractere, trim; NULL doar după anonimizare (FR-047) |
 | `event_date` | date NOT NULL | |
 | `organizer_email` | citext NULL | email valid; un singur organizator (FR-010); index pentru RLS; NULL doar după anonimizare |

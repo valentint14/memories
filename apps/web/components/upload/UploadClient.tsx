@@ -6,6 +6,7 @@ import { formatBytes, t } from "@/lib/i18n";
 import { UploadQueue, type QueueLimits } from "@/lib/upload/queue";
 import { ui } from "@/lib/ui";
 import { CameraIcon, PlusIcon } from "../ui/icons";
+import { Sheet } from "../ui/Sheet";
 import { FileRow } from "./FileRow";
 import { KeepOpenNotice } from "./KeepOpenNotice";
 import { NetworkBanner } from "./NetworkBanner";
@@ -81,21 +82,27 @@ export function UploadClient({
 
   return (
     <div className="flex flex-1 flex-col gap-6">
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="guest-name" className={ui.label}>
-          {t("guest.nameLabel")}
-        </label>
-        <input
-          id="guest-name"
-          value={name}
-          onChange={(e) => {
-            setName(e.target.value);
-          }}
-          maxLength={50}
-          autoComplete="name"
-          className={ui.input}
-        />
-      </div>
+      <Sheet id="guest-name-title" title={t("guest.sheet.name")}>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="guest-name" className={ui.label}>
+            {t("guest.nameLabel")}
+          </label>
+          <input
+            id="guest-name"
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+            }}
+            maxLength={50}
+            autoComplete="name"
+            aria-describedby="guest-name-hint"
+            className={ui.input}
+          />
+          <p id="guest-name-hint" className={ui.hint}>
+            {t("guest.nameHint")}
+          </p>
+        </div>
+      </Sheet>
 
       <PendingAfterReload
         token={token}
@@ -106,15 +113,15 @@ export function UploadClient({
       <NetworkBanner offline={offline} />
 
       {items.length > 0 && (
-        <section aria-labelledby="files-title" className="flex flex-col">
-          <div className="flex items-baseline justify-between border-b border-ink pb-2">
-            <h2 id="files-title" className={ui.kicker}>
-              {t("guest.filesList")}
-            </h2>
-            <span className={`${ui.data} text-xs text-ink-muted`}>
+        <Sheet
+          id="files-title"
+          title={t("guest.filesList")}
+          aside={
+            <span className={`${ui.data} text-ink-muted`}>
               {summary.done} / {items.length}
             </span>
-          </div>
+          }
+        >
           <ul aria-label={t("guest.filesList")} className="flex flex-col">
             {items.map((item) => (
               <FileRow
@@ -127,15 +134,14 @@ export function UploadClient({
             ))}
           </ul>
           <KeepOpenNotice active={queue.hasActiveUploads()} />
-        </section>
+          {summary.inProgress === 0 && <UploadSummary done={summary.done} failed={summary.failed} />}
+        </Sheet>
       )}
-
-      {items.length > 0 && summary.inProgress === 0 && <UploadSummary done={summary.done} failed={summary.failed} />}
 
       {privacy}
 
       {/* Acțiunile principale în treimea de jos a ecranului (FR-036). */}
-      <div className="sticky bottom-0 -mx-5 mt-auto flex flex-col gap-2.5 border-t border-rule bg-paper px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3.5">
+      <div className="sticky bottom-0 -mx-4 mt-auto flex flex-col gap-2.5 border-t border-rule bg-paper px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3.5">
         <label className={`${ui.buttonPrimaryLarge} focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ink`}>
           <PlusIcon />
           {t("guest.pick")}

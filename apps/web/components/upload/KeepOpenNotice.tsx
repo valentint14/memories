@@ -21,7 +21,7 @@ export function KeepOpenNotice({ active }: { active: boolean }) {
 
   if (!active) return null;
   return (
-    <p className="flex items-center gap-2 pt-3 text-sm font-medium">
+    <p className="flex items-center gap-2 text-sm font-medium">
       <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-accent" />
       {t("upload.keepOpen")}
     </p>

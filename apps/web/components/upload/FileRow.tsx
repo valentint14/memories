@@ -36,7 +36,7 @@ export function FileRow({ item, onRetry }: { item: QueueItem; onRetry?: (id: str
         : t(`upload.status.${item.status}`);
 
   return (
-    <li className="flex flex-col gap-2 border-b border-rule py-3">
+    <li className="flex flex-col gap-2 border-b border-rule py-3 first:pt-0 last:border-b-0 last:pb-0">
       <div className="flex items-center justify-between gap-3">
         <span className={`${ui.data} truncate text-sm`}>{item.name}</span>
         {item.status === "failed" && onRetry && (

@@ -5,14 +5,14 @@ import { GalleryGrid } from "@/components/gallery/GalleryGrid";
 import { RetentionPanel } from "@/components/retention/RetentionPanel";
 import { EventStatusPanel } from "@/components/self-service/EventStatusPanel";
 import { ManageEventSection } from "@/components/self-service/ManageEventSection";
-import { QrDownloads } from "@/components/self-service/QrDownloads";
-import { Sheet } from "@/components/ui/Sheet";
+import { UploadLinkSheet } from "@/components/self-service/UploadLinkSheet";
 import { StatBand } from "@/components/ui/StatBand";
 import { StatusStamp } from "@/components/ui/StatusStamp";
 import { formatDateShort, formatDayMonthTime, t, tp } from "@/lib/i18n";
 import { activationInfo } from "@/lib/organizer/activation";
 import { latestArchive } from "@/lib/organizer/archive";
 import { countReadyFiles, galleryAvailable, getOrganizerEvent, listGallery } from "@/lib/organizer/media";
+import { uploadUrlForOrganizer } from "@/lib/organizer/qr";
 import { retentionQuote } from "@/lib/organizer/retention";
 import { ui } from "@/lib/ui";
 
@@ -41,7 +41,7 @@ export default async function EventGalleryPage({ params }: { params: Promise<{ e
   if (!event) notFound();
 
   if (event.status === "awaiting_activation") {
-    const info = await activationInfo(eventId);
+    const [info, uploadUrl] = await Promise.all([activationInfo(eventId), uploadUrlForOrganizer(eventId)]);
     const none = t("admin.detail.none");
     return (
       <div className="flex flex-col gap-6">
@@ -67,12 +67,8 @@ export default async function EventGalleryPage({ params }: { params: Promise<{ e
         />
         <div className="grid gap-6 lg:grid-cols-2">
           <EventStatusPanel eventId={eventId} pendingPurgeAt={event.pendingPurgeAt} info={info} />
-          <Sheet id="qr-title" title={t("admin.detail.links")}>
-            <p className="leading-relaxed">{t("organizer.qrExplain")}</p>
-            <div className="mt-auto border-t border-rule pt-4">
-              <QrDownloads eventId={eventId} />
-            </div>
-          </Sheet>
+          {/* Până la activare, invitații care deschid linkul văd că încărcarea nu e încă deschisă. */}
+          <UploadLinkSheet eventId={eventId} uploadUrl={uploadUrl} explain="organizer.qrExplain" />
         </div>
         {event.name !== null && <ManageEventSection eventId={eventId} name={event.name} eventDate={event.eventDate} canEdit />}
       </div>
@@ -90,13 +86,15 @@ export default async function EventGalleryPage({ params }: { params: Promise<{ e
     );
   }
 
-  const [first, archive, readyFiles, quote] = await Promise.all([
+  const suspended = event.status === "suspended";
+  const [first, archive, readyFiles, quote, uploadUrl] = await Promise.all([
     listGallery(eventId),
     latestArchive(eventId),
     countReadyFiles(eventId),
-    event.status === "suspended" ? Promise.resolve([]) : retentionQuote(eventId),
+    suspended ? Promise.resolve([]) : retentionQuote(eventId),
+    // În suspendare invitații nu pot încărca: linkul și codul QR nu se mai arată.
+    suspended ? Promise.resolve(null) : uploadUrlForOrganizer(eventId),
   ]);
-  const suspended = event.status === "suspended";
   return (
     <div className="flex flex-col gap-6">
       <EventHeader name={event.name} status={event.status} />
@@ -114,20 +112,22 @@ export default async function EventGalleryPage({ params }: { params: Promise<{ e
           { label: t("admin.detail.stat.purgeAt"), value: formatDateShort(event.purgeAt) },
         ]}
       />
-      {/* Păstrarea și arhiva ca foi egale; în suspendare rămâne doar arhiva, pe tot rândul. */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {!suspended && (
+      {/*
+        Rândurile: galeria; arhiva; păstrarea și linkul cu codul QR (foi egale); apoi detaliile și
+        ștergerea. În suspendare nu mai apar păstrarea și linkul.
+      */}
+      <GalleryGrid eventId={eventId} initialItems={first.items} initialCursor={first.nextCursor} live={!suspended} />
+      <ArchivePanel eventId={eventId} readyFiles={readyFiles} initial={archive} />
+      {uploadUrl !== null && (
+        <div className="grid gap-6 lg:grid-cols-2">
           <RetentionPanel
             eventId={eventId}
             current={{ months: event.retentionMonths, finalPriceMinor: event.finalPriceMinor ?? 0, purgeAt: event.purgeAt }}
             initialOptions={quote}
           />
-        )}
-        <div className={`grid ${suspended ? "lg:col-span-2" : ""}`}>
-          <ArchivePanel eventId={eventId} readyFiles={readyFiles} initial={archive} />
+          <UploadLinkSheet eventId={eventId} uploadUrl={uploadUrl} explain="organizer.qrExplainActive" />
         </div>
-      </div>
-      <GalleryGrid eventId={eventId} initialItems={first.items} initialCursor={first.nextCursor} live={!suspended} />
+      )}
       {event.name !== null && (
         <ManageEventSection eventId={eventId} name={event.name} eventDate={event.eventDate} canEdit={!suspended} />
       )}

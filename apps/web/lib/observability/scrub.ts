@@ -4,7 +4,8 @@
  */
 
 const EMAIL = /[^\s@"'<>]+@[^\s@"'<>]+\.[^\s@"'<>]+/g;
-const EVENT_TOKEN_PATH = /\/e\/[A-Za-z0-9_-]{16,}/g;
+// Orice segment după /e/: tokenul e cheia de acces și, fiind derivat din nume, poate conține nume.
+const EVENT_TOKEN_PATH = /\/e\/[A-Za-z0-9_-]+/g;
 const STORAGE_PATH = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/[^\s"']+/gi;
 const SENSITIVE_KEYS = new Set([
   "email",

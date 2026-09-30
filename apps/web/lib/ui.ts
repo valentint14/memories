@@ -76,6 +76,9 @@ export const ui = {
   /** Banda unei foi cu înălțime fixă (48 px), pentru foi alăturate cu sau fără ștampilă în bandă. */
   sheetBar:
     "flex min-h-12 items-center justify-between gap-3 border-b border-rule px-4 font-mono text-xs font-medium uppercase tracking-[0.08em] text-ink-muted",
+  /** Banda unei foi care se deschide (`<details class="group">`): linia de sub ea apare doar deschisă. */
+  sheetSummary:
+    "flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 font-mono text-xs font-medium uppercase tracking-[0.08em] text-ink-muted group-open:border-b group-open:border-rule [&::-webkit-details-marker]:hidden",
   /** Ca `sheetBar`, în teracotă: grupa care cere atenție (cererile de activare). */
   sheetBarAccent:
     "flex min-h-12 items-center justify-between gap-3 border-b border-rule px-4 font-mono text-xs font-medium uppercase tracking-[0.08em] text-accent",

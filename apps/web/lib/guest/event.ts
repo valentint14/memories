@@ -1,5 +1,6 @@
 import "server-only";
 import { adminSupabase } from "../supabase/admin";
+import { EVENT_TOKEN } from "./token";
 
 export type GuestEventState = "open" | "not_started" | "ended" | "not_found" | "not_activated" | "suspended";
 
@@ -16,8 +17,6 @@ export interface GuestEvent {
   maxFilesPerGuest: number;
 }
 
-const TOKEN = /^[A-Za-z0-9_-]{22}$/;
-
 /** Starea paginii de upload pentru un token public (FR-020); tokenurile invalide → not_found. */
 export async function resolveGuestEvent(token: string): Promise<GuestEvent> {
   const notFound: GuestEvent = {
@@ -32,7 +31,7 @@ export async function resolveGuestEvent(token: string): Promise<GuestEvent> {
     maxVideoBytes: 0,
     maxFilesPerGuest: 0,
   };
-  if (!TOKEN.test(token)) return notFound;
+  if (!EVENT_TOKEN.test(token)) return notFound;
   const supabase = adminSupabase();
   const { data, error } = await supabase.rpc("resolve_event_for_guest", { p_token: token });
   const resolved = data?.[0];

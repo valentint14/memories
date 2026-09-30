@@ -116,18 +116,21 @@ export default async function AdminEventPage({ params }: { params: Promise<{ eve
 
       <StatBand label={t("admin.detail.summary")} stats={stats.map((s) => ({ ...s, label: t(s.label) }))} />
 
-      {/* Foile pe o grilă de două coloane egale; cele late ocupă tot rândul. */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      {/*
+        Fiecare foaie pe rândul ei: istoricele cresc în timp, iar o foaie scurtă alături s-ar întinde
+        cât ele. Linkul are descărcările în dreapta de la `lg`, ca pe pagina organizatorului.
+      */}
+      <div className="flex flex-col gap-6">
         <Sheet id="links-title" title={t("admin.detail.links")}>
           {linkActive ? (
-            <>
+            <div className="grid gap-4 lg:grid-cols-2 lg:items-center lg:gap-6">
               <p className="flex flex-col gap-1">
                 <span className="text-sm text-ink-muted">{t("admin.detail.uploadUrl")}</span>
                 <a href={event.uploadUrl} data-testid="upload-url" className={`${ui.link} ${ui.data} text-sm break-all`}>
                   {event.uploadUrl}
                 </a>
               </p>
-              <div className="mt-auto grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <a href={`/admin/events/${event.id}/qr.png`} download className={ui.buttonSecondary}>
                   {t("admin.detail.downloadPng")}
                 </a>
@@ -135,27 +138,27 @@ export default async function AdminEventPage({ params }: { params: Promise<{ eve
                   {t("admin.detail.downloadSvg")}
                 </a>
               </div>
-            </>
+            </div>
           ) : (
             <p className="text-ink-muted">{t("admin.detail.linkInactive")}</p>
           )}
         </Sheet>
 
-        <Sheet id="status-history-title" title={t("admin.statusHistory.title")}>
-          <StatusHistory rows={statusChanges} />
-        </Sheet>
-
         {event.status === "awaiting_activation" && event.name !== null && (
-          <Sheet id="pending-edit-title" title={t("admin.detail.edit")} className="lg:col-span-2">
+          <Sheet id="pending-edit-title" title={t("admin.detail.edit")}>
             <PendingEventForm eventId={event.id} name={event.name} eventDate={event.eventDate} />
           </Sheet>
         )}
 
         {editInitial !== null && (
-          <Sheet id="edit-title" title={t("admin.detail.edit")} className="lg:col-span-2">
+          <Sheet id="edit-title" title={t("admin.detail.edit")}>
             <EventForm fill options={formOptions} initial={editInitial} />
           </Sheet>
         )}
+
+        <Sheet id="status-history-title" title={t("admin.statusHistory.title")}>
+          <StatusHistory rows={statusChanges} />
+        </Sheet>
 
         <Sheet id="history-title" title={t("admin.history.title")}>
           {history.length === 0 ? (
