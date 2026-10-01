@@ -80,6 +80,8 @@ describe("retention_notice — activation_7d (FR-019)", () => {
     expect(mails[0]?.Subject).toMatch(/^Evenimentul „Aniversare Ioana” se șterge pe \d+ \S+ \d{4}$/);
     const text = await mailText(mails[0]?.ID ?? "");
     expect(text).toContain("299,00");
+    expect(text).toContain("plătind online pachetul complet");
+    expect(text).not.toContain("solicită activarea");
     expect(text).toContain(`/events/${eventId}`);
   });
 

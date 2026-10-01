@@ -6,27 +6,30 @@ import type { RetentionOptionQuote } from "@/lib/organizer/retention";
 import { ui } from "@/lib/ui";
 
 /**
- * Confirmarea prelungirii (FR-041): prețul final nou, diferența și noua dată de ștergere; butonul
- * repetă prețul, ca organizatorul să confirme exact suma pe care o vede.
+ * Revizuirea prelungirii înainte de plată (FR-041; 003: FR-020, FR-022): prețul final nou,
+ * diferența de plătit și noua dată de ștergere. Butonul trimite formularul de plată și repetă
+ * suma, ca organizatorul să plătească exact ce vede; noua dată se aplică doar după plată.
  */
 export function ExtendRetentionDialog({
+  eventId,
   option,
   currentPriceMinor,
   isOpen,
   pending,
   priceChanged,
   error,
+  action,
   onCancel,
-  onConfirm,
 }: {
+  eventId: string;
   option: RetentionOptionQuote | null;
   currentPriceMinor: number;
   isOpen: boolean;
   pending: boolean;
   priceChanged: boolean;
   error: string | null;
+  action: (formData: FormData) => void;
   onCancel: () => void;
-  onConfirm: () => void;
 }) {
   if (!option) return null;
   const difference = option.finalPriceMinor - currentPriceMinor;
@@ -51,9 +54,9 @@ export function ExtendRetentionDialog({
           )}
           <dl className="grid grid-cols-[auto_1fr] border-t border-rule">
             <dt className="border-b border-rule py-2 pr-4 text-ink-muted">{t("retention.newPrice")}</dt>
-            <dd className={`${ui.data} border-b border-rule py-2 font-semibold`}>{formatMoney(option.finalPriceMinor)}</dd>
+            <dd className={`${ui.data} border-b border-rule py-2`}>{formatMoney(option.finalPriceMinor)}</dd>
             <dt className="border-b border-rule py-2 pr-4 text-ink-muted">{t("retention.difference")}</dt>
-            <dd className={`${ui.data} border-b border-rule py-2`}>+{formatMoney(difference)}</dd>
+            <dd className={`${ui.data} border-b border-rule py-2 font-semibold`}>{formatMoney(difference)}</dd>
             <dt className="border-b border-rule py-2 pr-4 text-ink-muted">{t("retention.newPurgeAt")}</dt>
             <dd className={`${ui.data} border-b border-rule py-2`}>{formatDateTime(option.purgeAt)}</dd>
           </dl>
@@ -63,14 +66,18 @@ export function ExtendRetentionDialog({
               {error}
             </p>
           )}
-          <div className={ui.dialogActions}>
+          <form action={action} className={ui.dialogActions}>
+            <input type="hidden" name="eventId" value={eventId} />
+            <input type="hidden" name="purpose" value="retention_extension" />
+            <input type="hidden" name="optionId" value={option.optionId} />
+            <input type="hidden" name={`amount_${option.optionId}`} value={difference} />
             <Button onPress={onCancel} isDisabled={pending} className={ui.buttonSecondary}>
               {t("common.cancel")}
             </Button>
-            <Button onPress={onConfirm} isDisabled={pending} className={ui.buttonPrimary}>
-              {t("retention.confirm", { price: formatMoney(option.finalPriceMinor) })}
+            <Button type="submit" isDisabled={pending} className={ui.buttonPrimary}>
+              {t("retention.pay", { price: formatMoney(difference) })}
             </Button>
-          </div>
+          </form>
         </Dialog>
       </Modal>
     </ModalOverlay>

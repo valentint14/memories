@@ -39,6 +39,26 @@ export const serverEnv = {
     const value = process.env.TRUSTED_IP_HEADER?.trim().toLowerCase();
     return value === undefined || value === "" ? null : value;
   },
+  /**
+   * Cheia secretă Stripe (003, research R2). În afara producției se acceptă doar chei de test:
+   * o cheie `sk_live_` locală sau în CI ar încasa bani reali (FR-019).
+   */
+  get stripeSecretKey(): string {
+    const key = required("STRIPE_SECRET_KEY");
+    if (key.startsWith("sk_live_") && process.env.NODE_ENV !== "production") {
+      throw new Error("STRIPE_SECRET_KEY: cheia live Stripe este permisă doar în producție");
+    }
+    return key;
+  },
+  /** Secretul de semnare a webhook-urilor Stripe (contracts/stripe-webhooks.md). */
+  get stripeWebhookSecret(): string {
+    return required("STRIPE_WEBHOOK_SECRET");
+  },
+  /** Doar teste: adresa stripe-mock (research R9); null = API-ul Stripe real. */
+  get stripeApiBase(): URL | null {
+    const raw = process.env.STRIPE_API_BASE?.trim();
+    return raw === undefined || raw === "" ? null : new URL(raw);
+  },
   /** Limita de cereri de email per IP pe oră (FR-036); ridicată doar pe serverul e2e principal. */
   get rateLimitIpPerHour(): number {
     const raw = process.env.RATE_LIMIT_IP_PER_HOUR;

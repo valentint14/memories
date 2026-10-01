@@ -45,6 +45,11 @@ const env = {
   // Fără scriptul extern în teste; acceptat doar împreună cu secretul de test (server-env.ts).
   TURNSTILE_OFFLINE: "1",
   ADMIN_NOTIFY_EMAILS: "",
+  // Stripe (003, research R9): e2e vorbește doar cu serverul Stripe fals pornit de Playwright
+  // (apps/web/tests/e2e/support/stripe-fake.mjs); secretul semnează webhook-urile de test.
+  STRIPE_SECRET_KEY: "sk_test_ci",
+  STRIPE_WEBHOOK_SECRET: "whsec_test_ci_secret",
+  STRIPE_API_BASE: process.env.STRIPE_API_BASE ?? "http://127.0.0.1:12111",
   MAILPIT_URL: status.MAILPIT_URL ?? status.INBUCKET_URL ?? "http://127.0.0.1:54324",
 };
 
@@ -62,6 +67,9 @@ if (process.argv.includes("--write")) {
       "NEXT_PUBLIC_TURNSTILE_SITE_KEY",
       "TURNSTILE_SECRET_KEY",
       "TURNSTILE_OFFLINE",
+      "STRIPE_SECRET_KEY",
+      "STRIPE_WEBHOOK_SECRET",
+      "STRIPE_API_BASE",
     ]) +
       // Doar local, pentru testarea de mână: toate cererile vin de pe aceeași adresă (producția: 20).
       "RATE_LIMIT_IP_PER_HOUR=1000\n",

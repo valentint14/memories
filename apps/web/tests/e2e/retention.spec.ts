@@ -2,6 +2,7 @@ import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 import { loginAsNewAdmin, loginWithMagicLink } from "./support/auth";
 import { createAdmin, createEvent, createOrganizer, serviceClient } from "./support/db";
 import { gotoHydrated, uniqueName } from "./support/page";
+import { payFakeSession, sendWebhook, sessionIdFromCheckoutUrl, stubCheckoutPage } from "./support/stripe";
 
 // US8 — organizatorul alege cât timp se păstrează fișierele (quickstart 16, 18–21).
 test.describe.configure({ mode: "serial" });
@@ -34,7 +35,7 @@ test.afterAll(async () => {
   await context?.close();
 });
 
-test("organizatorul prelungește retenția și vede noul preț final (FR-041–FR-043, SC-013)", async () => {
+test("organizatorul plătește prelungirea și vede noul preț final după plată (FR-041–FR-043; 003: FR-020)", async () => {
   const event = await createEvent({ organizerEmail: email, name: uniqueName("Nunta retenție"), months: 3 });
   await gotoHydrated(page, `/events/${event.id}`);
 
@@ -50,12 +51,20 @@ test("organizatorul prelungește retenția și vede noul preț final (FR-041–F
 
   const dialog = page.getByRole("alertdialog");
   await expect(dialog).toContainText("398,00");
-  await expect(dialog).toContainText("+99,00");
-  await dialog.getByRole("button", { name: /Confirmă prelungirea/ }).click();
+  await expect(dialog).toContainText("99,00");
+  await stubCheckoutPage(page);
+  await dialog.getByRole("button", { name: "Plătește 99,00 RON" }).click();
+  const sessionId = await sessionIdFromCheckoutUrl(page);
 
-  await expect(summary).toContainText("12 luni, preț final 398,00");
-  // Reîmprospătarea paginii după confirmare se termină înainte de următoarea navigare.
-  await page.waitForLoadState("networkidle");
+  // Până la plată, nimic nu se schimbă (FR-020).
+  const { data: before } = await serviceClient().from("events").select("retention_months").eq("id", event.id).single();
+  expect(before?.retention_months).toBe(3);
+
+  expect(await sendWebhook(page, "checkout.session.completed", await payFakeSession(sessionId))).toBe(200);
+  await gotoHydrated(page, `/events/${event.id}`);
+  await expect(page.getByRole("region", { name: "Păstrarea fișierelor" }).getByText(/^Păstrare /)).toContainText(
+    "12 luni, preț final 398,00",
+  );
 
   const { data: row } = await serviceClient().from("events").select("final_price_minor, retention_months").eq("id", event.id).single();
   expect(row).toEqual({ final_price_minor: 39_800, retention_months: 12 });
@@ -65,10 +74,10 @@ test("organizatorul prelungește retenția și vede noul preț final (FR-041–F
     .eq("event_id", event.id)
     .order("id", { ascending: false })
     .limit(1);
-  expect(history?.[0]).toEqual({ actor_kind: "organizer", to_months: 12 });
+  expect(history?.[0]).toEqual({ actor_kind: "payment", to_months: 12 });
 });
 
-test("dacă prețul se schimbă între timp, dialogul arată prețul nou înainte de confirmare", async () => {
+test("dacă prețul se schimbă între timp, dialogul arată prețul nou înainte de plată", async () => {
   const event = await createEvent({ organizerEmail: email, name: uniqueName("Nunta preț"), months: 3 });
   await gotoHydrated(page, `/events/${event.id}`);
   const panel = page.getByRole("region", { name: "Păstrarea fișierelor" });
@@ -78,12 +87,12 @@ test("dacă prețul se schimbă între timp, dialogul arată prețul nou înaint
   await expect(dialog).toContainText("348,00");
 
   await setSurcharge(6, 5900);
-  await dialog.getByRole("button", { name: /Confirmă prelungirea/ }).click();
+  await stubCheckoutPage(page);
+  await dialog.getByRole("button", { name: "Plătește 49,00 RON" }).click();
   await expect(dialog.getByText("Prețul s-a schimbat")).toBeVisible();
   await expect(dialog).toContainText("358,00");
-  await dialog.getByRole("button", { name: /Confirmă prelungirea/ }).click();
-  await expect(panel.getByText(/^Păstrare /)).toContainText("6 luni, preț final 358,00");
-  await page.waitForLoadState("networkidle");
+  await dialog.getByRole("button", { name: "Plătește 59,00 RON" }).click();
+  await sessionIdFromCheckoutUrl(page);
 });
 
 test("un eveniment expirat apare ca „expirat”, fără galerie, iar linkul invitaților nu mai funcționează (FR-044)", async () => {

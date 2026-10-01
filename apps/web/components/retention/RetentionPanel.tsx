@@ -1,9 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { Button, Label, RadioButton, RadioField, RadioGroup } from "react-aria-components";
-import { extendRetention, getRetentionQuote } from "@/lib/actions/organizer";
+import { getRetentionQuote } from "@/lib/actions/organizer";
+import { startPaymentForm } from "@/lib/actions/payments";
+import type { FormState } from "@/lib/actions/self-service";
 import { formatDate, formatDateTime, formatMoney, t, tp } from "@/lib/i18n";
 import type { RetentionOptionQuote } from "@/lib/organizer/retention";
 import { ui } from "@/lib/ui";
@@ -13,7 +14,8 @@ import { ExtendRetentionDialog } from "./ExtendRetentionDialog";
 
 /**
  * „Păstrarea fișierelor” (FR-041): data ștergerii, opțiunea curentă, prețul final și prelungirea
- * spre o opțiune mai lungă (cele mai scurte sau egale sunt dezactivate — FR-042).
+ * spre o opțiune mai lungă (cele mai scurte sau egale sunt dezactivate — FR-042). Prelungirea se
+ * plătește online: dialogul arată diferența și duce la Stripe Checkout (003: FR-020–FR-022).
  */
 export function RetentionPanel({
   eventId,
@@ -24,21 +26,24 @@ export function RetentionPanel({
   current: { months: number; finalPriceMinor: number; purgeAt: string };
   initialOptions: RetentionOptionQuote[];
 }) {
-  const router = useRouter();
-  const [state, setState] = useState(current);
+  const state = current;
   const [options, setOptions] = useState(initialOptions);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [priceChanged, setPriceChanged] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
+  const [payment, payAction, pending] = useActionState<FormState, FormData>(startPaymentForm, { status: "idle" });
+  const priceChanged = payment.status === "error" && payment.error === "PRICE_CHANGED";
+  const error = payment.status === "error" && !priceChanged ? t(`errors.${payment.error}`) : null;
 
   const selected = options.find((o) => o.optionId === selectedId) ?? null;
 
-  const reloadQuote = async () => {
-    const quote = await getRetentionQuote(eventId);
-    if (quote.ok) setOptions(quote.data);
-  };
+  // Prețul din catalog s-a schimbat între pregătire și plată: arătăm prețul nou și cerem o nouă confirmare.
+  useEffect(() => {
+    if (!priceChanged) return;
+    void getRetentionQuote(eventId).then((quote) => {
+      if (quote.ok) setOptions(quote.data);
+    });
+  }, [priceChanged, eventId, payment]);
+
 
   return (
     <Sheet id="retention-title" title={t("retention.title")}>
@@ -78,42 +83,22 @@ export function RetentionPanel({
       </RadioGroup>
 
       <ExtendRetentionDialog
+        eventId={eventId}
         option={selected}
         currentPriceMinor={state.finalPriceMinor}
         isOpen={dialogOpen}
         pending={pending}
         priceChanged={priceChanged}
         error={error}
+        action={payAction}
         onCancel={() => {
           setDialogOpen(false);
-        }}
-        onConfirm={() => {
-          if (!selected) return;
-          setError(null);
-          startTransition(async () => {
-            const result = await extendRetention(eventId, selected.optionId, selected.finalPriceMinor);
-            if (result.ok) {
-              setState({ months: selected.months, finalPriceMinor: result.data.finalPriceMinor, purgeAt: result.data.purgeAt });
-              setDialogOpen(false);
-              setSelectedId(null);
-              await reloadQuote();
-              router.refresh();
-            } else if (result.error === "PRICE_CHANGED") {
-              // Prețul din catalog s-a schimbat: arătăm prețul nou și cerem o nouă confirmare.
-              await reloadQuote();
-              setPriceChanged(true);
-            } else {
-              setError(t(`errors.${result.error}`));
-            }
-          });
         }}
       />
       <SheetActions status={<p className={ui.hint}>{t("retention.notices", { date: formatDateTime(state.purgeAt) })}</p>}>
         <Button
           isDisabled={selected === null || !selected.selectable}
           onPress={() => {
-            setPriceChanged(false);
-            setError(null);
             setDialogOpen(true);
           }}
           className={ui.buttonSecondary}

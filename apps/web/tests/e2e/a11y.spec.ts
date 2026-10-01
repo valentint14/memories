@@ -138,9 +138,9 @@ test.describe("002: creare self-service, confirmare, documente legale", () => {
     await expect(page).toHaveURL(/\/events\/[0-9a-f-]{36}$/);
     await expectAccessible(page, "eveniment neactivat");
 
-    await page.getByRole("button", { name: "Solicită activarea" }).click();
-    await expect(page.getByRole("status").filter({ hasText: "Cerere trimisă" })).toBeVisible();
-    await expectAccessible(page, "cerere de activare trimisă");
+    await gotoHydrated(page, `${new URL(page.url()).pathname}?plata=anulata`);
+    await expect(page.getByRole("status").filter({ hasText: "Nu s-a încasat nimic" })).toBeVisible();
+    await expectAccessible(page, "plată anulată");
 
     await page.getByRole("button", { name: "Șterge evenimentul" }).click();
     await expect(page.getByRole("alertdialog")).toBeVisible();
@@ -153,7 +153,7 @@ test.describe("002: creare self-service, confirmare, documente legale", () => {
     await loginAsNewAdmin(page, await createAdmin());
     await gotoHydrated(page, "/admin/package");
     await expectAccessible(page, "/admin/package");
-    await gotoHydrated(page, "/admin/events?view=requested");
+    await gotoHydrated(page, "/admin/events?view=awaiting");
     await expectAccessible(page, "/admin/events filtrat");
     await gotoHydrated(page, `/admin/events/${eventId}`);
     await expectAccessible(page, "eveniment neactivat (admin)");

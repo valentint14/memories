@@ -48,5 +48,6 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  // Webhook-ul Stripe (003) nu are sesiune și nu servește HTML: fără Auth și fără CSP.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/stripe/webhook).*)"],
 };
