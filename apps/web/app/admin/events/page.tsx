@@ -7,7 +7,7 @@ import { StatusStamp } from "@/components/ui/StatusStamp";
 import { ChevronRightIcon, PlusIcon, SearchIcon } from "@/components/ui/icons";
 import { LEDGER_GROUPS, buildLedger, isActivated, parseView, type LedgerGroup, type LedgerView } from "@/lib/admin/ledger";
 import { listEvents, type AdminEventRow } from "@/lib/admin/queries";
-import { formatBytes, formatDate, formatDateShort, formatDateTime, formatDayMonthTime, formatMoney, t, tp } from "@/lib/i18n";
+import { formatBytes, formatDate, formatDateShort, formatMoney, t, tp } from "@/lib/i18n";
 import { ui } from "@/lib/ui";
 
 export const metadata: Metadata = { title: "Evenimente" };
@@ -32,9 +32,6 @@ function Facts({ event }: { event: AdminEventRow }) {
     if (event.purgeAt !== null) facts.push({ text: t("admin.ledger.purgeAt", { date: formatDate(event.purgeAt) }) });
   } else {
     facts.push({ text: t("admin.ledger.created", { date: formatDate(event.createdAt) }) });
-    if (event.lastActivationRequestAt !== null) {
-      facts.push({ text: t("admin.ledger.requested", { date: formatDateTime(event.lastActivationRequestAt) }), accent: true });
-    }
     if (event.pendingPurgeAt !== null) {
       facts.push({ text: t("admin.ledger.purgeAt", { date: t("admin.pendingPurge", { date: formatDate(event.pendingPurgeAt) }) }) });
     }
@@ -55,9 +52,6 @@ function Facts({ event }: { event: AdminEventRow }) {
 function KeyFact({ event }: { event: AdminEventRow }) {
   const cls = `${ui.data} text-xs`;
   if (!isActivated(event)) {
-    if (event.lastActivationRequestAt !== null) {
-      return <span className={`${cls} text-accent`}>{t("admin.ledger.compact.requested", { date: formatDayMonthTime(event.lastActivationRequestAt) })}</span>;
-    }
     return event.pendingPurgeAt === null ? null : (
       <span className={`${cls} text-ink-muted`}>{t("admin.ledger.compact.pendingPurge", { date: formatDateShort(event.pendingPurgeAt) })}</span>
     );
@@ -172,7 +166,7 @@ export default async function AdminEventsPage({ searchParams }: { searchParams: 
         label={t("admin.detail.summary")}
         stats={[
           { label: t("organizer.list.stat.total"), value: String(ledger.total) },
-          { label: t("admin.ledger.group.requested"), value: String(ledger.counts.requested), accent: ledger.counts.requested > 0 },
+          { label: t("admin.ledger.group.awaiting"), value: String(ledger.counts.awaiting) },
           { label: t("admin.ledger.group.active"), value: String(ledger.counts.active) },
           { label: t("admin.ledger.group.ended"), value: String(ledger.counts.ended) },
         ]}
@@ -231,7 +225,7 @@ export default async function AdminEventsPage({ searchParams }: { searchParams: 
               {/* Fiecare grupă e o foaie: banda cu numele grupei, rândurile evenimentelor dedesubt. */}
               {ledger.groups.map((group) => (
                 <section key={group.id} aria-labelledby={`group-${group.id}`} className={ui.sheet}>
-                  <h2 id={`group-${group.id}`} className={group.id === "requested" ? ui.sheetBarAccent : ui.sheetBar}>
+                  <h2 id={`group-${group.id}`} className={ui.sheetBar}>
                     <span>{groupLabel(group.id)}</span>
                     <span className={ui.data}>{group.rows.length}</span>
                   </h2>

@@ -22,8 +22,6 @@ export interface AdminEventRow {
   anonymizedAt: string | null;
   fileCount: number;
   totalBytes: number;
-  /** Ultima cerere de activare (002/FR-018a, FR-027). */
-  lastActivationRequestAt: string | null;
 }
 
 /**
@@ -32,21 +30,17 @@ export interface AdminEventRow {
  */
 export async function listEvents(): Promise<AdminEventRow[]> {
   const supabase = await requireAdmin();
-  const [events, stats, requests] = await Promise.all([
+  const [events, stats] = await Promise.all([
     supabase
       .from("events")
       .select("id, name, event_date, organizer_email, status, origin, final_price_minor, retention_months, purge_at, pending_purge_at, created_at, anonymized_at")
       .not("status", "in", "(deleting,unconfirmed)")
       .order("created_at", { ascending: false }),
     supabase.rpc("admin_event_stats", {}),
-    supabase.from("activation_requests").select("event_id, requested_at").order("requested_at", { ascending: false }),
   ]);
   throwIfDbError(events.error);
   throwIfDbError(stats.error);
-  throwIfDbError(requests.error);
   const byId = new Map((stats.data ?? []).map((s) => [s.event_id, s]));
-  const lastRequest = new Map<string, string>();
-  for (const r of requests.data ?? []) if (!lastRequest.has(r.event_id)) lastRequest.set(r.event_id, r.requested_at);
   return (events.data ?? []).map((e) => ({
     id: e.id,
     name: e.name,
@@ -62,7 +56,6 @@ export async function listEvents(): Promise<AdminEventRow[]> {
     anonymizedAt: e.anonymized_at,
     fileCount: byId.get(e.id)?.file_count ?? 0,
     totalBytes: byId.get(e.id)?.total_bytes ?? 0,
-    lastActivationRequestAt: lastRequest.get(e.id) ?? null,
   }));
 }
 
@@ -90,10 +83,9 @@ export async function getEvent(eventId: string): Promise<AdminEventDetail | null
     .maybeSingle();
   throwIfDbError(error);
   if (!e) return null;
-  const [token, stats, requests] = await Promise.all([
+  const [token, stats] = await Promise.all([
     supabase.rpc("admin_event_token", { p_event_id: eventId }),
     supabase.rpc("admin_event_stats", { p_event_id: eventId }),
-    supabase.from("activation_requests").select("requested_at").eq("event_id", eventId).order("requested_at", { ascending: false }).limit(1),
   ]);
   throwIfDbError(token.error);
   const stat = stats.data?.[0];
@@ -112,7 +104,6 @@ export async function getEvent(eventId: string): Promise<AdminEventDetail | null
     anonymizedAt: e.anonymized_at,
     fileCount: stat?.file_count ?? 0,
     totalBytes: stat?.total_bytes ?? 0,
-    lastActivationRequestAt: requests.data?.[0]?.requested_at ?? null,
     uploadStartsAt: e.upload_starts_at,
     uploadEndsAt: e.upload_ends_at,
     maxFilesPerGuest: e.max_files_per_guest,
@@ -170,7 +161,7 @@ export async function listRetentionCatalog(): Promise<CatalogOptionRow[]> {
 
 export interface RetentionChangeRow {
   at: string;
-  actorKind: "admin" | "organizer" | "system";
+  actorKind: "admin" | "organizer" | "system" | "payment";
   fromMonths: number | null;
   toMonths: number;
   fromFinalPriceMinor: number | null;
@@ -229,3 +220,60 @@ export async function listStatusChanges(eventId: string): Promise<StatusChangeRo
     note: c.note,
   }));
 }
+
+export interface AdminPaymentRow {
+  id: string;
+  purpose: "activation" | "retention_extension";
+  status: "open" | "paid" | "failed" | "expired" | "refund_due";
+  amountMinor: number;
+  retentionMonths: number;
+  createdAt: string;
+  paidAt: string | null;
+  disputedAt: string | null;
+  refundReason: string | null;
+  reference: string | null;
+  billingName: string | null;
+  billingAddress: string | null;
+  billingCompany: string | null;
+  billingTaxId: string | null;
+}
+
+/** Plățile unui eveniment, cu datele de facturare (003: FR-013); RLS: doar administratorii aal2. */
+export async function listPayments(eventId: string): Promise<AdminPaymentRow[]> {
+  const supabase = await requireAdmin();
+  const { data, error } = await supabase
+    .from("payments")
+    .select(
+      "id, purpose, status, amount_minor, retention_months, created_at, paid_at, disputed_at, refund_reason, stripe_payment_intent_id, stripe_session_id, billing_name, billing_address, billing_company, billing_tax_id",
+    )
+    .eq("event_id", eventId)
+    .order("created_at", { ascending: false });
+  throwIfDbError(error);
+  return (data ?? []).map((p) => ({
+    id: p.id,
+    purpose: p.purpose,
+    status: p.status,
+    amountMinor: p.amount_minor,
+    retentionMonths: p.retention_months,
+    createdAt: p.created_at,
+    paidAt: p.paid_at,
+    disputedAt: p.disputed_at,
+    refundReason: p.refund_reason,
+    reference: p.stripe_payment_intent_id ?? p.stripe_session_id,
+    billingName: p.billing_name,
+    billingAddress: formatAddress(p.billing_address),
+    billingCompany: p.billing_company,
+    billingTaxId: p.billing_tax_id,
+  }));
+}
+
+/** Adresa de facturare pe un rând: stradă, oraș, cod, județ, țară (fără câmpurile goale). */
+function formatAddress(value: unknown): string | null {
+  if (value === null || typeof value !== "object") return null;
+  const a = value as Record<string, unknown>;
+  const parts = ["line1", "line2", "postal_code", "city", "state", "country"]
+    .map((k) => a[k])
+    .filter((v): v is string => typeof v === "string" && v.trim() !== "");
+  return parts.length === 0 ? null : parts.join(", ");
+}
+

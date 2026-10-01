@@ -36,6 +36,13 @@ const webServer: PlaywrightTestConfig["webServer"] = process.env.E2E_BASE_URL
   ? undefined
   : [
       {
+        // Stripe fals cu stare (003, research R9): sesiuni Checkout cu id-uri unice, „plătibile” din teste.
+        command: "node tests/e2e/support/stripe-fake.mjs",
+        url: "http://127.0.0.1:12111/health",
+        reuseExistingServer: !process.env.CI,
+        timeout: 30_000,
+      },
+      {
         // Build de producție: testul de LCP (research.md R16) măsoară bundle-ul real.
         command: `npx next build && npx next start --port ${port}`,
         url: `${baseURL}/login`,

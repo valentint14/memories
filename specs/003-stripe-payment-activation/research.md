@@ -104,10 +104,15 @@ Fiecare decizie răspunde unei necunoscute din [plan.md](./plan.md) › Technica
     webhook se testează cu evenimente semnate cu un secret de test
     (`stripe.webhooks.generateTestHeaderString`) și cu clientul Stripe îndreptat spre un server
     local.
-  - **E2E (CI)**: `stripe/stripe-mock` (imaginea oficială Stripe) rulează ca serviciu; aplicația
-    îl folosește prin `STRIPE_API_BASE` (gazdă/port configurabile în SDK). Testul verifică
-    redirectul spre Checkout, apoi trimite webhook-ul semnat `checkout.session.completed` și
-    verifică evenimentul activ. Pagina Checkout găzduită nu se automatizează.
+  - **E2E (CI)**: un server Stripe fals, cu stare (`apps/web/tests/e2e/support/stripe-fake.mjs`,
+    pornit de Playwright), pe care aplicația îl folosește prin `STRIPE_API_BASE` (gazdă/port
+    configurabile în SDK). Testul verifică redirectul spre Checkout, apoi trimite webhook-ul semnat
+    `checkout.session.completed` și verifică evenimentul activ. Pagina Checkout găzduită nu se
+    automatizează.
+  - *Actualizare la implementare*: planul inițial era `stripe/stripe-mock`. Acesta e fără stare și
+    întoarce mereu același id de sesiune, care se ciocnește de unicitatea `payments.stripe_session_id`
+    și nu poate „plăti” o sesiune pentru verificarea la întoarcere. Serverul fals implementează doar
+    cele trei apeluri folosite de aplicație și două rute de control pentru teste.
   - **Manual (local și înainte de producție)**: cont Stripe în modul test, Stripe CLI
     (`stripe listen --forward-to`), carduri de test (succes, refuz, contestație).
 - **Rationale**: CI nu poate depinde de rețeaua și conturile Stripe; stripe-mock e întreținut de

@@ -1,13 +1,12 @@
 import { expect, test } from "@playwright/test";
 import { loginWithMagicLink } from "./support/auth";
-import { createAdmin, createOrganizer, serviceClient } from "./support/db";
-import { waitForEmail } from "./support/mailpit";
+import { createOrganizer, serviceClient } from "./support/db";
 import { gotoHydrated, uniqueName } from "./support/page";
 import { futureDate } from "./support/self-service";
 
-// US3 — evenimentul în așteptarea activării (002: FR-017–FR-019, FR-018a).
-test("panoul arată prețul, ce include, data ștergerii și trimite cererea de activare", async ({ page }) => {
-  const adminEmail = await createAdmin();
+// US3 (002) — evenimentul în așteptarea activării: prețul, ce include, data ștergerii (FR-017–FR-019);
+// cererea de activare e înlocuită de plata online (003: FR-001, FR-015).
+test("panoul arată prețul, ce include, data ștergerii și plata, fără cererea de activare", async ({ page }) => {
   const email = await createOrganizer();
   await loginWithMagicLink(page, email);
 
@@ -24,21 +23,11 @@ test("panoul arată prețul, ce include, data ștergerii și trimite cererea de 
   await expect(panel).toContainText("Preț: 299,00");
   await expect(panel).toContainText("3 luni");
   await expect(panel).toContainText("se șterge automat pe");
+  await expect(panel.getByRole("radio", { name: /^3 luni \(inclusă\)/ })).toBeChecked();
+  await expect(panel.getByRole("button", { name: "Plătește și activează" })).toBeVisible();
+  await expect(panel.getByRole("button", { name: "Solicită activarea" })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Descarcă codul QR (PNG)" })).toBeVisible();
 
-  const since = new Date();
-  await panel.getByRole("button", { name: "Solicită activarea" }).click();
-  await expect(panel.getByRole("status")).toContainText("Cerere trimisă pe");
-  await expect(panel.getByRole("button", { name: "Solicită activarea" })).toHaveCount(0);
-  await expect(panel).toContainText("Poți trimite o nouă cerere după");
-
-  // Administratorii din platform_admins primesc emailul (ADMIN_NOTIFY_EMAILS e gol local).
-  const mail = await waitForEmail(adminEmail, { since, subjectIncludes: "Cerere de activare" });
-  expect(mail.Text).toContain(`/admin/events/${eventId}`);
-
-  // După reîncărcare, cererea rămâne afișată.
-  await page.reload();
-  await expect(panel.getByRole("status")).toContainText("Cerere trimisă pe");
   const { data } = await serviceClient().from("activation_requests").select("id").eq("event_id", eventId);
-  expect(data).toHaveLength(1);
+  expect(data).toEqual([]);
 });

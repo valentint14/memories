@@ -74,12 +74,14 @@ describe("suspend_event / reactivate_event", () => {
     const deleted = await owner.rpc("delete_media", { p_event_id: event.id, p_media_ids: [mediaId] });
     expect(deleted.error).toBeNull();
 
-    const extend = await owner.rpc("extend_retention", {
+    // 003: prelungirea trece prin plată; plata nu poate fi pregătită în afara stării active (FR-020).
+    const extend = await owner.rpc("prepare_payment", {
       p_event_id: event.id,
+      p_purpose: "retention_extension",
       p_option_id: await retentionOptionId(12),
-      p_expected_final_price_minor: 0,
+      p_expected_amount_minor: 1,
     });
-    expect(extend.error?.message).toBe("EVENT_NOT_ACTIVE");
+    expect(extend.error?.message).toBe("PAYMENT_NOT_ALLOWED");
   });
 
   it("refuză prelungirea retenției și pentru un eveniment neactivat (FR-020)", async () => {
@@ -91,12 +93,14 @@ describe("suspend_event / reactivate_event", () => {
       p_terms_version: "2026-10-01",
       p_privacy_version: "2026-10-01",
     });
-    const extend = await owner.rpc("extend_retention", {
+    // 003: prelungirea trece prin plată; plata nu poate fi pregătită în afara stării active (FR-020).
+    const extend = await owner.rpc("prepare_payment", {
       p_event_id: eventId ?? "",
+      p_purpose: "retention_extension",
       p_option_id: await retentionOptionId(12),
-      p_expected_final_price_minor: 0,
+      p_expected_amount_minor: 1,
     });
-    expect(extend.error?.message).toBe("EVENT_NOT_ACTIVE");
+    expect(extend.error?.message).toBe("PAYMENT_NOT_ALLOWED");
   });
 });
 

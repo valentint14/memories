@@ -1,10 +1,12 @@
 import { adminActivationNotice } from "./admin-activation-notice.ts";
+import { adminPaymentNotice } from "./admin-payment-notice.ts";
 import { authEmail } from "./auth-email.ts";
 import { authRotate } from "./auth-rotate.ts";
 import { buildArchive } from "./build-archive.ts";
 import { deleteArchive } from "./delete-archive.ts";
 import { deleteOrganizerUser } from "./delete-organizer-user.ts";
 import { expireEvent } from "./expire-event.ts";
+import { paymentConfirmation } from "./payment-confirmation.ts";
 import { processMedia } from "./process.ts";
 import { purgeEvent } from "./purge-event.ts";
 import { purgeMedia } from "./purge-media.ts";
@@ -24,4 +26,6 @@ export const registry: Registry = {
   auth_email: authEmail,
   auth_rotate: authRotate,
   admin_activation_notice: adminActivationNotice,
+  payment_confirmation: paymentConfirmation,
+  admin_payment_notice: adminPaymentNotice,
 };

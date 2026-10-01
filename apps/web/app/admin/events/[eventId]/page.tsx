@@ -3,14 +3,15 @@ import { notFound } from "next/navigation";
 import { DeleteEventDialog } from "@/components/admin/DeleteEventDialog";
 import { EventForm } from "@/components/admin/EventForm";
 import { EventStateActions } from "@/components/admin/EventStateActions";
+import { PaymentsSheet } from "@/components/admin/PaymentsSheet";
 import { PendingEventForm } from "@/components/admin/PendingEventForm";
 import { StatusHistory } from "@/components/admin/StatusHistory";
 import { Sheet } from "@/components/ui/Sheet";
 import { SheetActions } from "@/components/ui/SheetActions";
 import { StatBand } from "@/components/ui/StatBand";
 import { StatusStamp } from "@/components/ui/StatusStamp";
-import { getEvent, listActiveRetentionOptions, listRetentionChanges, listStatusChanges } from "@/lib/admin/queries";
-import { formatBytes, formatDateShort, formatDateTime, formatDayMonthTime, formatMoney, t, tp, type MessageKey } from "@/lib/i18n";
+import { getEvent, listActiveRetentionOptions, listPayments, listRetentionChanges, listStatusChanges } from "@/lib/admin/queries";
+import { formatBytes, formatDateShort, formatDateTime, formatMoney, t, tp, type MessageKey } from "@/lib/i18n";
 import { ui } from "@/lib/ui";
 
 export const metadata: Metadata = { title: "Eveniment" };
@@ -20,11 +21,13 @@ export default async function AdminEventPage({ params }: { params: Promise<{ eve
   if (!/^[0-9a-f-]{36}$/i.test(eventId)) notFound();
   const event = await getEvent(eventId);
   if (!event) notFound();
-  const [options, history, statusChanges] = await Promise.all([
+  const [options, history, statusChanges, payments] = await Promise.all([
     listActiveRetentionOptions(),
     listRetentionChanges(eventId),
     listStatusChanges(eventId),
+    listPayments(eventId),
   ]);
+  const lastPaid = payments.find((p) => p.status === "paid" && p.paidAt !== null)?.paidAt ?? null;
 
   // Opțiunea curentă rămâne în listă chiar dacă între timp a fost dezactivată.
   const formOptions =
@@ -81,9 +84,9 @@ export default async function AdminEventPage({ params }: { params: Promise<{ eve
         { label: "admin.detail.stat.eventDate", value: formatDateShort(event.eventDate) },
         { label: "admin.detail.stat.created", value: formatDateShort(event.createdAt) },
         {
-          label: "admin.detail.stat.requested",
-          value: event.lastActivationRequestAt === null ? none : formatDayMonthTime(event.lastActivationRequestAt),
-          accent: event.lastActivationRequestAt !== null,
+          label: "admin.detail.stat.payment",
+          value: payments.some((p) => p.status === "open") ? t("organizer.stat.paymentOpen") : t("organizer.stat.unpaid"),
+          accent: payments.some((p) => p.status === "open"),
         },
         { label: "admin.detail.stat.pendingPurge", value: event.pendingPurgeAt === null ? none : formatDateShort(event.pendingPurgeAt) },
       ];
@@ -108,9 +111,9 @@ export default async function AdminEventPage({ params }: { params: Promise<{ eve
         </div>
       </header>
 
-      {event.lastActivationRequestAt !== null && event.status === "awaiting_activation" && (
-        <p role="status" className={ui.caution}>
-          {t("admin.detail.activationRequested", { date: formatDateTime(event.lastActivationRequestAt) })}
+      {lastPaid !== null && (
+        <p role="status" className={ui.notice}>
+          {t("admin.payments.lastPaid", { date: formatDateTime(lastPaid) })}
         </p>
       )}
 
@@ -155,6 +158,8 @@ export default async function AdminEventPage({ params }: { params: Promise<{ eve
             <EventForm fill options={formOptions} initial={editInitial} />
           </Sheet>
         )}
+
+        <PaymentsSheet payments={payments} />
 
         <Sheet id="status-history-title" title={t("admin.statusHistory.title")}>
           <StatusHistory rows={statusChanges} />

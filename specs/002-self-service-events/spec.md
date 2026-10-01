@@ -355,12 +355,15 @@ linkul invitaților devine invalid, iar fișierele nu mai sunt accesibile.
   TREBUIE să poată încărca fișiere; refuzul se aplică pe server.
 - **FR-018**: Pagina unui eveniment în așteptarea activării TREBUIE să afișeze starea, prețul
   curent al pachetului complet, ce include (durata de păstrare, limita de fișiere per invitat)
-  și un buton „Solicită activarea”.
+  și un buton „Solicită activarea”. *Înlocuit de [003/FR-001](../003-stripe-payment-activation/spec.md):
+  butonul devine „Plătește și activează”.*
 - **FR-018a**: La apăsarea butonului „Solicită activarea”, sistemul TREBUIE să înregistreze
   cererea (momentul), să trimită administratorilor un email în română cu numele și data
   evenimentului, emailul organizatorului și un link către evenimentul din administrare, și să
   afișeze organizatorului că cererea a fost trimisă, cu data ei. O nouă cerere pentru același
   eveniment este posibilă doar după 24 de ore. Cererea nu schimbă starea evenimentului.
+  *Scos din flux de [003/FR-015](../003-stripe-payment-activation/spec.md): activarea se face prin
+  plată online; cererile existente rămân pentru istoric.*
 - **FR-019**: Un eveniment în așteptarea activării TREBUIE șters automat și definitiv la 30 de
   zile după data evenimentului (sfârșitul zilei, ora României), dacă nu a fost activat până
   atunci. Organizatorul TREBUIE să primească un singur email de avertizare, cu 7 zile înainte,
@@ -394,7 +397,8 @@ linkul invitaților devine invalid, iar fișierele nu mai sunt accesibile.
   într-o funcționalitate ulterioară, automat de un sistem de plăți, prin aceeași operație și cu
   aceleași efecte: starea devine activ, se aplică limitele și prețul pachetului complet,
   perioada de upload începe, iar data ștergerii se calculează după durata de păstrare a
-  pachetului (001/FR-040).
+  pachetului (001/FR-040). *Sistemul de plăți e livrat de
+  [003](../003-stripe-payment-activation/spec.md) (Stripe), cu aceeași operație.*
 - **FR-026**: Activarea TREBUIE să fie idempotentă: o a doua activare a aceluiași eveniment
   (de ex. o notificare de plată repetată) NU TREBUIE să schimbe din nou prețul sau data ștergerii
   și TREBUIE înregistrată ca atare.
@@ -540,6 +544,8 @@ linkul invitaților devine invalid, iar fișierele nu mai sunt accesibile.
   pachetului complet (vezi Clarifications).
 - Plata online nu este în scop; după cererea de activare (FR-018a), administratorul ia
   legătura cu organizatorul, încasează în afara aplicației (ca în 001) și activează evenimentul.
+  *Depășit de [003](../003-stripe-payment-activation/spec.md): plata online prin Stripe activează
+  evenimentul; activarea manuală rămâne pentru plățile din afara aplicației.*
   Emailul către administratori merge la adresele de administrator preconfigurate (001/FR-006a).
 - Valorile inițiale ale pachetului complet (modificabile de administrator) sunt cele din 001:
   preț de bază configurat de administrator, plafoanele de dimensiune per fișier (001/FR-001a),

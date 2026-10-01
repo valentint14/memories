@@ -98,6 +98,26 @@ apar în *Packages* ca private. Imaginile nu conțin secrete, așa că le poți 
 
 ---
 
+## 4b. Plățile: Stripe (003)
+
+1. Cont Stripe activat pentru plăți reale (datele firmei, IBAN-ul). În *Settings › Public details*,
+   numele platformei, afișat pe pagina de plată.
+2. *Settings › Customer emails*: activează **Successful payments** (chitanțele trimise
+   organizatorilor). Factura fiscală o emiți tu, în afara aplicației, pe baza foii **Plăți** din
+   administrare.
+3. *Developers › Webhooks › Add endpoint*: `https://<domeniu>/api/stripe/webhook`, doar
+   evenimentele `checkout.session.completed`, `checkout.session.async_payment_succeeded`,
+   `checkout.session.async_payment_failed`, `checkout.session.expired`, `charge.dispute.created`.
+   Secretul de semnare (`whsec_…`) intră în `web.env` ca `STRIPE_WEBHOOK_SECRET`.
+4. *Developers › API keys*: cheia secretă **live** (`sk_live_…`) în `web.env` ca `STRIPE_SECRET_KEY`.
+5. Cloudflare (*Security*): nicio provocare (Bot Fight Mode, regulă WAF) pe `POST /api/stripe/webhook`;
+   Stripe nu poate rezolva o provocare JavaScript.
+6. Politica de confidențialitate trebuie să menționeze Stripe ca procesator de plăți (versiune
+   nouă a documentului, vezi specificația 002, FR-041).
+7. Probă: o plată reală mică pe un eveniment de test, apoi rambursată din Stripe.
+
+---
+
 ## 5. Emailurile: Brevo (planul gratuit)
 
 1. Cont pe <https://www.brevo.com>, *Senders, Domains & Dedicated IPs › Domains*: adaugă

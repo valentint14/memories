@@ -8,6 +8,7 @@ import {
   sql,
   type SupabaseClient,
 } from "../support/clients.ts";
+import { insertPayment, optionId } from "../support/payments.ts";
 
 // Activarea pachetului complet (002: FR-016, FR-025, FR-026, FR-028).
 afterAll(closePool);
@@ -121,12 +122,14 @@ describe("activate_event (FR-025)", () => {
 
   it("e idempotentă: a doua activare scrie doar istoricul; aceeași referință de plată nu scrie nimic", async () => {
     const eventId = await awaitingEvent(inDays(15));
+    const paymentId = await insertPayment({ eventId });
     const service = serviceClient();
-    const first = await service.rpc("activate_event", { p_event_id: eventId, p_source: "payment", p_reason: "plată online", p_external_ref: "pay_123" });
+    const args = { p_event_id: eventId, p_source: "payment" as const, p_reason: "plată online", p_external_ref: "pay_123", p_payment_id: paymentId };
+    const first = await service.rpc("activate_event", args);
     expect(first.data).toEqual([{ already_active: false }]);
     const before = await eventRow(eventId);
 
-    const repeated = await service.rpc("activate_event", { p_event_id: eventId, p_source: "payment", p_reason: "plată online", p_external_ref: "pay_123" });
+    const repeated = await service.rpc("activate_event", args);
     expect(repeated.data).toEqual([{ already_active: true }]);
     const byAdmin = await admin.rpc("activate_event", { p_event_id: eventId, p_source: "admin", p_reason: "reconfirmare" });
     expect(byAdmin.data).toEqual([{ already_active: true }]);
@@ -157,6 +160,12 @@ describe("activate_event (FR-025)", () => {
     expect((await admin.rpc("activate_event", { p_event_id: eventId, p_source: "payment", p_reason: "x" })).error?.message).toBe(
       "FORBIDDEN",
     );
+    // 003: sursa „payment” cere plata; sursa „admin” nu o poate primi.
+    const paymentId = await insertPayment({ eventId });
+    expect((await serviceClient().rpc("activate_event", { p_event_id: eventId, p_source: "payment" })).error?.message).toBe("FORBIDDEN");
+    expect(
+      (await admin.rpc("activate_event", { p_event_id: eventId, p_source: "admin", p_payment_id: paymentId })).error?.message,
+    ).toBe("FORBIDDEN");
     const owner = await organizerClient(randomEmail("activate-self"));
     expect((await owner.rpc("activate_event", { p_event_id: eventId, p_source: "admin", p_reason: "x" })).error?.message).toBe("FORBIDDEN");
   });
@@ -180,6 +189,62 @@ describe("activate_event (FR-025)", () => {
       expect((await eventRow(eventId))?.base_price_minor).toBe(before?.base_price_minor);
     } finally {
       await sql("update public.packages set price_minor = $1 where code = 'complete'", [pkg?.price_minor]);
+    }
+  });
+});
+
+describe("activate_event cu plată (003: FR-002, FR-005, research R6)", () => {
+  it("aplică prețul și opțiunea din plată, chiar dacă pachetul și catalogul s-au schimbat între timp", async () => {
+    const eventId = await awaitingEvent(inDays(14));
+    const option12 = await optionId(12);
+    const paymentId = await insertPayment({ eventId, months: 12, basePriceMinor: 29_900, surchargeMinor: 9_900 });
+    const [pkg] = await sql<{ price_minor: string }>("select price_minor from public.packages where code = 'complete'");
+    const [opt] = await sql<{ surcharge_minor: string }>("select surcharge_minor from public.retention_options where id = $1", [option12]);
+    await sql("update public.packages set price_minor = 50000 where code = 'complete'");
+    await sql("update public.retention_options set surcharge_minor = 20000 where id = $1", [option12]);
+    try {
+      const { error } = await serviceClient().rpc("activate_event", {
+        p_event_id: eventId,
+        p_source: "payment",
+        p_external_ref: `cs_test_${paymentId}`,
+        p_payment_id: paymentId,
+      });
+      expect(error).toBeNull();
+      const [event] = await sql<{ base_price_minor: string; retention_option_id: string; retention_months: number; retention_surcharge_minor: string; final_price_minor: string }>(
+        "select base_price_minor, retention_option_id, retention_months, retention_surcharge_minor, final_price_minor from public.events where id = $1",
+        [eventId],
+      );
+      expect(event).toEqual({
+        base_price_minor: "29900",
+        retention_option_id: option12,
+        retention_months: 12,
+        retention_surcharge_minor: "9900",
+        final_price_minor: "39800",
+      });
+      const [change] = await sql<{ source: string; external_ref: string }>(
+        "select source::text, external_ref from public.event_status_changes where event_id = $1 and to_status = 'active'",
+        [eventId],
+      );
+      expect(change).toEqual({ source: "payment", external_ref: `cs_test_${paymentId}` });
+      const [log] = await sql<{ actor_kind: string; to_months: number }>(
+        "select actor_kind::text, to_months from public.event_retention_changes where event_id = $1 order by id desc limit 1",
+        [eventId],
+      );
+      expect(log).toEqual({ actor_kind: "payment", to_months: 12 });
+    } finally {
+      await sql("update public.packages set price_minor = $1 where code = 'complete'", [pkg?.price_minor]);
+      await sql("update public.retention_options set surcharge_minor = $1 where id = $2", [opt?.surcharge_minor, option12]);
+    }
+  });
+
+  it("refuză o plată a altui eveniment sau pentru prelungire", async () => {
+    const eventId = await awaitingEvent(inDays(13));
+    const otherEvent = await awaitingEvent(inDays(13));
+    const foreign = await insertPayment({ eventId: otherEvent });
+    const extension = await insertPayment({ eventId, purpose: "retention_extension", months: 12, surchargeMinor: 9_900 });
+    for (const paymentId of [foreign, extension]) {
+      const { error } = await serviceClient().rpc("activate_event", { p_event_id: eventId, p_source: "payment", p_payment_id: paymentId });
+      expect(error?.message).toBe("FORBIDDEN");
     }
   });
 });
