@@ -23,6 +23,8 @@ describe("checkoutSessionParams", () => {
 
   it("plată unică în lei, cu suma din baza de date și numele evenimentului", () => {
     expect(params.mode).toBe("payment");
+    // Platforma e vânzătorul (FR-012), indiferent de setarea Managed Payments a contului.
+    expect(params.managed_payments).toEqual({ enabled: false });
     expect(params.line_items).toEqual([
       {
         quantity: 1,

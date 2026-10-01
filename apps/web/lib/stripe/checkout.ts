@@ -24,6 +24,9 @@ export function checkoutSessionParams(input: CheckoutInput): Stripe.Checkout.Ses
   const eventUrl = new URL(`/events/${input.eventId}`, input.appUrl).toString();
   return {
     mode: "payment",
+    // Platforma e vânzătorul și emite facturile (FR-012). Managed Payments (Stripe ca vânzător, activ
+    // implicit pe unele conturi) ar cere coduri fiscale de produs și ar muta facturarea la Stripe.
+    managed_payments: { enabled: false },
     line_items: [
       {
         quantity: 1,

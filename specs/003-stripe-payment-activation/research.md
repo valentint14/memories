@@ -12,6 +12,10 @@ Fiecare decizie răspunde unei necunoscute din [plan.md](./plan.md) › Technica
   Apple Pay / Google Pay și traducere în română fără cod în plus. `price_data` evită
   sincronizarea catalogului de retenție cu produse Stripe (constituția VII): suma vine mereu din
   baza de date.
+- *Actualizare la implementare*: sesiunea trimite `managed_payments: { enabled: false }`. Pe
+  conturile noi, Stripe activează implicit Managed Payments (Stripe ca vânzător, cu TVA și
+  documente fiscale proprii, coduri fiscale de produs obligatorii), ceea ce ar contrazice FR-012
+  (platforma emite facturile). Decizia proprietarului (2026-10-02): platforma rămâne vânzătorul.
 - **Alternatives considered**: Payment Element încorporat (formular în aplicație: mai mult cod,
   CSP pentru `js.stripe.com`, SAQ A-EP); Payment Links (nu pot purta suma calculată per eveniment
   și nici legătura sigură cu evenimentul); produse/prețuri Stripe sincronizate (două surse de

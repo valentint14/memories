@@ -36,6 +36,7 @@ Parametrii trimiși la `checkout.sessions.create` (cheie de idempotență = `pay
 | Câmp | Valoare |
 | --- | --- |
 | `mode` | `"payment"` |
+| `managed_payments.enabled` | `false` (platforma e vânzătorul, FR-012; research R1) |
 | `line_items[0].price_data` | `currency: "ron"`, `unit_amount: amount_minor`, `product_data.name`: „Memories — pachet complet, {N} luni” sau „Memories — prelungirea păstrării la {N} luni”, `product_data.description`: numele evenimentului |
 | `line_items[0].quantity` | 1 |
 | `customer_email` | emailul organizatorului |

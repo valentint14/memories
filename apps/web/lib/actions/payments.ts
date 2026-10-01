@@ -83,7 +83,12 @@ export async function startPaymentForm(_prev: FormState, formData: FormData): Pr
       // Procesatorul indisponibil: plata se închide, evenimentul rămâne neschimbat.
       await admin.rpc("expire_payment_by_id", { p_payment_id: prepared.payment_id });
       if (error instanceof ActionError) throw error;
-      console.error(JSON.stringify({ level: "error", scope: "stripe_checkout", msg: "checkout_create_failed", payment_id: prepared.payment_id }));
+      // Motivul (tipul, codul și mesajul erorii Stripe), fără chei sau date personale.
+      const reason =
+        error instanceof Error
+          ? { error_type: "type" in error ? String(error.type) : error.name, error_code: "code" in error ? String(error.code) : undefined, error: error.message.slice(0, 300) }
+          : {};
+      console.error(JSON.stringify({ level: "error", scope: "stripe_checkout", msg: "checkout_create_failed", payment_id: prepared.payment_id, ...reason }));
       throw new ActionError("PAYMENT_UNAVAILABLE");
     }
   });
