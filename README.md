@@ -74,9 +74,7 @@ email și a Turnstile în producție). Testul widgetului Turnstile real rulează
 | --- | --- | --- | --- |
 | Local | `next dev` / `next start` | Supabase CLI (Docker) | container local |
 | Preview | `docker compose` (local sau pe server) | al doilea proiect Supabase Free (UE) | același compose |
-| Producție | server propriu (Oracle Always Free sau Raspberry Pi) prin Cloudflare Tunnel ([livrare](docs/livrare-server-propriu.md)) | Supabase `eu-central-1`, plan Free la lansare, Pro la primii clienți | același server, Docker Compose |
-
-Varianta de cost redus și alternativele analizate (Vercel, Scaleway etc.): [docs/arhitectura-cost-redus.md](docs/arhitectura-cost-redus.md).
+| Producție | Oracle Cloud Always Free prin Cloudflare Tunnel ([livrare](docs/livrare-server-propriu.md)) | Supabase `eu-central-1`, plan Free la lansare, Pro la primii clienți | aceeași instanță, Docker Compose |
 
 ## Date personale (GDPR)
 

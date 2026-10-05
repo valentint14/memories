@@ -93,7 +93,7 @@ plată, pe plata anulată și pe registrul adminului.
   fiscal), webhook-urile livrate de Stripe și chitanțele. De parcurs scenariile din
   [quickstart.md](./quickstart.md) cu un cont Stripe în modul test și `stripe listen`.
 - **Producție**: migrațiile 003 de aplicat pe Supabase; cheile și endpointul de webhook din
-  [docs/livrare-server-propriu.md](../../docs/livrare-server-propriu.md) › 4b; regula Cloudflare
+  [docs/livrare-server-propriu.md](../../docs/livrare-server-propriu.md) › 8. Plățile; regula Cloudflare
   pentru `POST /api/stripe/webhook`.
 - **Imaginea worker-ului** trebuie reconstruită (joburile noi `payment_confirmation` și
   `admin_payment_notice`); local, containerul pornit mai vechi nu le cunoaște.

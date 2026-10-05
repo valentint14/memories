@@ -1,6 +1,6 @@
-# Aplicația pe un server propriu: Oracle Always Free, Raspberry Pi sau orice VM cu Docker
-# (docs/livrare-server-propriu.md). Imaginile vin din GitHub Container Registry, publicate de CI
-# la fiecare merge pe main, pentru arm64 și amd64.
+# Aplicația pe o instanță Oracle Cloud Always Free (docs/livrare-server-propriu.md). Imaginile vin
+# din GitHub Container Registry, publicate de CI la fiecare merge pe main, inclusiv pentru arm64
+# (procesorul Ampere al instanței).
 #
 # Nimic nu ascultă pe porturi publice: Cloudflare Tunnel deschide o conexiune spre Cloudflare și
 # trimite traficul HTTPS către `web` prin rețeaua internă.
