@@ -9,8 +9,8 @@ async function unconfirmedEvent(): Promise<{ requestId: string; eventId: string 
     p_email: randomEmail("cleanup"),
     p_name: "Aniversare",
     p_event_date: new Date(Date.now() + 3 * 86_400_000).toISOString().slice(0, 10),
-    p_terms_version: "2026-10-01",
-    p_privacy_version: "2026-10-01",
+    p_terms_version: "2026-10-05",
+    p_privacy_version: "2026-10-05",
   });
   if (error) throw new Error(error.message);
   const [row] = await sql<{ event_id: string }>("select event_id from public.auth_requests where id = $1", [data]);
@@ -62,8 +62,8 @@ describe("purge_stale_auth_users (research R6)", () => {
       p_email: withEvent,
       p_name: "Are eveniment",
       p_event_date: new Date(Date.now() + 5 * 86_400_000).toISOString().slice(0, 10),
-      p_terms_version: "2026-10-01",
-      p_privacy_version: "2026-10-01",
+      p_terms_version: "2026-10-05",
+      p_privacy_version: "2026-10-05",
     });
 
     await sql("select public.purge_stale_auth_users()");

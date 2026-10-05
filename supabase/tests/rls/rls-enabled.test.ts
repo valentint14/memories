@@ -16,6 +16,9 @@ const TABLES_002 = [
   "app_audit_log",
 ];
 
+// Tabelele noi din 003 (data-model.md).
+const TABLES_003 = ["payments", "stripe_webhook_events"];
+
 // Constituția, principiul III: RLS activ pe toate tabelele, fără excepție.
 describe("RLS", () => {
   it("este activ pe fiecare tabel din schema public", async () => {
@@ -31,6 +34,14 @@ describe("RLS", () => {
       [TABLES_002],
     );
     expect(rows.map((r) => r.tablename)).toEqual([...TABLES_002].sort());
+  });
+
+  it("tabelele din 003 există și au RLS activ", async () => {
+    const rows = await sql<{ tablename: string }>(
+      "select tablename from pg_tables where schemaname = 'public' and rowsecurity and tablename = any($1) order by tablename",
+      [TABLES_003],
+    );
+    expect(rows.map((r) => r.tablename)).toEqual([...TABLES_003].sort());
   });
 
   it.each(["auth_requests", "app_audit_log"])("%s nu este accesibil clienților", async (table) => {

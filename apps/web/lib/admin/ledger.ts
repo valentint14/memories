@@ -1,20 +1,20 @@
 import type { AdminEventRow } from "./queries";
 
 /**
- * Registrul evenimentelor din administrare: grupe în ordinea în care cer atenție. Cererile de
- * activare stau primele, fiindcă doar ele așteaptă o acțiune de la administrator.
+ * Registrul evenimentelor din administrare: grupe în ordinea în care cer atenție. Fără cereri de
+ * activare (003: FR-015): organizatorii își activează singuri evenimentele, plătind.
  */
-export const LEDGER_GROUPS = ["requested", "awaiting", "active", "suspended", "expiring", "ended"] as const;
+export const LEDGER_GROUPS = ["awaiting", "active", "suspended", "expiring", "ended"] as const;
 export type LedgerGroup = (typeof LEDGER_GROUPS)[number];
 /** Fila selectată: toate grupele sau una singură. */
 export type LedgerView = "all" | LedgerGroup;
 
-type GroupInput = Pick<AdminEventRow, "status" | "lastActivationRequestAt">;
+type GroupInput = Pick<AdminEventRow, "status">;
 
 export function groupOf(e: GroupInput): LedgerGroup {
   switch (e.status) {
     case "awaiting_activation":
-      return e.lastActivationRequestAt !== null ? "requested" : "awaiting";
+      return "awaiting";
     case "active":
       return "active";
     case "suspended":

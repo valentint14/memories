@@ -13,7 +13,7 @@ import {
   type MediaCursor,
   type MediaUrls,
 } from "../organizer/media";
-import { extendEventRetention, retentionQuote, type RetentionOptionQuote } from "../organizer/retention";
+import { retentionQuote, type RetentionOptionQuote } from "../organizer/retention";
 import { serverSupabase } from "../supabase/server";
 import { eventBasicsSchema } from "../validation/self-service";
 import { runAction, throwIfDbError, type ActionResult } from "./result";
@@ -74,29 +74,6 @@ export async function deleteMedia(
 /** Oferta de prelungire a retenției (US8). */
 export async function getRetentionQuote(eventId: string): Promise<ActionResult<RetentionOptionQuote[]>> {
   return runAction(z.object({ eventId: z.uuid() }), { eventId }, (input) => retentionQuote(input.eventId));
-}
-
-const extendSchema = z.object({
-  eventId: z.uuid(),
-  optionId: z.uuid(),
-  expectedFinalPriceMinor: z.number().int().nonnegative(),
-});
-
-/**
- * Prelungirea retenției la prețul confirmat de organizator. Erori: FORBIDDEN, RETENTION_NOT_LONGER,
- * RETENTION_EXPIRED, PRICE_CHANGED (catalog modificat între timp), OPTION_INACTIVE.
- */
-export async function extendRetention(
-  eventId: string,
-  optionId: string,
-  expectedFinalPriceMinor: number,
-): Promise<ActionResult<{ finalPriceMinor: number; purgeAt: string }>> {
-  return runAction(extendSchema, { eventId, optionId, expectedFinalPriceMinor }, async (input) => {
-    const result = await extendEventRetention(input.eventId, input.optionId, input.expectedFinalPriceMinor);
-    revalidatePath(`/events/${input.eventId}`);
-    revalidatePath("/events");
-    return result;
-  });
 }
 
 /** Numele fișierului descărcat, ca în arhivă (research.md R9). */
@@ -167,17 +144,6 @@ export async function createEventForm(_prev: FormState, formData: FormData): Pro
   }
   revalidatePath("/events");
   redirect(`/events/${data}`);
-}
-
-/** Cererea de activare a pachetului complet (002: FR-018a). */
-export async function requestActivation(eventId: string): Promise<ActionResult<{ requestedAt: string }>> {
-  return runAction(z.object({ eventId: z.uuid() }), { eventId }, async (input) => {
-    const supabase = await serverSupabase();
-    const { data, error } = await supabase.rpc("request_activation", { p_event_id: input.eventId });
-    throwIfDbError(error);
-    revalidatePath(`/events/${input.eventId}`);
-    return { requestedAt: data ?? new Date().toISOString() };
-  });
 }
 
 /** Numele și data evenimentului propriu (002: FR-033, FR-034); linkul și codul QR rămân aceleași. */

@@ -4,7 +4,7 @@ import { closePool, createTestEvent, organizerClient, randomEmail, sql, type Sup
 // Crearea din cont, fără email de confirmare (002: FR-005, FR-021, FR-041).
 afterAll(closePool);
 
-const V = "2026-10-01";
+const V = "2026-10-05";
 
 function inDays(days: number): string {
   return new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 10);

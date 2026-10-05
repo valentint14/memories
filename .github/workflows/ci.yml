@@ -87,7 +87,7 @@ jobs:
 
   publish-images:
     # Doar pe main; verificările au trecut deja pe PR. Imaginile merg în GitHub Container Registry,
-    # construite nativ pe amd64 și arm64 (Raspberry Pi, Oracle Ampere) — docs/livrare-server-propriu.md.
+    # construite nativ pe amd64 și arm64 (Oracle Ampere) — docs/livrare-server-propriu.md.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     strategy:
       matrix:

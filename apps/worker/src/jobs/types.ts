@@ -10,7 +10,13 @@ export type JobMessage =
   | { type: "retention_notice"; event_id: string; threshold: "30d" | "7d" | "1d" | "activation_7d"; purge_at: string }
   | { type: "auth_email"; request_id: string; email: string; purpose: "create" | "login" }
   | { type: "auth_rotate"; email: string; request_id: string }
-  | { type: "admin_activation_notice"; event_id: string };
+  | { type: "admin_activation_notice"; event_id: string }
+  | { type: "payment_confirmation"; payment_id: string }
+  | {
+      type: "admin_payment_notice";
+      payment_id: string;
+      reason: "EVENT_NOT_AWAITING" | "DUPLICATE_PAYMENT" | "EVENT_DELETED" | "EXTENSION_NOT_POSSIBLE" | "DISPUTE";
+    };
 
 export type JobType = JobMessage["type"];
 

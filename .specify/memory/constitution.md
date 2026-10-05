@@ -39,6 +39,13 @@ minori); conformitatea GDPR trebuie garantată de arhitectură, nu de disciplina
 - Accesul la un eveniment TREBUIE să se facă doar printr-un token aleator, negeghicibil,
   generat cu un generator criptografic sigur; identificatorii secvențiali sau derivabili sunt
   interziși în URL-urile publice.
+  - **Excepție — linkul lizibil al invitatului**: tokenul poate începe cu un slug derivat din
+    numele evenimentului, dacă este urmat de un sufix aleator generat cu un generator
+    criptografic sigur (cel puțin 6 caractere dintr-un alfabet de cel puțin 31 de simboluri),
+    unic, fixat la crearea evenimentului, iar uploadul rămâne protejat de rate limiting.
+    Slug-ul singur NU TREBUIE să dea acces, iar linkul unui eveniment NU TREBUIE să
+    poată fi dedus din linkul altui eveniment. Pentru că slug-ul poate conține nume, linkul
+    TREBUIE eliminat din loguri și din rapoartele de erori.
 - Row Level Security TREBUIE să fie activ pe toate tabelele, fără excepție.
 - Serverul TREBUIE să valideze tipul, dimensiunea și numărul fișierelor; validarea din client
   este doar ajutor de UX, nu control de securitate.
@@ -48,7 +55,9 @@ minori); conformitatea GDPR trebuie garantată de arhitectură, nu de disciplina
   derivatele (thumbnails, conversii) se șterg din stocare, nu doar rândul din baza de date.
 
 **Justificare:** codul QR circulă liber la eveniment; sistemul trebuie să rămână sigur chiar
-și atunci când linkul ajunge la persoane neinvitate.
+și atunci când linkul ajunge la persoane neinvitate. Excepția pentru linkul lizibil există
+pentru că un link complet aleator ridică suspiciuni clienților; sufixul aleator păstrează
+linkul imposibil de ghicit doar din numele evenimentului.
 
 ### IV. Pipeline media scalabil
 
@@ -175,4 +184,4 @@ engleză evită o rescriere ulterioară a interfeței.
 - Conformitatea se verifică la fiecare plan (poarta „Constitution Check”) și la fiecare review
   de cod; neconformitățile nejustificate blochează merge-ul.
 
-**Version**: 1.2.0 | **Ratified**: 2026-09-23 | **Last Amended**: 2026-09-24
+**Version**: 1.3.0 | **Ratified**: 2026-09-23 | **Last Amended**: 2026-10-01

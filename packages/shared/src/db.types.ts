@@ -631,6 +631,115 @@ export type Database = {
           },
         ]
       }
+      payments: {
+        Row: {
+          amount_minor: number
+          base_price_minor: number
+          billing_address: Json | null
+          billing_company: string | null
+          billing_name: string | null
+          billing_tax_id: string | null
+          checkout_url: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          disputed_at: string | null
+          event_id: string | null
+          event_name: string | null
+          expires_at: string
+          id: string
+          organizer_email: string | null
+          paid_at: string | null
+          purpose: Database["public"]["Enums"]["payment_purpose"]
+          refund_reason: string | null
+          retention_months: number
+          retention_option_id: string
+          status: Database["public"]["Enums"]["payment_status"]
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          surcharge_minor: number
+          updated_at: string
+        }
+        Insert: {
+          amount_minor: number
+          base_price_minor: number
+          billing_address?: Json | null
+          billing_company?: string | null
+          billing_name?: string | null
+          billing_tax_id?: string | null
+          checkout_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          disputed_at?: string | null
+          event_id?: string | null
+          event_name?: string | null
+          expires_at: string
+          id?: string
+          organizer_email?: string | null
+          paid_at?: string | null
+          purpose: Database["public"]["Enums"]["payment_purpose"]
+          refund_reason?: string | null
+          retention_months: number
+          retention_option_id: string
+          status?: Database["public"]["Enums"]["payment_status"]
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          surcharge_minor: number
+          updated_at?: string
+        }
+        Update: {
+          amount_minor?: number
+          base_price_minor?: number
+          billing_address?: Json | null
+          billing_company?: string | null
+          billing_name?: string | null
+          billing_tax_id?: string | null
+          checkout_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          disputed_at?: string | null
+          event_id?: string | null
+          event_name?: string | null
+          expires_at?: string
+          id?: string
+          organizer_email?: string | null
+          paid_at?: string | null
+          purpose?: Database["public"]["Enums"]["payment_purpose"]
+          refund_reason?: string | null
+          retention_months?: number
+          retention_option_id?: string
+          status?: Database["public"]["Enums"]["payment_status"]
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          surcharge_minor?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "organizer_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_retention_option_id_fkey"
+            columns: ["retention_option_id"]
+            isOneToOne: false
+            referencedRelation: "retention_options"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_admins: {
         Row: {
           created_at: string
@@ -751,6 +860,30 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_webhook_events: {
+        Row: {
+          id: string
+          outcome: string | null
+          processed_at: string | null
+          received_at: string
+          type: string
+        }
+        Insert: {
+          id: string
+          outcome?: string | null
+          processed_at?: string | null
+          received_at?: string
+          type: string
+        }
+        Update: {
+          id?: string
+          outcome?: string | null
+          processed_at?: string | null
+          received_at?: string
+          type?: string
+        }
+        Relationships: []
+      }
       terms_acceptances: {
         Row: {
           accepted_at: string
@@ -862,11 +995,23 @@ export type Database = {
         Args: {
           p_event_id: string
           p_external_ref?: string
+          p_payment_id?: string
           p_reason?: string
           p_source: Database["public"]["Enums"]["status_change_source"]
         }
         Returns: {
           already_active: boolean
+        }[]
+      }
+      activation_quote: {
+        Args: { p_event_id: string }
+        Returns: {
+          amount_minor: number
+          included: boolean
+          months: number
+          option_id: string
+          purge_at: string
+          surcharge_minor: number
         }[]
       }
       admin_event_stats: {
@@ -884,6 +1029,7 @@ export type Database = {
       }
       allow_event_write: { Args: never; Returns: undefined }
       anonymize_expired_events: { Args: { p_now?: string }; Returns: number }
+      apply_paid_extension: { Args: { p_payment_id: string }; Returns: string }
       assert_current_legal_versions: {
         Args: { p_privacy_version: string; p_terms_version: string }
         Returns: undefined
@@ -893,6 +1039,14 @@ export type Database = {
         Returns: undefined
       }
       assert_reason: { Args: { p_reason: string }; Returns: undefined }
+      attach_checkout_session: {
+        Args: {
+          p_checkout_url: string
+          p_payment_id: string
+          p_session_id: string
+        }
+        Returns: undefined
+      }
       auth_mail_allowed: {
         Args: { p_email: string; p_ip_hash: string; p_ip_limit: number }
         Returns: boolean
@@ -920,6 +1074,17 @@ export type Database = {
       complete_event_expiry: {
         Args: { p_event_id: string }
         Returns: undefined
+      }
+      complete_payment: {
+        Args: {
+          p_billing: Json
+          p_payment_intent_id: string
+          p_session_id: string
+        }
+        Returns: {
+          event_id: string
+          outcome: string
+        }[]
       }
       create_event_as_organizer: {
         Args: {
@@ -951,6 +1116,12 @@ export type Database = {
       event_slug: { Args: { p_name: string }; Returns: string }
       expire_archives: { Args: never; Returns: number }
       expire_due_events: { Args: { p_now?: string }; Returns: number }
+      expire_payment: { Args: { p_session_id: string }; Returns: undefined }
+      expire_payment_by_id: {
+        Args: { p_payment_id: string }
+        Returns: undefined
+      }
+      expire_stale_payments: { Args: never; Returns: number }
       extend_retention: {
         Args: {
           p_event_id: string
@@ -962,9 +1133,14 @@ export type Database = {
           purge_at: string
         }[]
       }
+      fail_payment: { Args: { p_session_id: string }; Returns: undefined }
       finalize_media_deletion: {
         Args: { p_media_ids: string[] }
         Returns: number
+      }
+      finish_webhook_event: {
+        Args: { p_id: string; p_outcome: string }
+        Returns: undefined
       }
       guest_open_event: {
         Args: { p_token: string }
@@ -1034,6 +1210,15 @@ export type Database = {
         Args: { p_object_name: string }
         Returns: boolean
       }
+      organizer_payment_state: {
+        Args: { p_event_id: string }
+        Returns: {
+          paid_at: string
+          purpose: Database["public"]["Enums"]["payment_purpose"]
+          status: Database["public"]["Enums"]["payment_status"]
+          updated_at: string
+        }[]
+      }
       organizer_status_history: {
         Args: { p_event_id: string }
         Returns: {
@@ -1048,7 +1233,23 @@ export type Database = {
         Returns: undefined
       }
       orphan_organizer_user_id: { Args: { p_email: string }; Returns: string }
+      prepare_payment: {
+        Args: {
+          p_event_id: string
+          p_expected_amount_minor: number
+          p_option_id: string
+          p_purpose: Database["public"]["Enums"]["payment_purpose"]
+        }
+        Returns: {
+          amount_minor: number
+          expires_at: string
+          payment_id: string
+          replaced_session_id: string
+          reuse_url: string
+        }[]
+      }
       purge_auth_requests: { Args: { p_now?: string }; Returns: number }
+      purge_payment_noise: { Args: never; Returns: undefined }
       purge_stale_auth_users: { Args: { p_now?: string }; Returns: number }
       purge_unactivated_events: { Args: { p_now?: string }; Returns: number }
       purge_unconfirmed_events: { Args: { p_now?: string }; Returns: number }
@@ -1062,6 +1263,17 @@ export type Database = {
         Returns: undefined
       }
       reconcile_deletions: { Args: never; Returns: number }
+      record_webhook_event: {
+        Args: { p_id: string; p_type: string }
+        Returns: boolean
+      }
+      register_dispute: {
+        Args: { p_payment_intent_id: string }
+        Returns: {
+          event_id: string
+          outcome: string
+        }[]
+      }
       register_failed_code: {
         Args: { p_request_id: string }
         Returns: Database["public"]["Enums"]["auth_request_status"]
@@ -1176,7 +1388,9 @@ export type Database = {
         | "rejected"
         | "deleting"
       notice_threshold: "30d" | "7d" | "1d" | "activation_7d"
-      retention_actor: "admin" | "organizer" | "system"
+      payment_purpose: "activation" | "retention_extension"
+      payment_status: "open" | "paid" | "failed" | "expired" | "refund_due"
+      retention_actor: "admin" | "organizer" | "system" | "payment"
       status_change_source: "organizer" | "admin" | "system" | "payment"
     }
     CompositeTypes: {
@@ -1333,7 +1547,9 @@ export const Constants = {
         "deleting",
       ],
       notice_threshold: ["30d", "7d", "1d", "activation_7d"],
-      retention_actor: ["admin", "organizer", "system"],
+      payment_purpose: ["activation", "retention_extension"],
+      payment_status: ["open", "paid", "failed", "expired", "refund_due"],
+      retention_actor: ["admin", "organizer", "system", "payment"],
       status_change_source: ["organizer", "admin", "system", "payment"],
     },
   },

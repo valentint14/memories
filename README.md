@@ -74,21 +74,23 @@ email și a Turnstile în producție). Testul widgetului Turnstile real rulează
 | --- | --- | --- | --- |
 | Local | `next dev` / `next start` | Supabase CLI (Docker) | container local |
 | Preview | `docker compose` (local sau pe server) | al doilea proiect Supabase Free (UE) | același compose |
-| Producție | server propriu (Oracle Always Free sau Raspberry Pi) prin Cloudflare Tunnel ([livrare](docs/livrare-server-propriu.md)) | Supabase `eu-central-1`, plan Free la lansare, Pro la primii clienți | același server, Docker Compose |
-
-Varianta de cost redus și alternativele analizate (Vercel, Scaleway etc.): [docs/arhitectura-cost-redus.md](docs/arhitectura-cost-redus.md).
+| Producție | Oracle Cloud Always Free prin Cloudflare Tunnel ([livrare](docs/livrare-server-propriu.md)) | Supabase `eu-central-1`, plan Free la lansare, Pro la primii clienți | aceeași instanță, Docker Compose |
 
 ## Date personale (GDPR)
 
-Toate datele sunt găzduite în UE. Procesatori cu sediul în afara UE, cu date în UE, pentru care
-este necesar un acord de prelucrare a datelor (DPA) înainte de producție (research.md R15):
+Datele aplicației sunt găzduite în UE. Procesatori, fiecare cu acord de prelucrare a datelor (DPA)
+acceptat înainte de producție (research.md R15), listați și în politica de confidențialitate
+(`apps/web/content/legal/privacy/`):
 
-- **Vercel** — doar dacă aplicația web se mută pe Vercel (`fra1`, plan Pro pentru uz comercial)
 - **Supabase** — baza de date, autentificarea și stocarea fișierelor (`eu-central-1`)
-- **Resend** — trimiterea emailurilor (`eu-west-1`); pe serverul propriu, **Brevo** (Franța, UE)
+- **Oracle Cloud** — serverul aplicației și al worker-ului (Frankfurt)
+- **Brevo** — trimiterea emailurilor (Franța)
+- **Stripe** — plățile online (Stripe Payments Europe, Irlanda); datele cardului nu ajung în aplicație
 - **Sentry** — raportarea erorilor, fără date personale (regiunea de date UE)
 - **Cloudflare** — Tunnel (traficul HTTPS către server) și verificarea anti-bot Turnstile pe formularele de creare și de autentificare
   (adresa IP și semnale ale browserului, fără cookie-uri și fără stocarea datelor aplicației)
+
+Stripe și Cloudflare pot prelucra unele date în afara UE, cu clauzele contractuale standard.
 
 Backup-urile bazei de date se păstrează 7 zile; ștergerea completă a datelor unei persoane are
 loc în cel mult 7 zile de la ștergerea din aplicație ([`supabase/README.md`](supabase/README.md)).

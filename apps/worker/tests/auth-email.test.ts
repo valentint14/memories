@@ -29,7 +29,7 @@ async function mailBody(id: string): Promise<{ Text: string; HTML: string }> {
 
 async function createRequest(email: string, name: string): Promise<string> {
   const [row] = await query<{ id: string }>(
-    "select public.request_self_service_event($1, $2, current_date + 10, '2026-10-01', '2026-10-01') as id",
+    "select public.request_self_service_event($1, $2, current_date + 10, '2026-10-05', '2026-10-05') as id",
     [email, name],
   );
   return row?.id ?? "";

@@ -4,8 +4,8 @@ import { closePool, createUser, randomEmail, serviceClient, signedInClient, sql 
 // Crearea self-service și confirmarea (002: FR-003–FR-009, FR-021, FR-040; research R4).
 afterAll(closePool);
 
-const TERMS = "2026-10-01";
-const PRIVACY = "2026-10-01";
+const TERMS = "2026-10-05";
+const PRIVACY = "2026-10-05";
 
 function tomorrow(offsetDays = 1): string {
   const d = new Date(Date.now() + offsetDays * 24 * 60 * 60 * 1000);

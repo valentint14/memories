@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildCsp, TURNSTILE_ORIGIN } from "../../lib/security/csp";
+import { buildCsp, STRIPE_CHECKOUT_ORIGIN, TURNSTILE_ORIGIN } from "../../lib/security/csp";
 
 function directives(csp: string): Map<string, string> {
   return new Map(
@@ -17,6 +17,12 @@ describe("CSP", () => {
     expect(csp.get("script-src")).toContain(TURNSTILE_ORIGIN);
     expect(csp.get("script-src")).toContain("'nonce-abc'");
     expect(csp.get("frame-src")).toBe(TURNSTILE_ORIGIN);
+  });
+
+  it("lasă formularul de plată să ajungă la Stripe Checkout și nicăieri altundeva (003, R10)", () => {
+    expect(csp.get("form-action")).toBe(`'self' ${STRIPE_CHECKOUT_ORIGIN}`);
+    expect(csp.get("script-src")).not.toContain("stripe");
+    expect(csp.get("frame-src")).not.toContain("stripe");
   });
 
   it("păstrează restricțiile din 001", () => {

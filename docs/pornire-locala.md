@@ -126,6 +126,32 @@ Aplicația e la **<http://localhost:3000>**. Lasă fereastra deschisă cât lucr
 > La prima pornire în modul dev, Next.js poate crea `apps/web/AGENTS.md`, `apps/web/CLAUDE.md` și
 > poate modifica `apps/web/next-env.d.ts`. Nu le comite.
 
+### Plățile (Stripe, modul test)
+
+Aplicația are nevoie de trei variabile Stripe în `apps/web/.env.local` (003). Ai două variante:
+
+- **Fără cont Stripe** (ca testele automate): pornește serverul Stripe fals și folosește-l:
+  ```powershell
+  node apps/web/tests/e2e/support/stripe-fake.mjs
+  ```
+  ```text
+  STRIPE_SECRET_KEY=sk_test_local_fake
+  STRIPE_WEBHOOK_SECRET=whsec_test_ci_secret
+  STRIPE_API_BASE=http://127.0.0.1:12111
+  ```
+  Butonul „Plătește și activează” duce la o adresă `checkout.stripe.com` care nu se deschide;
+  plata o simulezi ca în `apps/web/tests/e2e/support/stripe.ts` (sesiune plătită + webhook semnat).
+- **Cu un cont Stripe în modul test** (pagina reală de plată, carduri de test): cheia `sk_test_…`
+  din *Developers › API keys*, `STRIPE_API_BASE` gol, iar într-o fereastră separată:
+  ```powershell
+  stripe listen --events checkout.session.completed,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed,checkout.session.expired,charge.dispute.created --forward-to localhost:3000/api/stripe/webhook
+  ```
+  Secretul `whsec_…` afișat de comandă intră în `STRIPE_WEBHOOK_SECRET`. Carduri de test:
+  `4242 4242 4242 4242` (reușită), `4000 0000 0000 0002` (refuzată), `4000 0000 0000 0259`
+  (contestație). Scenariile complete: [quickstart 003](../specs/003-stripe-payment-activation/quickstart.md).
+
+O cheie `sk_live_` e refuzată în afara producției.
+
 ---
 
 ## 8. Emailurile locale: Mailpit
@@ -136,7 +162,8 @@ Local, **niciun email nu pleacă spre o adresă reală**. Toate apar în Mailpit
 Acolo găsești:
 - codul de 6 cifre și linkul de confirmare sau de autentificare (valabile **15 minute**, o singură
   folosire);
-- emailurile trimise administratorilor la „Solicită activarea”;
+- confirmările plăților și emailurile către administratori pentru plățile de verificat (de rambursat,
+  contestate);
 - avertizările de ștergere.
 
 ---
@@ -161,8 +188,8 @@ Acolo găsești:
    bifează acceptarea termenilor și apasă **Creează evenimentul**.
 3. Deschide Mailpit și copiază codul de 6 cifre în pagina deschisă. Poți apăsa și pe linkul din
    email, apoi pe **Confirmă**.
-4. Ajungi la eveniment, **în așteptarea activării**: descarci codul QR, vezi prețul și poți apăsa
-   **Solicită activarea**.
+4. Ajungi la eveniment, **în așteptarea activării**: descarci codul QR, alegi perioada de păstrare
+   și apeși **Plătește și activează** (vezi „Plățile” la pasul 7).
 
 ### B. Activezi evenimentul (administrator)
 
@@ -170,8 +197,10 @@ Acolo găsești:
    `admin@example.test`, ia codul din Mailpit și confirmă.
 2. La prima autentificare scanezi codul QR TOTP cu aplicația de autentificare (Google
    Authenticator, Microsoft Authenticator, 1Password) și introduci codul de 6 cifre.
-3. În **Evenimente**, alege grupa **Cer activare** și apasă **Activează** pe rândul evenimentului
-   (sau **Activează pachetul complet** pe pagina lui); confirmi după numele evenimentului.
+3. Evenimentele plătite se activează singure. Pentru o plată primită în afara aplicației (de ex.
+   transfer bancar), în **Evenimente** › grupa **În așteptare** apasă **Activează** pe rândul
+   evenimentului (sau **Activează pachetul complet** pe pagina lui); confirmi după numele lui. Pe
+   pagina evenimentului, foaia **Plăți** arată plățile online și datele de facturare.
 4. Din pagina evenimentului poți **Suspenda** și **Reactiva** (cu un motiv); istoricul stărilor
    apare mai jos.
 5. În **Pachet** (`/admin/package`) modifici prețul și limitele pachetului complet.

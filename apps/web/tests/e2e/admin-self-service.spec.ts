@@ -48,8 +48,9 @@ test.beforeAll(async ({ browser }) => {
   await organizer.getByRole("button", { name: "Creează evenimentul" }).click();
   await expect(organizer).toHaveURL(/\/events\/[0-9a-f-]{36}$/);
   eventId = organizer.url().split("/").pop() ?? "";
-  await organizer.getByRole("button", { name: "Solicită activarea" }).click();
-  await expect(organizer.getByRole("status").filter({ hasText: "Cerere trimisă" })).toBeVisible();
+  // 003: fără cerere de activare; organizatorul vede direct plata.
+  await expect(organizer.getByRole("button", { name: "Solicită activarea" })).toHaveCount(0);
+  await expect(organizer.getByRole("button", { name: "Plătește și activează" })).toBeVisible();
 
   admin = await openPage(browser);
   await loginAsNewAdmin(admin, await createAdmin());
@@ -60,15 +61,15 @@ test.afterAll(async () => {
   await admin.context().close();
 });
 
-test("registrul arată cererea de activare în grupa ei, cu datele cerute (FR-027)", async () => {
-  await gotoHydrated(admin, "/admin/events?view=requested");
-  const group = admin.getByRole("region", { name: /Cer activare/ });
+test("registrul arată evenimentul neactivat în grupa „În așteptare”, fără grupa cererilor (FR-027; 003: FR-015)", async () => {
+  await gotoHydrated(admin, "/admin/events?view=awaiting");
+  await expect(admin.getByRole("region", { name: /Cer activare/ })).toHaveCount(0);
+  const group = admin.getByRole("region", { name: /În așteptare/ });
   const row = group.getByRole("listitem").filter({ hasText: name });
   await expect(row).toBeVisible();
   await expect(row).toContainText("Self-service");
   await expect(row).toContainText("În așteptarea activării");
   await expect(row).toContainText("@example.test");
-  await expect(row).toContainText("activare cerută");
   await expect(row).toContainText("(dacă nu e activat)");
   await expect(row.getByRole("button", { name: `Activează ${name}` })).toBeVisible();
 
@@ -81,7 +82,6 @@ test("registrul arată cererea de activare în grupa ei, cu datele cerute (FR-02
 
 test("editează numele înainte de activare, apoi activează după confirmare; istoricul arată schimbările", async () => {
   await gotoHydrated(admin, `/admin/events/${eventId}`);
-  await expect(admin.getByRole("status").filter({ hasText: "a cerut activarea" })).toBeVisible();
   name = `${name} (corectat)`;
   await admin.getByLabel("Numele evenimentului").fill(name);
   await admin.getByRole("button", { name: "Salvează" }).click();

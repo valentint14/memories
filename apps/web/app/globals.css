@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
- * Limbajul vizual „Foaie de contact” (docs/propunere-design.md). Paleta, razele, umbrele și
+ * Limbajul vizual „Foaie de contact”. Paleta, razele, umbrele și
  * fonturile implicite ale Tailwind sunt șterse: în afara tokenilor de mai jos nu există alte
  * utilitare de culoare, rază sau umbră. `tests/unit/design-language.test.ts` verifică restul.
  */
