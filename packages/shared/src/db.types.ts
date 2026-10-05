@@ -650,8 +650,14 @@ export type Database = {
           id: string
           organizer_email: string | null
           paid_at: string | null
+          previous_retention_months: number | null
+          previous_retention_option_id: string | null
+          previous_surcharge_minor: number | null
           purpose: Database["public"]["Enums"]["payment_purpose"]
+          refund_effect: string | null
           refund_reason: string | null
+          refunded_at: string | null
+          refunded_minor: number
           retention_months: number
           retention_option_id: string
           status: Database["public"]["Enums"]["payment_status"]
@@ -678,8 +684,14 @@ export type Database = {
           id?: string
           organizer_email?: string | null
           paid_at?: string | null
+          previous_retention_months?: number | null
+          previous_retention_option_id?: string | null
+          previous_surcharge_minor?: number | null
           purpose: Database["public"]["Enums"]["payment_purpose"]
+          refund_effect?: string | null
           refund_reason?: string | null
+          refunded_at?: string | null
+          refunded_minor?: number
           retention_months: number
           retention_option_id: string
           status?: Database["public"]["Enums"]["payment_status"]
@@ -706,8 +718,14 @@ export type Database = {
           id?: string
           organizer_email?: string | null
           paid_at?: string | null
+          previous_retention_months?: number | null
+          previous_retention_option_id?: string | null
+          previous_surcharge_minor?: number | null
           purpose?: Database["public"]["Enums"]["payment_purpose"]
+          refund_effect?: string | null
           refund_reason?: string | null
+          refunded_at?: string | null
+          refunded_minor?: number
           retention_months?: number
           retention_option_id?: string
           status?: Database["public"]["Enums"]["payment_status"]
@@ -729,6 +747,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "organizer_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_previous_retention_option_id_fkey"
+            columns: ["previous_retention_option_id"]
+            isOneToOne: false
+            referencedRelation: "retention_options"
             referencedColumns: ["id"]
           },
           {
@@ -1267,6 +1292,14 @@ export type Database = {
         Args: { p_id: string; p_type: string }
         Returns: boolean
       }
+      refund_activation_effect: {
+        Args: { pay: Database["public"]["Tables"]["payments"]["Row"] }
+        Returns: string
+      }
+      refund_extension_effect: {
+        Args: { pay: Database["public"]["Tables"]["payments"]["Row"] }
+        Returns: string
+      }
       register_dispute: {
         Args: { p_payment_intent_id: string }
         Returns: {
@@ -1277,6 +1310,17 @@ export type Database = {
       register_failed_code: {
         Args: { p_request_id: string }
         Returns: Database["public"]["Enums"]["auth_request_status"]
+      }
+      register_refund: {
+        Args: {
+          p_payment_intent_id: string
+          p_refunded_at: string
+          p_refunded_minor: number
+        }
+        Returns: {
+          event_id: string
+          outcome: string
+        }[]
       }
       request_activation: { Args: { p_event_id: string }; Returns: string }
       request_archive: { Args: { p_event_id: string }; Returns: string }

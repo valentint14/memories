@@ -1,4 +1,4 @@
-import { organizerClient, randomEmail, sql, type SupabaseClient } from "./clients.ts";
+import { createTestEvent, organizerClient, randomEmail, serviceClient, sql, type SupabaseClient } from "./clients.ts";
 
 /** Ajutoare pentru testele de plăți (003). Rândurile se scriu ca `postgres`, ocolind RLS. */
 
@@ -65,4 +65,58 @@ export async function insertPayment(values: {
   );
   if (!row) throw new Error("Plata nu a fost inserată");
   return row.id;
+}
+
+export interface PaidPayment {
+  eventId: string;
+  paymentId: string;
+  paymentIntentId: string;
+  amountMinor: number;
+}
+
+/** Eveniment activat printr-o plată reușită (004), ca în testele de contestație. */
+export async function paidActivation(prefix: string): Promise<PaidPayment> {
+  const { eventId } = await awaitingEvent(prefix);
+  const paymentId = await insertPayment({ eventId });
+  const paymentIntentId = `pi_test_${paymentId.replaceAll("-", "")}`;
+  await sql("select public.activate_event($1, 'payment', null, $2, $3)", [eventId, `cs_ref_${paymentId}`, paymentId]);
+  await sql("update public.payments set status = 'paid', paid_at = now(), stripe_payment_intent_id = $2 where id = $1", [
+    paymentId,
+    paymentIntentId,
+  ]);
+  return { eventId, paymentId, paymentIntentId, amountMinor: 29_900 };
+}
+
+/** Eveniment activ (`months` luni) prelungit la `toMonths` printr-o plată confirmată de `complete_payment`. */
+export async function paidExtension(prefix: string, months = 3, toMonths = 12): Promise<PaidPayment> {
+  const email = randomEmail(prefix);
+  const client = await organizerClient(email);
+  const event = await createTestEvent({ organizerEmail: email, months, basePriceMinor: 29_900 });
+  const [from, to] = await Promise.all([optionSurcharge(months), optionSurcharge(toMonths)]);
+  const { data, error } = await client.rpc("prepare_payment", {
+    p_event_id: event.id,
+    p_purpose: "retention_extension",
+    p_option_id: await optionId(toMonths),
+    p_expected_amount_minor: to - from,
+  });
+  if (error) throw new Error(error.message);
+  const paymentId = data[0]?.payment_id ?? "";
+  const sessionId = `cs_test_${paymentId.replaceAll("-", "")}`;
+  const paymentIntentId = `pi_test_${paymentId.replaceAll("-", "")}`;
+  const service = serviceClient();
+  const attached = await service.rpc("attach_checkout_session", {
+    p_payment_id: paymentId,
+    p_session_id: sessionId,
+    p_checkout_url: `https://checkout.stripe.com/c/pay/${sessionId}`,
+  });
+  if (attached.error) throw new Error(attached.error.message);
+  const done = await service.rpc("complete_payment", { p_session_id: sessionId, p_payment_intent_id: paymentIntentId, p_billing: {} });
+  if (done.error) throw new Error(done.error.message);
+  if (done.data[0]?.outcome !== "extended") throw new Error(`Prelungirea nu s-a aplicat: ${done.data[0]?.outcome ?? "?"}`);
+  return { eventId: event.id, paymentId, paymentIntentId, amountMinor: to - from };
+}
+
+async function optionSurcharge(months: number): Promise<number> {
+  const [row] = await sql<{ surcharge_minor: string }>("select surcharge_minor from public.retention_options where months = $1", [months]);
+  return Number(row?.surcharge_minor);
 }

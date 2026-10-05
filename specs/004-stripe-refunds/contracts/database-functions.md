@@ -23,7 +23,7 @@ Execuție: doar `service_role` (handler-ul de webhook). Blochează rândul plă�
 | integrală, prelungire, eveniment activ, o condiție din R5 neîndeplinită | `refund_effect = 'manual_adjustment'`; `pgmq.send('media_jobs', {type: 'admin_payment_notice', payment_id, reason: 'RETENTION_MANUAL'})` | `manual_adjustment` |
 
 `p_refunded_minor` peste `amount_minor` se limitează la `amount_minor`. Valori negative →
-`INVALID_INPUT`.
+`VALIDATION`.
 
 ## Modificate
 
