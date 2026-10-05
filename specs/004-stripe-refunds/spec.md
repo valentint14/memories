@@ -78,9 +78,9 @@ dinainte, cu o intrare nouă în istoricul păstrării.
    „sistem de plăți” și referința plății.
 2. **Given** aceeași prelungire, **When** plata ei este rambursată parțial, **Then** păstrarea nu
    se schimbă, iar suma rambursată apare în foaia „Plăți”.
-3. **Given** o prelungire rambursată după ce data de ștergere de dinainte a trecut sau e foarte
-   aproape, **When** păstrarea revine, **Then** data ștergerii devine cea mai târzie dintre data de
-   dinainte și momentul rambursării plus 7 zile, ca organizatorul să-și poată descărca fișierele.
+3. **Given** o prelungire rambursată după ce data de ștergere de dinainte a trecut sau e la mai
+   puțin de 7 zile, **When** vine rambursarea integrală, **Then** păstrarea nu se schimbă automat
+   (fișierele nu se șterg pe loc), iar administratorii primesc un email că trebuie ajustată manual.
 4. **Given** o prelungire urmată de o altă schimbare a păstrării (o a doua prelungire sau o
    schimbare făcută de administrator), **When** prima prelungire este rambursată, **Then**
    păstrarea nu se schimbă automat, iar administratorii primesc un email că trebuie ajustată
@@ -160,13 +160,15 @@ aplicație unde administratorul verifică ce s-a întâmplat și pregătește st
   activ, iar prelungirea plătită este ultima schimbare a păstrării, perioada de păstrare, data
   ștergerii automate și prețul final TREBUIE readuse la valorile de dinaintea prelungirii, iar
   schimbarea TREBUIE înregistrată în istoricul prețului și al păstrării (001/FR-043) cu sursa
-  „sistem de plăți” și referința plății.
+  „sistem de plăți”; plata rambursată se vede în foaia „Plăți” cu efectul aplicat (FR-012).
 - **FR-008**: Dacă data ștergerii de dinaintea prelungirii este mai devreme decât momentul
-  rambursării plus 7 zile, data ștergerii TREBUIE stabilită la momentul rambursării plus 7 zile.
-- **FR-009**: Dacă după prelungirea rambursată a existat o altă schimbare a păstrării, sau
-  evenimentul nu este activ, păstrarea NU TREBUIE schimbată automat; dacă evenimentul este activ,
-  administratorii TREBUIE să primească un email în română cu evenimentul și plata, ca să ajusteze
-  manual păstrarea.
+  rambursării plus 7 zile, păstrarea NU TREBUIE readusă automat (fișierele nu se pot șterge din
+  cauza unei rambursări fără ca organizatorul să aibă timp să le descarce); se aplică FR-009.
+- **FR-009**: Dacă după prelungirea rambursată a existat o altă schimbare a păstrării, dacă nu se
+  cunosc valorile de dinaintea prelungirii, sau în cazul din FR-008, păstrarea NU TREBUIE
+  schimbată automat; dacă evenimentul este activ, administratorii TREBUIE să primească un email în
+  română cu evenimentul și plata, ca să ajusteze manual păstrarea. Dacă evenimentul nu este activ,
+  păstrarea rămâne neschimbată, fără email.
 - **FR-010**: Rambursarea parțială a plății unei prelungiri NU TREBUIE să schimbe păstrarea.
 
 **Plățile neaplicate și afișarea**
@@ -187,7 +189,7 @@ aplicație unde administratorul verifică ce s-a întâmplat și pregătește st
 - **Schimbare de stare** (din 002): suspendarea la rambursare are sursa „sistem de plăți”, motivul
   „Plată rambursată” și referința plății.
 - **Schimbare a păstrării** (din 001): revenirea la rambursarea prelungirii are sursa „sistem de
-  plăți” și referința plății.
+  plăți”.
 
 ## Success Criteria *(mandatory)*
 
@@ -209,8 +211,11 @@ aplicație unde administratorul verifică ce s-a întâmplat și pregătește st
 - Organizatorul nu primește un email automat la rambursare: procesatorul trimite propria
   confirmare, iar administratorul comunică direct cu organizatorul. Organizatorul vede evenimentul
   suspendat ca la orice suspendare (002).
-- Marja de 7 zile la revenirea păstrării (FR-008) urmează principiul din 001 că organizatorul are
-  timp să-și descarce fișierele înainte de ștergere.
+- Marja de 7 zile (FR-008) urmează principiul din 001 că organizatorul are timp să-și descarce
+  fișierele înainte de ștergere. Data ștergerii se calculează din perioada de păstrare, deci nu
+  poate fi fixată la „rambursare plus 7 zile”; în acest caz decide administratorul.
+- Plățile de prelungire aplicate înainte de această funcționalitate nu au păstrate valorile de
+  dinainte; rambursarea lor integrală duce la ajustarea manuală (FR-009).
 - Anularea sau eșecul unei rambursări la procesator, după ce a fost aplicată, sunt rare; aplicația
   nu le inversează automat (cazuri limită).
 - Factura de stornare se emite în afara aplicației, ca factura inițială (003, Q2).
