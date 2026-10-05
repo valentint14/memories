@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { PAPER } from "../../lib/ui";
 
 /**
- * Limbajul vizual „Foaie de contact” (docs/propunere-design.md), verificat mecanic: orice clasă,
+ * Limbajul vizual „Foaie de contact” (`lib/ui.ts`, `app/globals.css`), verificat mecanic: orice clasă,
  * culoare sau font din afara lui oprește CI-ul. Tailwind nu mai generează paleta implicită, deci o
  * clasă greșită n-ar da eroare de build, ci doar un element nestilizat — de aceea acest test.
  */

@@ -1,5 +1,5 @@
 /**
- * Clasele comune ale limbajului vizual „Foaie de contact” (docs/propunere-design.md): colțuri de
+ * Clasele comune ale limbajului vizual „Foaie de contact”: colțuri de
  * 2 px, linii în loc de carduri, un singur buton plin pe ecran, cifrele în mono. Ecranele compun
  * aceste clase în loc să-și inventeze stilurile; testul `design-language` blochează abaterile.
  *

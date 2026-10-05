@@ -1,9 +1,8 @@
 # Livrarea worker-ului — Scaleway Serverless Containers (`fr-par`)
 
-> **Alternativă plătită.** Livrarea curentă e pe un server propriu
+> **Alternativă plătită.** Livrarea curentă e pe Oracle Cloud Always Free
 > ([docs/livrare-server-propriu.md](../../../docs/livrare-server-propriu.md)); CI publică imaginile în
-> GitHub Container Registry, nu în Scaleway. Costuri comparate în
-> [docs/arhitectura-cost-redus.md](../../../docs/arhitectura-cost-redus.md).
+> GitHub Container Registry, nu în Scaleway.
 
 Worker-ul e un proces persistent (buclă de polling pe `pgmq`), deci rulează cu **cel puțin o
 instanță mereu pornită**. Regiune UE (constituția, principiul II; research.md R15).
