@@ -236,6 +236,11 @@ export interface AdminPaymentRow {
   billingAddress: string | null;
   billingCompany: string | null;
   billingTaxId: string | null;
+  /** Suma rambursată cumulată, momentul ultimei rambursări și efectul aplicat (004: FR-012). */
+  refundedMinor: number;
+  refundedAt: string | null;
+  refundEffect: "suspended" | "retention_reverted" | "manual_adjustment" | "none" | null;
+  previousRetentionMonths: number | null;
 }
 
 /** Plățile unui eveniment, cu datele de facturare (003: FR-013); RLS: doar administratorii aal2. */
@@ -244,7 +249,7 @@ export async function listPayments(eventId: string): Promise<AdminPaymentRow[]> 
   const { data, error } = await supabase
     .from("payments")
     .select(
-      "id, purpose, status, amount_minor, retention_months, created_at, paid_at, disputed_at, refund_reason, stripe_payment_intent_id, stripe_session_id, billing_name, billing_address, billing_company, billing_tax_id",
+      "id, purpose, status, amount_minor, retention_months, created_at, paid_at, disputed_at, refund_reason, stripe_payment_intent_id, stripe_session_id, billing_name, billing_address, billing_company, billing_tax_id, refunded_minor, refunded_at, refund_effect, previous_retention_months",
     )
     .eq("event_id", eventId)
     .order("created_at", { ascending: false });
@@ -264,6 +269,11 @@ export async function listPayments(eventId: string): Promise<AdminPaymentRow[]> 
     billingAddress: formatAddress(p.billing_address),
     billingCompany: p.billing_company,
     billingTaxId: p.billing_tax_id,
+    refundedMinor: p.refunded_minor,
+    refundedAt: p.refunded_at,
+    // Valorile sunt limitate de constrângerea `payments_refund_effect` (data-model.md).
+    refundEffect: p.refund_effect as AdminPaymentRow["refundEffect"],
+    previousRetentionMonths: p.previous_retention_months,
   }));
 }
 

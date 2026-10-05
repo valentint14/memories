@@ -86,16 +86,16 @@ emailurilor în `apps/worker/src/email/messages/ro.ts`.
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T013 [P] [US2] În `supabase/tests/functions/payment-retention.test.ts` (existent): după `complete_payment` pentru o prelungire, plata are `previous_retention_option_id`, `previous_retention_months` și `previous_surcharge_minor` egale cu valorile evenimentului de dinainte; o activare nu le setează
-- [ ] T014 [P] [US2] În `supabase/tests/functions/payment-refund.test.ts`: prelungire 3 → 12 rambursată integral → `retention_reverted`; evenimentul are `retention_months`, `retention_surcharge_minor`, `final_price_minor` și `purge_at` de dinainte; `event_retention_changes` are un rând nou cu `actor_kind = 'payment'`; aceeași revenire funcționează dacă opțiunea de 3 luni a fost dezactivată între timp în catalog. Cazuri `manual_adjustment` (cu mesaj `admin_payment_notice` / `RETENTION_MANUAL` în coada `media_jobs`): o schimbare a păstrării făcută de admin după prelungire (FR-009); `previous_*` null (prelungire dinainte de 004); data recalculată ≤ acum + 7 zile (FR-008). Eveniment suspendat sau expirat → `none`, fără mesaj. Rambursare parțială → păstrarea neschimbată (FR-010)
-- [ ] T015 [P] [US2] Test worker în `apps/worker/tests/admin-payment-notice.test.ts` (existent): motivul `RETENTION_MANUAL` produce un email în română care spune că plata prelungirii a fost rambursată și păstrarea trebuie ajustată manual, cu linkul spre fișa evenimentului
+- [X] T013 [P] [US2] În `supabase/tests/functions/payment-retention.test.ts` (existent): după `complete_payment` pentru o prelungire, plata are `previous_retention_option_id`, `previous_retention_months` și `previous_surcharge_minor` egale cu valorile evenimentului de dinainte; o activare nu le setează
+- [X] T014 [P] [US2] În `supabase/tests/functions/payment-refund.test.ts`: prelungire 3 → 12 rambursată integral → `retention_reverted`; evenimentul are `retention_months`, `retention_surcharge_minor`, `final_price_minor` și `purge_at` de dinainte; `event_retention_changes` are un rând nou cu `actor_kind = 'payment'`; aceeași revenire funcționează dacă opțiunea de 3 luni a fost dezactivată între timp în catalog. Cazuri `manual_adjustment` (cu mesaj `admin_payment_notice` / `RETENTION_MANUAL` în coada `media_jobs`): o schimbare a păstrării făcută de admin după prelungire (FR-009); `previous_*` null (prelungire dinainte de 004); data recalculată ≤ acum + 7 zile (FR-008). Eveniment suspendat sau expirat → `none`, fără mesaj. Rambursare parțială → păstrarea neschimbată (FR-010)
+- [X] T015 [P] [US2] Test worker în `apps/worker/tests/admin-payment-notice.test.ts` (existent): motivul `RETENTION_MANUAL` produce un email în română care spune că plata prelungirii a fost rambursată și păstrarea trebuie ajustată manual, cu linkul spre fișa evenimentului
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] În migrația din T003: `create or replace function public.apply_paid_extension(p_payment_id uuid)` ca în `supabase/migrations/20261002000700_retention_payment.sql`, plus, înainte de `update public.events`, `update public.payments set previous_retention_option_id = e.retention_option_id, previous_retention_months = e.retention_months, previous_surcharge_minor = e.retention_surcharge_minor where id = pay.id` (research R5); semnătura și drepturile neschimbate
-- [ ] T017 [US2] În `register_refund`: ramura `purpose = 'retention_extension'` și `status = 'paid'` (research R5, data-model.md): eveniment inexistent sau ne-`active` → `none`; dacă `previous_*` sunt null, sau există în `event_retention_changes` un rând pentru eveniment cu `created_at > pay.paid_at`, sau `(upload_ends_at la Europe/Bucharest + previous_retention_months luni)` ≤ `now() + interval '7 days'` → `refund_effect = 'manual_adjustment'`, `pgmq.send('media_jobs', jsonb_build_object('type', 'admin_payment_notice', 'payment_id', pay.id, 'reason', 'RETENTION_MANUAL'))`, întoarce `manual_adjustment`; altfel setează `app.payment_snapshot` = `{"months": previous_retention_months, "surcharge": previous_surcharge_minor}` și `app.retention_actor = 'payment'`, `update public.events set retention_option_id = pay.previous_retention_option_id`, golește setările, `refund_effect = 'retention_reverted'`, întoarce `retention_reverted`
-- [ ] T018 [P] [US2] În `apps/worker/src/jobs/types.ts` adaugă `"RETENTION_MANUAL"` la `reason` din `admin_payment_notice`; în `apps/worker/src/email/messages/ro.ts › adminPaymentNotice.reasons` adaugă textul „Plata prelungirii a fost rambursată, dar păstrarea nu a putut fi readusă automat. Ajustează păstrarea din fișa evenimentului.”; în `apps/worker/src/email/templates/plata-de-verificat.ts` acțiunea pentru `RETENTION_MANUAL` e „Ajustează păstrarea din fișa evenimentului” (contracts/worker-jobs.md)
-- [ ] T019 [US2] Rulează `corepack pnpm test:db` și `corepack pnpm test:worker`; regenerează `db.types.ts` dacă s-au schimbat semnături
+- [X] T016 [US2] În migrația din T003: `create or replace function public.apply_paid_extension(p_payment_id uuid)` ca în `supabase/migrations/20261002000700_retention_payment.sql`, plus, înainte de `update public.events`, `update public.payments set previous_retention_option_id = e.retention_option_id, previous_retention_months = e.retention_months, previous_surcharge_minor = e.retention_surcharge_minor where id = pay.id` (research R5); semnătura și drepturile neschimbate
+- [X] T017 [US2] În `register_refund`: ramura `purpose = 'retention_extension'` și `status = 'paid'` (research R5, data-model.md): eveniment inexistent sau ne-`active` → `none`; dacă `previous_*` sunt null, sau există în `event_retention_changes` un rând pentru eveniment cu `created_at > pay.paid_at`, sau `(upload_ends_at la Europe/Bucharest + previous_retention_months luni)` ≤ `now() + interval '7 days'` → `refund_effect = 'manual_adjustment'`, `pgmq.send('media_jobs', jsonb_build_object('type', 'admin_payment_notice', 'payment_id', pay.id, 'reason', 'RETENTION_MANUAL'))`, întoarce `manual_adjustment`; altfel setează `app.payment_snapshot` = `{"months": previous_retention_months, "surcharge": previous_surcharge_minor}` și `app.retention_actor = 'payment'`, `update public.events set retention_option_id = pay.previous_retention_option_id`, golește setările, `refund_effect = 'retention_reverted'`, întoarce `retention_reverted`
+- [X] T018 [P] [US2] În `apps/worker/src/jobs/types.ts` adaugă `"RETENTION_MANUAL"` la `reason` din `admin_payment_notice`; în `apps/worker/src/email/messages/ro.ts › adminPaymentNotice.reasons` adaugă textul „Plata prelungirii a fost rambursată, dar păstrarea nu a putut fi readusă automat. Ajustează păstrarea din fișa evenimentului.”; în `apps/worker/src/email/templates/plata-de-verificat.ts` acțiunea pentru `RETENTION_MANUAL` e „Ajustează păstrarea din fișa evenimentului” (contracts/worker-jobs.md)
+- [X] T019 [US2] Rulează `corepack pnpm test:db` și `corepack pnpm test:worker`; regenerează `db.types.ts` dacă s-au schimbat semnături
 
 **Checkpoint**: prelungirile rambursate nu mai lasă păstrare gratuită
 
@@ -109,14 +109,14 @@ emailurilor în `apps/worker/src/email/messages/ro.ts`.
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T020 [P] [US3] În `apps/web/tests/e2e/refund.spec.ts`: adminul deschide `/admin/events/{id}` după rambursarea integrală și vede în foaia „Plăți” „Rambursată” cu data și „Eveniment suspendat”; după o rambursare parțială vede „Rambursat parțial: {sumă}”; verificare axe (WCAG 2.2 AA) pe fișă, ca în `apps/web/tests/e2e/a11y.spec.ts`
+- [X] T020 [P] [US3] În `apps/web/tests/e2e/refund.spec.ts`: adminul deschide `/admin/events/{id}` după rambursarea integrală și vede în foaia „Plăți” „Rambursată” cu data și „Eveniment suspendat”; după o rambursare parțială vede „Rambursat parțial: {sumă}”; verificare axe (WCAG 2.2 AA) pe fișă, ca în `apps/web/tests/e2e/a11y.spec.ts`
 
 ### Implementation for User Story 3
 
-- [ ] T021 [US3] În `apps/web/lib/admin/queries.ts › listPayments` citește și `refunded_minor`, `refunded_at`, `refund_effect`, `previous_retention_months` și expune-le ca `refundedMinor`, `refundedAt`, `refundEffect`, `previousRetentionMonths`
-- [ ] T022 [P] [US3] În `apps/web/lib/i18n/messages/ro.ts` adaugă `admin.payments.refund.partial` („Rambursat parțial: {amount}”), `admin.payments.refund.full` („Rambursată”), `admin.payments.refund.effect.suspended` („Eveniment suspendat”), `admin.payments.refund.effect.retention_reverted` („Păstrarea a revenit la {months}”), `admin.payments.refund.effect.manual_adjustment` („Păstrarea trebuie ajustată manual”), `admin.payments.refund.effect.none` („Fără schimbări”)
-- [ ] T023 [US3] În `apps/web/components/admin/PaymentsSheet.tsx` afișează, pentru plățile cu `refundedMinor > 0`, rândul de rambursare din contracts/web-interface.md (sumă formatată cu `formatMoney`, data cu `formatDateTime`, efectul); rambursarea integrală folosește culoarea de atenționare ca `flagged`, cu starea spusă în text (WCAG 1.4.1)
-- [ ] T024 [US3] Rulează e2e-ul din T020 pe desktop, Pixel 7 și iPhone 15
+- [X] T021 [US3] În `apps/web/lib/admin/queries.ts › listPayments` citește și `refunded_minor`, `refunded_at`, `refund_effect`, `previous_retention_months` și expune-le ca `refundedMinor`, `refundedAt`, `refundEffect`, `previousRetentionMonths`
+- [X] T022 [P] [US3] În `apps/web/lib/i18n/messages/ro.ts` adaugă `admin.payments.refund.partial` („Rambursat parțial: {amount}”), `admin.payments.refund.full` („Rambursată”), `admin.payments.refund.effect.suspended` („Eveniment suspendat”), `admin.payments.refund.effect.retention_reverted` („Păstrarea a revenit la {months}”), `admin.payments.refund.effect.manual_adjustment` („Păstrarea trebuie ajustată manual”), `admin.payments.refund.effect.none` („Fără schimbări”)
+- [X] T023 [US3] În `apps/web/components/admin/PaymentsSheet.tsx` afișează, pentru plățile cu `refundedMinor > 0`, rândul de rambursare din contracts/web-interface.md (sumă formatată cu `formatMoney`, data cu `formatDateTime`, efectul); rambursarea integrală folosește culoarea de atenționare ca `flagged`, cu starea spusă în text (WCAG 1.4.1)
+- [X] T024 [US3] Rulează e2e-ul din T020 pe desktop, Pixel 7 și iPhone 15
 
 **Checkpoint**: toate poveștile funcționează independent
 
@@ -124,11 +124,11 @@ emailurilor în `apps/worker/src/email/messages/ro.ts`.
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T025 [P] În `docs/livrare-server-propriu.md › 8. Plățile` adaugă `charge.refunded` la evenimentele destinației de webhook (6 în total) și nota că rambursările integrale suspendă evenimentul sau readuc păstrarea (FR-013)
-- [ ] T026 [P] În `specs/003-stripe-payment-activation/spec.md › FR-016` adaugă trimiterea: „Înlocuită pentru rambursările plăților aplicate de 004/FR-004 și FR-007.”
-- [ ] T027 Rulează porțile complete: `corepack pnpm lint`, `corepack pnpm typecheck`, `corepack pnpm test:unit`, `corepack pnpm test:db`, `corepack pnpm test:worker`, e2e (desktop + mobil) cu serverul Stripe fals
+- [X] T025 [P] În `docs/livrare-server-propriu.md › 8. Plățile` adaugă `charge.refunded` la evenimentele destinației de webhook (6 în total) și nota că rambursările integrale suspendă evenimentul sau readuc păstrarea (FR-013)
+- [X] T026 [P] În `specs/003-stripe-payment-activation/spec.md › FR-016` adaugă trimiterea: „Înlocuită pentru rambursările plăților aplicate de 004/FR-004 și FR-007.”
+- [X] T027 Rulează porțile complete: `corepack pnpm lint`, `corepack pnpm typecheck`, `corepack pnpm test:unit`, `corepack pnpm test:db`, `corepack pnpm test:worker`, e2e (desktop + mobil) cu serverul Stripe fals
 - [ ] T028 Scenariile manuale 1–7 din [quickstart.md](./quickstart.md) cu Stripe în modul test și `stripe listen`
-- [ ] T029 Scrie `specs/004-stripe-refunds/raport-implementare.md` (constituția: ce s-a realizat, cum, verificare, limitări)
+- [X] T029 Scrie `specs/004-stripe-refunds/raport-implementare.md` (constituția: ce s-a realizat, cum, verificare, limitări)
 
 ---
 

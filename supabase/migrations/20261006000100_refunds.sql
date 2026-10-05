@@ -100,15 +100,75 @@ begin
 end;
 $$;
 
--- Efectul rambursării integrale a unei prelungiri (US2); completat mai jos.
+-- Rambursarea integrală a unei prelungiri (US2, FR-007–FR-009; research R5): opțiunea de dinainte
+-- revine cu snapshot-ul ei, iar data ștergerii și prețul final se recalculează (compute_purge_at),
+-- doar dacă revenirea e sigură; altfel administratorii ajustează manual.
 create function public.refund_extension_effect(pay public.payments)
 returns text
 language plpgsql
 security definer
 set search_path = ''
 as $$
+declare
+  e public.events;
 begin
-  return 'none';
+  select * into e from public.events ev where ev.id = pay.event_id for update;
+  if not found or e.status <> 'active' then
+    return 'none';
+  end if;
+
+  if pay.previous_retention_option_id is null
+     or exists (
+       select 1 from public.event_retention_changes c where c.event_id = e.id and c.created_at > pay.paid_at
+     )
+     or ((e.upload_ends_at at time zone 'Europe/Bucharest') + make_interval(months => pay.previous_retention_months))
+        at time zone 'Europe/Bucharest' <= now() + interval '7 days' then
+    perform pgmq.send('media_jobs', jsonb_build_object(
+      'type', 'admin_payment_notice', 'payment_id', pay.id, 'reason', 'RETENTION_MANUAL'));
+    return 'manual_adjustment';
+  end if;
+
+  perform set_config('app.payment_snapshot',
+    jsonb_build_object('months', pay.previous_retention_months, 'surcharge', pay.previous_surcharge_minor)::text, true);
+  perform set_config('app.retention_actor', 'payment', true);
+  update public.events set retention_option_id = pay.previous_retention_option_id where id = e.id;
+  perform set_config('app.payment_snapshot', '', true);
+  perform set_config('app.retention_actor', '', true);
+  return 'retention_reverted';
+end;
+$$;
+
+-- Ca în 20261002000700, plus opțiunea de dinainte reținută pe plată, pentru revenirea la
+-- rambursare (FR-007). Semnătura și drepturile neschimbate.
+create or replace function public.apply_paid_extension(p_payment_id uuid)
+returns text
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  pay public.payments;
+  e public.events;
+begin
+  select * into pay from public.payments p where p.id = p_payment_id;
+  select * into e from public.events ev where ev.id = pay.event_id for update;
+  if not found or e.status <> 'active' or now() >= e.purge_at or pay.retention_months <= e.retention_months then
+    return 'EXTENSION_NOT_POSSIBLE';
+  end if;
+
+  update public.payments
+     set previous_retention_option_id = e.retention_option_id,
+         previous_retention_months = e.retention_months,
+         previous_surcharge_minor = e.retention_surcharge_minor
+   where id = pay.id;
+
+  perform set_config('app.payment_snapshot',
+    jsonb_build_object('months', pay.retention_months, 'surcharge', pay.surcharge_minor)::text, true);
+  perform set_config('app.retention_actor', 'payment', true);
+  update public.events set retention_option_id = pay.retention_option_id where id = e.id;
+  perform set_config('app.payment_snapshot', '', true);
+  perform set_config('app.retention_actor', '', true);
+  return null;
 end;
 $$;
 

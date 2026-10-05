@@ -9,11 +9,12 @@ Pentru fiecare plată, pe lângă câmpurile din 003:
 | Condiție | Afișare (textele în `messages/ro.ts`) |
 | --- | --- |
 | `refunded_minor = 0` | neschimbat |
-| rambursare parțială | „Rambursat parțial: {sumă} · {dată}” |
-| rambursare integrală | „Rambursată · {dată}” + efectul: „Eveniment suspendat”, „Păstrarea a revenit la {luni}”, „Păstrarea trebuie ajustată manual”, „Fără schimbări” |
+| rambursare parțială | starea neschimbată + rândul „Rambursat parțial: {sumă} · {dată}” |
+| rambursare integrală | starea „Rambursată” + rândul „Rambursare pe {dată} · {efect}”, efectul fiind „Eveniment suspendat”, „Păstrarea a revenit la {luni}”, „Păstrarea trebuie ajustată manual” sau „Fără schimbări” |
 
-Rambursarea integrală e marcată vizual ca plățile de rambursat (culoarea de atenționare), iar textul
-spune starea; culoarea nu e singurul indiciu (WCAG 1.4.1).
+Starea „Rambursată” folosește culoarea de atenționare, iar textul spune starea; culoarea nu e
+singurul indiciu (WCAG 1.4.1). O plată „De rambursat” rambursată integral nu mai arată instrucțiunea
+„rambursează plata din Stripe”.
 
 ## Organizatorul
 

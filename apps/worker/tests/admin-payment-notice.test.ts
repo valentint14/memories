@@ -81,3 +81,20 @@ describe("admin_payment_notice (FR-011, FR-016a)", () => {
     expect(text).toContain("(eveniment șters)");
   });
 });
+
+describe("admin_payment_notice: păstrarea de ajustat manual (004: FR-009)", () => {
+  it("spune că prelungirea a fost rambursată și că păstrarea se ajustează din fișa evenimentului", async () => {
+    const admin = randomEmail("pay-admin-ret");
+    process.env.ADMIN_NOTIFY_EMAILS = admin;
+    const { paymentId, eventId } = await refundDue(randomEmail("pay-org-ret"));
+
+    await adminPaymentNotice.run({ type: "admin_payment_notice", payment_id: paymentId, reason: "RETENTION_MANUAL" }, ctx);
+
+    const [mail] = await mailsTo(admin);
+    const text = await mailText(mail?.ID ?? "");
+    expect(text).toContain("Plata prelungirii a fost rambursată");
+    expect(text).toContain("ajustează păstrarea din fișa evenimentului");
+    expect(text).not.toContain("rambursează plata");
+    expect(text).toContain(`/admin/events/${eventId ?? ""}`);
+  });
+});

@@ -1,7 +1,8 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { loginWithMagicLink } from "./support/auth";
-import { createOrganizer, serviceClient } from "./support/db";
-import { gotoHydrated, uniqueName } from "./support/page";
+import { loginAsNewAdmin, loginWithMagicLink } from "./support/auth";
+import { createAdmin, createOrganizer, serviceClient } from "./support/db";
+import { gotoHydrated, uniqueName, waitForHydration } from "./support/page";
 import { futureDate } from "./support/self-service";
 import { chargeRefunded, latestPayment, payFakeSession, sendWebhook, sessionIdFromCheckoutUrl, stubCheckoutPage } from "./support/stripe";
 
@@ -64,4 +65,29 @@ test("o rambursare parțială lasă evenimentul activ", async ({ page }) => {
   await gotoHydrated(page, `/e/${await tokenOf(eventId)}`);
   await expect(page.getByLabel("Alege poze și video")).toBeVisible();
   expect(await latestPayment(eventId)).toMatchObject({ refunded_minor: 5_000, refund_effect: null });
+});
+
+test("foaia „Plăți” a adminului arată rambursarea parțială, apoi pe cea integrală cu efectul (US3)", async ({ page, browser }) => {
+  const { eventId, intent, amount } = await paidEvent(page);
+  expect(await sendWebhook(page, "charge.refunded", chargeRefunded(intent, amount, 5_000))).toBe(200);
+
+  const context = await browser.newContext(test.info().project.use);
+  const admin = await context.newPage();
+  try {
+    await loginAsNewAdmin(admin, await createAdmin());
+    await gotoHydrated(admin, `/admin/events/${eventId}`);
+    const sheet = admin.getByRole("region", { name: "Plăți" });
+    await expect(sheet).toContainText("Rambursat parțial: 50,00");
+
+    expect(await sendWebhook(page, "charge.refunded", chargeRefunded(intent, amount, amount))).toBe(200);
+    await gotoHydrated(admin, `/admin/events/${eventId}`);
+    await expect(sheet).toContainText("Rambursată");
+    await expect(sheet).toContainText("Eveniment suspendat");
+
+    await waitForHydration(admin);
+    const accessibility = await new AxeBuilder({ page: admin }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+    expect(accessibility.violations.map((v) => v.id)).toEqual([]);
+  } finally {
+    await context.close();
+  }
 });

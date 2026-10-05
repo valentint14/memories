@@ -326,17 +326,30 @@ _Packages_), apoi `docker compose up -d`.
 2. _Settings › Customer emails_: activează **Successful payments** (chitanțele trimise
    organizatorilor). Factura fiscală o emiți tu, în afara aplicației, pe baza foii **Plăți** din
    administrare.
-3. _Developers › Webhooks › Add endpoint_: `https://<domeniu>/api/stripe/webhook`, doar
-   evenimentele `checkout.session.completed`, `checkout.session.async_payment_succeeded`,
-   `checkout.session.async_payment_failed`, `checkout.session.expired`, `charge.dispute.created`.
+3. Webhook-ul, în modul **live**: _Developers_ (jos în stânga) › _Workbench › Webhooks › Add
+   destination_ (sau direct <https://dashboard.stripe.com/webhooks>):
+   - _Events from_: **Your account**; _API version_: cea a aplicației (`2026-08-26.dahlia`);
+     _Payload style_, dacă apare: **Snapshot**;
+   - exact **6** evenimente: `checkout.session.completed`, `checkout.session.async_payment_succeeded`,
+     `checkout.session.async_payment_failed`, `checkout.session.expired`, `charge.dispute.created`,
+     `charge.refunded`;
+   - _Destination type_: **Webhook endpoint**, URL `https://<domeniu>/api/stripe/webhook`.
+
    Secretul de semnare (`whsec_…`) intră în `web.env` ca `STRIPE_WEBHOOK_SECRET`.
 4. _Developers › API keys_: cheia secretă **live** (`sk_live_…`) în `web.env` ca `STRIPE_SECRET_KEY`.
-5. Cloudflare (_Security_): nicio provocare (Bot Fight Mode, regulă WAF) pe `POST /api/stripe/webhook`;
-   Stripe nu poate rezolva o provocare JavaScript.
-6. Politica de confidențialitate trebuie să menționeze Stripe ca procesator de plăți (versiune
-   nouă a documentului, vezi specificația 002, FR-041).
-7. Migrațiile 003 se aplică (`supabase db push`) odată cu imaginile care le conțin, după merge.
-8. Probă: o plată reală mică pe un eveniment de test, apoi rambursată din Stripe.
+   Cheile nu ajung în cod sau în GitHub, doar în `web.env` pe instanță; după modificare,
+   `docker compose up -d --force-recreate web`.
+5. Cloudflare (_Security › Bots_): Bot Fight Mode oprit; nicio altă provocare pe
+   `POST /api/stripe/webhook`. Stripe nu poate rezolva o provocare JavaScript.
+6. **Rambursările** se fac din Stripe (_Payments › plata › Refund_), iar aplicația reacționează
+   singură (004): rambursarea integrală a activării suspendă evenimentul („Plată rambursată”),
+   cea a unei prelungiri readuce păstrarea de dinainte sau trimite un email de ajustare manuală;
+   rambursările parțiale și cele ale plăților „de rambursat” doar apar în foaia **Plăți**.
+7. Migrațiile se aplică (`supabase db push`, de pe `main`) **imediat** după merge: cron-ul de pe
+   instanță instalează imaginile noi în cel mult 15 minute, iar aplicația nouă pe baza veche dă
+   erori.
+8. Probă: o plată reală mică pe un eveniment de test, apoi rambursată integral din Stripe;
+   evenimentul trebuie să devină suspendat.
 
 ---
 

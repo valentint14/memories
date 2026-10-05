@@ -88,10 +88,21 @@ export async function paidActivation(prefix: string): Promise<PaidPayment> {
 }
 
 /** Eveniment activ (`months` luni) prelungit la `toMonths` printr-o plată confirmată de `complete_payment`. */
-export async function paidExtension(prefix: string, months = 3, toMonths = 12): Promise<PaidPayment> {
+export async function paidExtension(
+  prefix: string,
+  options: { months?: number; toMonths?: number; uploadStartsAt?: Date; uploadEndsAt?: Date } = {},
+): Promise<PaidPayment> {
+  const months = options.months ?? 3;
+  const toMonths = options.toMonths ?? 12;
   const email = randomEmail(prefix);
   const client = await organizerClient(email);
-  const event = await createTestEvent({ organizerEmail: email, months, basePriceMinor: 29_900 });
+  const event = await createTestEvent({
+    organizerEmail: email,
+    months,
+    basePriceMinor: 29_900,
+    ...(options.uploadStartsAt && { uploadStartsAt: options.uploadStartsAt }),
+    ...(options.uploadEndsAt && { uploadEndsAt: options.uploadEndsAt }),
+  });
   const [from, to] = await Promise.all([optionSurcharge(months), optionSurcharge(toMonths)]);
   const { data, error } = await client.rpc("prepare_payment", {
     p_event_id: event.id,
