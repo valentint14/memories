@@ -8,8 +8,8 @@ async function awaitingEvent(client: SupabaseClient, name: string): Promise<stri
   const { data, error } = await client.rpc("create_event_as_organizer", {
     p_name: name,
     p_event_date: new Date(Date.now() + 10 * 86_400_000).toISOString().slice(0, 10),
-    p_terms_version: "2026-10-01",
-    p_privacy_version: "2026-10-01",
+    p_terms_version: "2026-10-05",
+    p_privacy_version: "2026-10-05",
   });
   if (error) throw new Error(error.message);
   return data;

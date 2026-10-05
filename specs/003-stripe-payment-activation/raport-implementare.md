@@ -14,8 +14,9 @@
 | US4 — prelungirea plătită (P3) | FR-020–FR-022 | ✅ |
 | Securitate și date | FR-017, FR-018, FR-019 | ✅ |
 
-**Sarcini** (`tasks.md`): 57 din 58 finalizate. Rămasă: **T054** (versiune nouă a politicii de
-confidențialitate), cu motivul de la „Limitări”.
+**Sarcini** (`tasks.md`): 58 din 58 finalizate. T054 (documentele legale) a fost încheiată după
+prima instalare în producție: versiunile `2026-10-05` ale termenilor și politicii de
+confidențialitate, încă marcate ca schiță de verificat juridic de proprietar.
 
 **Fișiere principale**
 
@@ -81,14 +82,14 @@ plată, pe plata anulată și pe registrul adminului.
 
 ## Limitări și pași următori
 
-- **T054 nefinalizată — politica de confidențialitate.** Specificația 002 spune că textele legale
-  le furnizează proprietarul platformei, iar o versiune nouă în vigoare cere tuturor
-  organizatorilor o nouă acceptare. Paragraful propus, de adăugat de proprietar într-o versiune
-  nouă (`apps/web/content/legal/privacy/<data>.md` + rândul din `legal_documents`):
-  > Plățile online sunt procesate de Stripe Payments Europe, Ltd. (Irlanda). Datele cardului se
-  > introduc doar pe pagina Stripe; noi nu le primim și nu le stocăm. Păstrăm suma, data,
-  > referința plății și datele de facturare (nume, adresă și, opțional, firma și codul fiscal),
-  > cât timp păstrăm datele necesare facturării evenimentului, apoi le anonimizăm.
+- **Documentele legale `2026-10-05`** (T054): politica numește Stripe, datele plăților și
+  procesatorii serverului propriu (Oracle, Brevo, Cloudflare); termenii descriu plata online,
+  rambursarea plăților neaplicabile și suspendarea la contestație. Rămân schiță: verificarea
+  juridică, dreptul de retragere pentru serviciile digitale și datele de contact ale firmei sunt
+  ale proprietarului.
+- **Expirarea plății: 23 h, nu 24 h.** Stripe real respinge `expires_at` la exact 24 h de la
+  crearea sesiunii (ceasul lui poate fi cu o fracțiune de secundă în urmă); serverul fals din e2e
+  nu verifica limita.
 - **Neverificat cu Stripe real**: pagina Checkout găzduită (locale, câmpurile de facturare, codul
   fiscal), webhook-urile livrate de Stripe și chitanțele. De parcurs scenariile din
   [quickstart.md](./quickstart.md) cu un cont Stripe în modul test și `stripe listen`.

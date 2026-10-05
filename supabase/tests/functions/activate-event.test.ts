@@ -26,8 +26,8 @@ async function awaitingEvent(eventDate: string): Promise<string> {
   const { data, error } = await client.rpc("create_event_as_organizer", {
     p_name: "Nuntă de activat",
     p_event_date: eventDate,
-    p_terms_version: "2026-10-01",
-    p_privacy_version: "2026-10-01",
+    p_terms_version: "2026-10-05",
+    p_privacy_version: "2026-10-05",
   });
   if (error) throw new Error(error.message);
   return data;

@@ -49,6 +49,11 @@ const server = createServer((req, res) => {
       const key = req.headers["idempotency-key"];
       if (typeof key === "string" && byIdempotencyKey.has(key)) return send(res, 200, sessions.get(byIdempotencyKey.get(key)));
       const params = parseForm(body);
+      // Ca Stripe: expirarea între 30 de minute și strict sub 24 h de la creare.
+      const ttl = Number(params.expires_at ?? 0) - Math.floor(Date.now() / 1000);
+      if (params.expires_at !== undefined && (ttl < 30 * 60 || ttl >= 24 * 60 * 60)) {
+        return send(res, 400, { error: { type: "invalid_request_error", param: "expires_at", message: "The `expires_at` timestamp must be less than 24 hours from Checkout Session creation." } });
+      }
       const id = `cs_test_${randomBytes(12).toString("hex")}`;
       const item = params.line_items?.["0"] ?? {};
       const session = {

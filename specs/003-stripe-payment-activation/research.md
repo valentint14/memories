@@ -66,8 +66,9 @@ Fiecare decizie răspunde unei necunoscute din [plan.md](./plan.md) › Technica
 - **Decision**: rândul `payments` cu `status = 'open'` e unic per (eveniment, scop) printr-un
   index unic parțial. La o nouă apăsare: dacă plata deschisă are aceeași opțiune și aceeași sumă
   și mai are cel puțin 10 minute, se reia URL-ul ei; altfel se închide la Stripe
-  (`checkout.sessions.expire`) și se creează alta. `expires_at` = minimul dintre acum + 24 h și
-  ștergerea automată − 1 h; Stripe cere cel puțin 30 de minute, deci sub acest prag plata nu mai
+  (`checkout.sessions.expire`) și se creează alta. `expires_at` = minimul dintre acum + 23 h și
+  ștergerea automată − 1 h. Stripe cere strict sub 24 h după ceasul lui (24 h exact e respins, verificat
+  cu Stripe real) și cel puțin 30 de minute, deci sub acest prag plata nu mai
   poate începe (`PAYMENT_WINDOW_CLOSED`).
 - **Rationale**: Stripe nu permite două încasări din aceeași sesiune; închiderea explicită a
   sesiunii vechi elimină dubla plată din două ferestre (rămâne doar cazul teoretic în care ambele

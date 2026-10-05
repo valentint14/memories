@@ -90,8 +90,8 @@ describe("suspend_event / reactivate_event", () => {
     const { data: eventId } = await owner.rpc("create_event_as_organizer", {
       p_name: "Neactivat",
       p_event_date: new Date(Date.now() + 9 * 86_400_000).toISOString().slice(0, 10),
-      p_terms_version: "2026-10-01",
-      p_privacy_version: "2026-10-01",
+      p_terms_version: "2026-10-05",
+      p_privacy_version: "2026-10-05",
     });
     // 003: prelungirea trece prin plată; plata nu poate fi pregătită în afara stării active (FR-020).
     const extend = await owner.rpc("prepare_payment", {
@@ -110,8 +110,8 @@ describe("admin_update_pending_event (FR-028)", () => {
     const { data: eventId } = await owner.rpc("create_event_as_organizer", {
       p_name: "Nume greșit",
       p_event_date: new Date(Date.now() + 9 * 86_400_000).toISOString().slice(0, 10),
-      p_terms_version: "2026-10-01",
-      p_privacy_version: "2026-10-01",
+      p_terms_version: "2026-10-05",
+      p_privacy_version: "2026-10-05",
     });
     const newDate = new Date(Date.now() + 40 * 86_400_000).toISOString().slice(0, 10);
     const { error } = await admin.rpc("admin_update_pending_event", { p_event_id: eventId ?? "", p_name: "Nume corect", p_event_date: newDate });

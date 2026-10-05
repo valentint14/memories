@@ -78,15 +78,19 @@ email și a Turnstile în producție). Testul widgetului Turnstile real rulează
 
 ## Date personale (GDPR)
 
-Toate datele sunt găzduite în UE. Procesatori cu sediul în afara UE, cu date în UE, pentru care
-este necesar un acord de prelucrare a datelor (DPA) înainte de producție (research.md R15):
+Datele aplicației sunt găzduite în UE. Procesatori, fiecare cu acord de prelucrare a datelor (DPA)
+acceptat înainte de producție (research.md R15), listați și în politica de confidențialitate
+(`apps/web/content/legal/privacy/`):
 
-- **Vercel** — doar dacă aplicația web se mută pe Vercel (`fra1`, plan Pro pentru uz comercial)
 - **Supabase** — baza de date, autentificarea și stocarea fișierelor (`eu-central-1`)
-- **Resend** — trimiterea emailurilor (`eu-west-1`); pe serverul propriu, **Brevo** (Franța, UE)
+- **Oracle Cloud** — serverul aplicației și al worker-ului (Frankfurt)
+- **Brevo** — trimiterea emailurilor (Franța)
+- **Stripe** — plățile online (Stripe Payments Europe, Irlanda); datele cardului nu ajung în aplicație
 - **Sentry** — raportarea erorilor, fără date personale (regiunea de date UE)
 - **Cloudflare** — Tunnel (traficul HTTPS către server) și verificarea anti-bot Turnstile pe formularele de creare și de autentificare
   (adresa IP și semnale ale browserului, fără cookie-uri și fără stocarea datelor aplicației)
+
+Stripe și Cloudflare pot prelucra unele date în afara UE, cu clauzele contractuale standard.
 
 Backup-urile bazei de date se păstrează 7 zile; ștergerea completă a datelor unei persoane are
 loc în cel mult 7 zile de la ștergerea din aplicație ([`supabase/README.md`](supabase/README.md)).

@@ -19,8 +19,8 @@ export async function awaitingEvent(prefix: string, daysAhead = 20): Promise<Awa
   const { data, error } = await client.rpc("create_event_as_organizer", {
     p_name: "Nuntă de plătit",
     p_event_date: inDays(daysAhead),
-    p_terms_version: "2026-10-01",
-    p_privacy_version: "2026-10-01",
+    p_terms_version: "2026-10-05",
+    p_privacy_version: "2026-10-05",
   });
   if (error) throw new Error(error.message);
   return { client, email, eventId: data };

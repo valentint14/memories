@@ -71,8 +71,9 @@ begin
     perform public.raise_app_error('PAYMENT_NOT_ALLOWED');
   end if;
 
-  -- Cel mult 24 h și cu cel puțin 1 h înainte de ștergere; Stripe cere minimum 30 de minute (FR-008).
-  v_expires := least(now() + interval '24 hours', coalesce(v_deadline, now() + interval '25 hours') - interval '1 hour');
+  -- Cel mult 23 h și cu cel puțin 1 h înainte de ștergere (FR-008). Stripe cere între 30 de minute
+  -- și strict sub 24 h de la crearea sesiunii, după ceasul lui: 24 h exact e respins.
+  v_expires := least(now() + interval '23 hours', coalesce(v_deadline, now() + interval '25 hours') - interval '1 hour');
   if v_expires < now() + interval '30 minutes' then
     perform public.raise_app_error('PAYMENT_WINDOW_CLOSED');
   end if;
