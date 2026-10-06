@@ -403,7 +403,8 @@ export const ro = {
   "gallery.download": "Descarcă originalul",
   "gallery.downloadShort": "Descarcă",
   "gallery.position": "{current} / {total}",
-  "gallery.live": "Live — fișierele noi apar automat",
+  "gallery.live": "Live",
+  "gallery.liveHint": "Fișierele noi apar automat.",
   "gallery.selected": "{count} selectate",
 
   // Retenție și preț
@@ -443,6 +444,8 @@ export const ro = {
   "delete.select": "Selectează fișierul de la {name}",
   "delete.selection": "Șterge selecția ({count})",
   "delete.clearSelection": "Anulează selecția",
+  "delete.selectionShort": "Șterge",
+  "delete.clearSelectionShort": "Anulează",
   "delete.title": "Ștergi definitiv {files}?",
   "delete.warning": "Ștergerea este ireversibilă: fișierele, miniaturile și versiunile de redare dispar definitiv, iar linkurile trimise anterior nu vor mai funcționa.",
   "delete.confirm": "Șterge definitiv",
