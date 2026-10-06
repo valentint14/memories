@@ -66,6 +66,32 @@ textarea:not([aria-invalid="true"]):not([data-invalid]):focus {
   border-color: var(--color-ink);
 }
 
+/*
+ * Câmpurile de dată pe iOS: controlul nativ al Safari ignoră înălțimea minimă (câmpul gol se
+ * turtește), centrează valoarea și își impune o lățime minimă care poate ieși din coloană. Fără
+ * aspectul nativ arată ca celelalte câmpuri; selectorul de dată al sistemului se deschide în
+ * continuare la atingere. `-webkit-touch-callout` există doar pe iOS: desktopul și Android rămân
+ * cu controlul nativ.
+ */
+@supports (-webkit-touch-callout: none) {
+  input[type="date"],
+  input[type="datetime-local"],
+  input[type="time"] {
+    -webkit-appearance: none;
+    appearance: none;
+    display: block;
+    width: 100%;
+    min-width: 0;
+    text-align: left;
+  }
+  input[type="date"]::-webkit-date-and-time-value,
+  input[type="datetime-local"]::-webkit-date-and-time-value,
+  input[type="time"]::-webkit-date-and-time-value {
+    min-height: 1.5em;
+    text-align: left;
+  }
+}
+
 /* Fără bare de derulare vizibile; derularea merge în continuare cu rotița, touchpadul, atingerea și tastatura. */
 * {
   scrollbar-width: none;

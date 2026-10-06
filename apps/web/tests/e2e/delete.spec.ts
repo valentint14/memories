@@ -1,7 +1,7 @@
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 import { loginWithMagicLink } from "./support/auth";
 import { createEvent, createOrganizer, serviceClient, uploadAsGuest, waitForProcessed } from "./support/db";
-import { uniqueName } from "./support/page";
+import { gotoHydrated, uniqueName } from "./support/page";
 
 // US5 — organizatorul șterge fișiere (quickstart 13, SC-011). Necesită worker-ul.
 test.describe.configure({ mode: "serial" });
@@ -35,7 +35,7 @@ test.afterAll(async () => {
 });
 
 test("șterge definitiv fișierele selectate, după confirmare (FR-031, FR-032, SC-011)", async () => {
-  await page.goto(`/events/${eventId}`);
+  await gotoHydrated(page, `/events/${eventId}`);
   const rows = page.getByRole("row");
   await expect(rows).toHaveCount(3);
 
@@ -45,6 +45,10 @@ test("șterge definitiv fișierele selectate, după confirmare (FR-031, FR-032, 
   await rows.nth(0).locator("label").click();
   await expect(rows.nth(0).getByRole("checkbox")).toBeChecked();
   await rows.nth(1).locator("label").click();
+  // Banda galeriei: la selecție, numărul selectat și acțiunile înlocuiesc „Live” și numărul de fișiere.
+  const gallery = page.getByRole("region", { name: "Fișierele evenimentului" }).first();
+  await expect(gallery.getByText("2 selectate")).toBeVisible();
+  await expect(gallery.getByText("3 fișiere")).toHaveCount(0);
   await page.getByRole("button", { name: "Șterge selecția (2)" }).click();
 
   const dialog = page.getByRole("alertdialog");
@@ -54,6 +58,7 @@ test("șterge definitiv fișierele selectate, după confirmare (FR-031, FR-032, 
 
   await expect(rows).toHaveCount(1);
   await expect(rows.first()).toContainText("Cristi");
+  await expect(gallery.getByText("1 fișier", { exact: true })).toBeVisible();
   await expect(page.getByText("Arhiva anterioară nu mai este disponibilă")).toBeVisible();
 
   // După cel mult 60 s, niciun link emis anterior nu mai funcționează.
@@ -70,7 +75,7 @@ test("șterge definitiv fișierele selectate, după confirmare (FR-031, FR-032, 
 });
 
 test("renunțarea la confirmare nu șterge nimic", async () => {
-  await page.goto(`/events/${eventId}`);
+  await gotoHydrated(page, `/events/${eventId}`);
   await page.getByRole("row").first().locator("label").click();
   await page.getByRole("button", { name: "Șterge selecția (1)" }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Renunță" }).click();

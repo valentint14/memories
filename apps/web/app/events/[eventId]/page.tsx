@@ -14,7 +14,7 @@ import { activationInfo } from "@/lib/organizer/activation";
 import { confirmReturnedSession } from "@/lib/stripe/return";
 import { serverSupabase } from "@/lib/supabase/server";
 import { latestArchive } from "@/lib/organizer/archive";
-import { countReadyFiles, galleryAvailable, getOrganizerEvent, listGallery } from "@/lib/organizer/media";
+import { countGalleryFiles, countReadyFiles, galleryAvailable, getOrganizerEvent, listGallery } from "@/lib/organizer/media";
 import { uploadUrlForOrganizer } from "@/lib/organizer/qr";
 import { retentionQuote } from "@/lib/organizer/retention";
 import { ui } from "@/lib/ui";
@@ -104,10 +104,11 @@ export default async function EventGalleryPage({
   }
 
   const suspended = event.status === "suspended";
-  const [first, archive, readyFiles, quote, uploadUrl, payment] = await Promise.all([
+  const [first, archive, readyFiles, galleryFiles, quote, uploadUrl, payment] = await Promise.all([
     listGallery(eventId),
     latestArchive(eventId),
     countReadyFiles(eventId),
+    countGalleryFiles(eventId),
     suspended ? Promise.resolve([]) : retentionQuote(eventId),
     // În suspendare invitații nu pot încărca: linkul și codul QR nu se mai arată.
     suspended ? Promise.resolve(null) : uploadUrlForOrganizer(eventId),
@@ -135,7 +136,7 @@ export default async function EventGalleryPage({
         label={t("admin.detail.summary")}
         stats={[
           { label: t("admin.detail.stat.eventDate"), value: formatDateShort(event.eventDate) },
-          { label: t("admin.detail.stat.files"), value: String(readyFiles) },
+          { label: t("admin.detail.stat.files"), value: String(galleryFiles) },
           { label: t("admin.detail.stat.retention"), value: tp("plural.months", event.retentionMonths) },
           { label: t("admin.detail.stat.purgeAt"), value: formatDateShort(event.purgeAt) },
         ]}
@@ -144,7 +145,13 @@ export default async function EventGalleryPage({
         Rândurile: galeria; arhiva; păstrarea și linkul cu codul QR (foi egale); apoi detaliile și
         ștergerea. În suspendare nu mai apar păstrarea și linkul.
       */}
-      <GalleryGrid eventId={eventId} initialItems={first.items} initialCursor={first.nextCursor} live={!suspended} />
+      <GalleryGrid
+        eventId={eventId}
+        initialItems={first.items}
+        initialCursor={first.nextCursor}
+        initialTotal={galleryFiles}
+        live={!suspended}
+      />
       <ArchivePanel eventId={eventId} readyFiles={readyFiles} initial={archive} />
       {uploadUrl !== null && (
         <div className="grid gap-6 lg:grid-cols-2">

@@ -133,6 +133,21 @@ export async function listGallery(
   };
 }
 
+/**
+ * Numărul fișierelor din galerie, cu același filtru ca `listGallery` (încărcate, inclusiv cele în
+ * procesare): aceeași valoare în fișa evenimentului și în banda galeriei, indiferent de paginare.
+ */
+export async function countGalleryFiles(eventId: string): Promise<number> {
+  const supabase = await requireActiveEvent(eventId);
+  const { count, error } = await supabase
+    .from("media_items")
+    .select("id", { count: "exact", head: true })
+    .eq("event_id", eventId)
+    .not("uploaded_at", "is", null);
+  throwIfDbError(error);
+  return count ?? 0;
+}
+
 /** Numărul fișierelor gata (pentru activarea descărcării în masă, US4-3). */
 export async function countReadyFiles(eventId: string): Promise<number> {
   const supabase = await serverSupabase();

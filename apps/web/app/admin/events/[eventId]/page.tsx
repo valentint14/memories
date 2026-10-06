@@ -93,13 +93,22 @@ export default async function AdminEventPage({ params }: { params: Promise<{ eve
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Antetul: numele și organizatorul în stânga, starea și acțiunea ei în dreapta. */}
+      {/*
+        Antetul: numele și organizatorul în stânga, starea și acțiunea ei în dreapta. Pe telefon,
+        numele, originea (etichetă) și adresa sunt centrate, ca pe pagina organizatorului; adresa se
+        rupe doar după „@”, nu în mijlocul cuvintelor.
+      */}
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex min-w-0 flex-col gap-2">
+        <div className="flex min-w-0 flex-col items-center gap-2 text-center sm:items-stretch sm:text-left">
           <h1 className={ui.pageTitle}>{title}</h1>
-          <p className={`${ui.data} text-sm break-all text-ink-muted`}>
-            {t(`admin.origin.${event.origin}`)}
-            {event.organizerEmail !== null && <> · {event.organizerEmail}</>}
+          <p className="flex min-w-0 flex-col items-center gap-1 sm:flex-row sm:items-baseline sm:gap-3">
+            <span className={`${ui.kicker} text-ink-muted`}>{t(`admin.origin.${event.origin}`)}</span>
+            {event.organizerEmail !== null && (
+              <a href={`mailto:${event.organizerEmail}`} className={`${ui.link} max-w-full break-words`}>
+                {event.organizerEmail.split("@")[0]}@<wbr />
+                {event.organizerEmail.split("@").slice(1).join("@")}
+              </a>
+            )}
           </p>
         </div>
         {/* Pe telefon: ștampila și acțiunea pe toată lățimea, una sub alta; pe ecrane late, pe un rând. */}
