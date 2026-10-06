@@ -8,6 +8,7 @@ import { createEvent, updateEvent } from "@/lib/actions/admin";
 import { isoToLocalInput, localInputToIso } from "@/lib/dates";
 import { formatDateTime, formatMoney, t, type MessageKey } from "@/lib/i18n";
 import { ui } from "@/lib/ui";
+import { DateField } from "../ui/DateField";
 import { SelectField } from "../ui/SelectField";
 import { Sheet } from "../ui/Sheet";
 import { SheetActions } from "../ui/SheetActions";
@@ -91,11 +92,7 @@ export function EventForm({
     </TextField>
   );
   const eventDateField = (
-    <TextField name="eventDate" type="date" defaultValue={initial?.eventDate} className={fieldClass}>
-      <Label className="font-medium">{t("admin.form.eventDate")}</Label>
-      <Input className={inputClass} />
-      <FieldError className={errorClass} />
-    </TextField>
+    <DateField name="eventDate" label={t("admin.form.eventDate")} labelClassName="font-medium" defaultValue={initial?.eventDate} />
   );
   const organizerField = (
     <TextField name="organizerEmail" type="email" defaultValue={initial?.organizerEmail} className={fieldClass}>
@@ -105,23 +102,23 @@ export function EventForm({
     </TextField>
   );
   const startsField = (
-    <TextField
+    <DateField
       name="uploadStartsAt"
-      type="datetime-local"
-      defaultValue={initial ? isoToLocalInput(initial.uploadStartsAt) : undefined}
-      className={fieldClass}
-    >
-      <Label className="font-medium">{t("admin.form.uploadStartsAt")}</Label>
-      <Input className={inputClass} />
-      <FieldError className={errorClass} />
-    </TextField>
+      granularity="minute"
+      label={t("admin.form.uploadStartsAt")}
+      labelClassName="font-medium"
+      {...(initial && { defaultValue: isoToLocalInput(initial.uploadStartsAt) })}
+    />
   );
   const endsField = (
-    <TextField name="uploadEndsAt" type="datetime-local" value={uploadEndsLocal} onChange={setUploadEndsLocal} className={fieldClass}>
-      <Label className="font-medium">{t("admin.form.uploadEndsAt")}</Label>
-      <Input className={inputClass} />
-      <FieldError className={errorClass} />
-    </TextField>
+    <DateField
+      name="uploadEndsAt"
+      granularity="minute"
+      label={t("admin.form.uploadEndsAt")}
+      labelClassName="font-medium"
+      value={uploadEndsLocal}
+      onChange={setUploadEndsLocal}
+    />
   );
   const maxFilesField = (
     <TextField name="maxFilesPerGuest" type="number" defaultValue={String(initial?.maxFilesPerGuest ?? 50)} className={fieldClass}>

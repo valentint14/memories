@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { TOTP } from "otpauth";
 import { loginAsNewAdmin, loginWithMagicLink } from "./support/auth";
 import { createAdmin, createEvent, createOrganizer, randomEmail, serviceClient, uploadAsGuest, waitForProcessed } from "./support/db";
-import { gotoHydrated, uniqueName, waitForHydration } from "./support/page";
+import { fillDate, gotoHydrated, uniqueName, waitForHydration } from "./support/page";
 import { codeFromEmail, createAwaitingEvent, futureDate, submitCreateForm } from "./support/self-service";
 
 // FR-037: WCAG 2.2 nivel AA pe toate ecranele (constituția, principiul VIII).
@@ -132,7 +132,7 @@ test.describe("002: creare self-service, confirmare, documente legale", () => {
     await gotoHydrated(page, "/events/new");
     await expectAccessible(page, "/events/new");
     await page.getByLabel("Numele evenimentului").fill(uniqueName("A11y neactivat"));
-    await page.getByLabel("Data evenimentului").fill(futureDate(20));
+    await fillDate(page, "Data evenimentului", futureDate(20));
     await page.getByRole("checkbox", { name: /Accept termenii/ }).check();
     await page.getByRole("button", { name: "Creează evenimentul" }).click();
     await expect(page).toHaveURL(/\/events\/[0-9a-f-]{36}$/);

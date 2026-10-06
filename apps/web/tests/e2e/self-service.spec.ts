@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { randomEmail, serviceClient } from "./support/db";
-import { waitForHydration, uniqueName } from "./support/page";
+import { fillDate, uniqueName, waitForHydration } from "./support/page";
 import { codeFromEmail, enterCode, failedAttempts, futureDate, submitCreateForm } from "./support/self-service";
 
 // US1 — vizitatorul își creează singur un eveniment (002: FR-001–FR-009, SC-001–SC-004).
@@ -98,7 +98,7 @@ test("afișează erorile lângă câmpuri și nu trimite formularul incomplet", 
   await waitForHydration(page);
   await page.getByLabel("Adresa de email").fill("nu-e-email");
   await page.getByLabel("Numele evenimentului").fill("Nunta");
-  await page.getByLabel("Data evenimentului").fill("2020-01-01");
+  await fillDate(page, "Data evenimentului", "2020-01-01");
   await page.getByRole("button", { name: "Creează evenimentul" }).click();
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByText("Adresa de email nu este validă.")).toBeVisible();
@@ -123,13 +123,13 @@ test("datele completate rămân în formular când lipsește acceptarea termenil
   await waitForHydration(page);
   await page.getByLabel("Adresa de email").fill(email);
   await page.getByLabel("Numele evenimentului").fill(name);
-  await page.getByLabel("Data evenimentului").fill(date);
+  await fillDate(page, "Data evenimentului", date);
   await page.getByRole("button", { name: "Creează evenimentul" }).click();
 
   await expect(page.getByText("Trebuie să accepți termenii și politica de confidențialitate.")).toBeVisible();
   await expect(page.getByLabel("Adresa de email")).toHaveValue(email);
   await expect(page.getByLabel("Numele evenimentului")).toHaveValue(name);
-  await expect(page.getByLabel("Data evenimentului")).toHaveValue(date);
+  await expect(page.locator('input[type="hidden"][name="eventDate"]')).toHaveValue(date);
 
   // După bifare, aceeași trimitere reușește fără a completa din nou.
   await page.getByRole("checkbox", { name: /Accept termenii/ }).check();

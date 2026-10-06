@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { updateOwnEvent } from "@/lib/actions/organizer";
 import { t, type MessageKey } from "@/lib/i18n";
 import { ui } from "@/lib/ui";
+import { DateField } from "../ui/DateField";
 import { SheetActions } from "../ui/SheetActions";
 
 /** Modificarea numelui și a datei de către organizator (002: FR-033). */
@@ -58,21 +59,14 @@ export function EditEventForm({ eventId, name, eventDate }: { eventId: string; n
           />
           {fields.name !== undefined && <p className={ui.fieldError}>{t(fields.name as MessageKey)}</p>}
         </div>
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="edit-date" className={ui.label}>
-            {t("home.date")}
-          </label>
-          <input
-            id="edit-date"
-            name="eventDate"
-            type="date"
-            defaultValue={eventDate}
-            required
-            aria-invalid={fields.eventDate !== undefined}
-            className={`${ui.input} ${ui.data}`}
-          />
-          {fields.eventDate !== undefined && <p className={ui.fieldError}>{t(fields.eventDate as MessageKey)}</p>}
-        </div>
+        <DateField
+          label={t("home.date")}
+          name="eventDate"
+          defaultValue={eventDate}
+          isRequired
+          isInvalid={fields.eventDate !== undefined}
+          {...(fields.eventDate !== undefined && { errorMessage: t(fields.eventDate as MessageKey) })}
+        />
       </div>
       <SheetActions
         status={

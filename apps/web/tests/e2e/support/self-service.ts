@@ -2,7 +2,7 @@ import { expect, test, type Browser, type Page } from "@playwright/test";
 import { loginWithMagicLink } from "./auth";
 import { createOrganizer, serviceClient } from "./db";
 import { waitForEmail } from "./mailpit";
-import { gotoHydrated } from "./page";
+import { fillDate, gotoHydrated } from "./page";
 
 /** Data de peste `days` zile, în formatul câmpului `date`. */
 export function futureDate(days: number): string {
@@ -14,7 +14,7 @@ export async function submitCreateForm(page: Page, input: { email: string; name:
   await gotoHydrated(page, "/");
   await page.getByLabel("Adresa de email").fill(input.email);
   await page.getByLabel("Numele evenimentului").fill(input.name);
-  await page.getByLabel("Data evenimentului").fill(input.date ?? futureDate(30));
+  await fillDate(page, "Data evenimentului", input.date ?? futureDate(30));
   await page.getByRole("checkbox", { name: /Accept termenii/ }).check();
   await page.getByRole("button", { name: "Creează evenimentul" }).click();
   await expect(page).toHaveURL(/\/auth\/code\?request=/);
@@ -55,7 +55,7 @@ export async function createAwaitingEvent(browser: Browser, name: string): Promi
     await loginWithMagicLink(organizer, await createOrganizer());
     await gotoHydrated(organizer, "/events/new");
     await organizer.getByLabel("Numele evenimentului").fill(name);
-    await organizer.getByLabel("Data evenimentului").fill(futureDate(20));
+    await fillDate(organizer, "Data evenimentului", futureDate(20));
     await organizer.getByRole("checkbox", { name: /Accept termenii/ }).check();
     await organizer.getByRole("button", { name: "Creează evenimentul" }).click();
     await expect(organizer).toHaveURL(/\/events\/[0-9a-f-]{36}$/);

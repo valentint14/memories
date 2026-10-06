@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { archiveUrl, latestArchive, requestArchiveJob, type ArchiveState } from "../organizer/archive";
 import {
+  countGalleryFiles,
   listGallery,
   mediaUrls,
   requireActiveEvent,
@@ -20,6 +21,11 @@ import { runAction, throwIfDbError, type ActionResult } from "./result";
 import type { FormState } from "./self-service";
 
 const cursorSchema = z.object({ uploadedAt: z.iso.datetime({ offset: true }), id: z.uuid() });
+
+/** Numărul fișierelor din galerie, după o schimbare live sau o ștergere (banda galeriei). */
+export async function countMedia(eventId: string): Promise<ActionResult<number>> {
+  return runAction(z.object({ eventId: z.uuid() }), { eventId }, (input) => countGalleryFiles(input.eventId));
+}
 
 /** Pagina următoare din galerie sau diferența de la `updatedSince` (contracts/web-interface.md). */
 export async function listMedia(

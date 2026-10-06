@@ -5,6 +5,7 @@ import { useActionState, type ReactNode } from "react";
 import { requestEventCreationForm, type FormState } from "@/lib/actions/self-service";
 import { t, type MessageKey } from "@/lib/i18n";
 import { ui } from "@/lib/ui";
+import { DateField } from "../ui/DateField";
 import { SheetActions } from "../ui/SheetActions";
 
 function FieldError({ id, message }: { id: string; message: string | undefined }) {
@@ -82,24 +83,16 @@ export function CreateEventForm({
         <FieldError id="ss-name-error" message={fields.name} />
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="ss-date" className={ui.label}>
-          {t("home.date")}
-        </label>
-        <input
-          id="ss-date"
-          name="eventDate"
-          type="date"
-          defaultValue={values.eventDate}
-          required
-          min={minDate}
-          max={maxDate}
-          aria-invalid={fields.eventDate !== undefined}
-          aria-describedby="ss-date-error"
-          className={`${ui.input} ${ui.data}`}
-        />
-        <FieldError id="ss-date-error" message={fields.eventDate} />
-      </div>
+      <DateField
+        label={t("home.date")}
+        name="eventDate"
+        defaultValue={values.eventDate}
+        isRequired
+        minValue={minDate}
+        maxValue={maxDate}
+        isInvalid={fields.eventDate !== undefined}
+        {...(fields.eventDate !== undefined && { errorMessage: t(fields.eventDate as MessageKey) })}
+      />
 
       {/* Capcană pentru boți: ascunsă vizual și pentru cititoarele de ecran. */}
       <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">

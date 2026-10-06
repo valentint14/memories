@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { loginWithMagicLink } from "./support/auth";
 import { createEvent, createOrganizer, serviceClient, uploadAsGuest, waitForProcessed } from "./support/db";
-import { gotoHydrated, uniqueName } from "./support/page";
+import { fillDate, gotoHydrated, uniqueName } from "./support/page";
 import { futureDate } from "./support/self-service";
 
 // US7 — organizatorul își modifică sau își șterge evenimentul (002: FR-033–FR-035).
@@ -10,7 +10,7 @@ test("redenumirea și schimbarea datei păstrează linkul și codul QR", async (
   await loginWithMagicLink(page, await createOrganizer());
   await gotoHydrated(page, "/events/new");
   await page.getByLabel("Numele evenimentului").fill(uniqueName("Nume greșit"));
-  await page.getByLabel("Data evenimentului").fill(futureDate(20));
+  await fillDate(page, "Data evenimentului", futureDate(20));
   await page.getByRole("checkbox", { name: /Accept termenii/ }).check();
   await page.getByRole("button", { name: "Creează evenimentul" }).click();
   await expect(page).toHaveURL(/\/events\/[0-9a-f-]{36}$/);
@@ -20,7 +20,7 @@ test("redenumirea și schimbarea datei păstrează linkul și codul QR", async (
   const section = page.getByRole("region", { name: "Detaliile evenimentului" });
   const name = uniqueName("Nume corect");
   await section.getByLabel("Numele evenimentului").fill(name);
-  await section.getByLabel("Data evenimentului").fill(futureDate(45));
+  await fillDate(section, "Data evenimentului", futureDate(45));
   await section.getByRole("button", { name: "Salvează" }).click();
   await expect(section.getByRole("status")).toContainText("Linkul și codul QR rămân aceleași");
   await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();

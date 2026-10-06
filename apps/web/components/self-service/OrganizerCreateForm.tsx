@@ -6,6 +6,7 @@ import { createEventForm } from "@/lib/actions/organizer";
 import type { FormState } from "@/lib/actions/self-service";
 import { t, type MessageKey } from "@/lib/i18n";
 import { ui } from "@/lib/ui";
+import { DateField } from "../ui/DateField";
 import { SheetActions } from "../ui/SheetActions";
 
 /**
@@ -56,28 +57,16 @@ export function OrganizerCreateForm({
           </p>
         )}
       </div>
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="oc-date" className={ui.label}>
-          {t("home.date")}
-        </label>
-        <input
-          id="oc-date"
-          name="eventDate"
-          type="date"
-          defaultValue={values.eventDate}
-          required
-          min={minDate}
-          max={maxDate}
-          aria-invalid={fields.eventDate !== undefined}
-          aria-describedby="oc-date-error"
-          className={`${ui.input} ${ui.data}`}
-        />
-        {fields.eventDate !== undefined && (
-          <p id="oc-date-error" className={ui.fieldError}>
-            {t(fields.eventDate as MessageKey)}
-          </p>
-        )}
-      </div>
+      <DateField
+        label={t("home.date")}
+        name="eventDate"
+        defaultValue={values.eventDate}
+        isRequired
+        minValue={minDate}
+        maxValue={maxDate}
+        isInvalid={fields.eventDate !== undefined}
+        {...(fields.eventDate !== undefined && { errorMessage: t(fields.eventDate as MessageKey) })}
+      />
       {versions !== null && (
         <div className="flex flex-col gap-1.5">
           <div className="flex items-start gap-3">

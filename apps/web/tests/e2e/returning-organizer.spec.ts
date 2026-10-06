@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { loginAsNewAdmin, loginWithMagicLink } from "./support/auth";
 import { createAdmin, createEvent, createOrganizer, serviceClient } from "./support/db";
-import { gotoHydrated, uniqueName } from "./support/page";
+import { fillDate, gotoHydrated, uniqueName } from "./support/page";
 import { futureDate } from "./support/self-service";
 
 // US2 — organizatorul care revine își vede toate evenimentele (002: FR-005, FR-010, FR-012, FR-021).
@@ -16,7 +16,7 @@ test("vede evenimentele create de administrator și pe cele self-service, cu sta
   const selfService = uniqueName("Botez din cont");
   await gotoHydrated(page, "/events/new");
   await page.getByLabel("Numele evenimentului").fill(selfService);
-  await page.getByLabel("Data evenimentului").fill(futureDate(25));
+  await fillDate(page, "Data evenimentului", futureDate(25));
   await page.getByRole("checkbox", { name: /Accept termenii/ }).check();
   await page.getByRole("button", { name: "Creează evenimentul" }).click();
   await expect(page).toHaveURL(/\/events\/[0-9a-f-]{36}$/);
@@ -37,7 +37,7 @@ test("creează din cont fără email; la limită primește mesajul explicativ", 
   for (let i = 0; i < 3; i++) {
     await gotoHydrated(page, "/events/new");
     await page.getByLabel("Numele evenimentului").fill(uniqueName(`Eveniment ${String(i)}`));
-    await page.getByLabel("Data evenimentului").fill(futureDate(30));
+    await fillDate(page, "Data evenimentului", futureDate(30));
     const accept = page.getByRole("checkbox", { name: /Accept termenii/ });
     if (await accept.isVisible()) await accept.check();
     await page.getByRole("button", { name: "Creează evenimentul" }).click();
@@ -59,7 +59,7 @@ test("pe pagina principală, organizatorul autentificat creează direct în cont
   await expect(page.getByLabel("Adresa de email")).toHaveCount(0);
   const name = uniqueName("Aniversare");
   await page.getByLabel("Numele evenimentului").fill(name);
-  await page.getByLabel("Data evenimentului").fill(futureDate(15));
+  await fillDate(page, "Data evenimentului", futureDate(15));
   await page.getByRole("checkbox", { name: /Accept termenii/ }).check();
   await page.getByRole("button", { name: "Creează evenimentul" }).click();
   await expect(page).toHaveURL(/\/events\/[0-9a-f-]{36}$/);
