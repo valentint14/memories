@@ -117,11 +117,13 @@ describe("register_failed_code (FR-008)", () => {
 });
 
 describe("complete_auth_request (FR-009)", () => {
+  // Organizatorul se autentifică înainte de cerere: un worker care consumă coada (`auth_email`)
+  // creează utilizatorul și emite un magic link nou, în cursă cu `createUser` și `signedInClient`.
   it("confirmă evenimentul, calculează data ștergerii și leagă acceptările de utilizator", async () => {
     const email = randomEmail("ss-confirm");
-    const requestId = await requestEvent(email);
     const userId = await createUser(email);
     const client = await signedInClient(email);
+    const requestId = await requestEvent(email);
 
     const { data, error } = await client.rpc("complete_auth_request", { p_request_id: requestId });
     expect(error).toBeNull();
@@ -150,14 +152,14 @@ describe("complete_auth_request (FR-009)", () => {
 
   it("refuză o adresă diferită, cererile folosite și cele expirate", async () => {
     const email = randomEmail("ss-wrong");
-    const requestId = await requestEvent(email);
+    await createUser(email);
+    const owner = await signedInClient(email);
     const otherEmail = randomEmail("ss-other");
     await createUser(otherEmail);
     const other = await signedInClient(otherEmail);
+    const requestId = await requestEvent(email);
     expect((await other.rpc("complete_auth_request", { p_request_id: requestId })).error?.message).toBe("REQUEST_EXPIRED");
 
-    await createUser(email);
-    const owner = await signedInClient(email);
     await sql("update public.auth_requests set expires_at = now() - interval '1 second' where id = $1", [requestId]);
     expect((await owner.rpc("complete_auth_request", { p_request_id: requestId })).error?.message).toBe("REQUEST_EXPIRED");
 
