@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { loginAsNewAdmin, loginWithMagicLink } from "./support/auth";
 import { createAdmin, createOrganizer, serviceClient } from "./support/db";
-import { gotoHydrated, uniqueName, waitForHydration } from "./support/page";
+import { fillDate, gotoHydrated, uniqueName, waitForHydration } from "./support/page";
 import { futureDate } from "./support/self-service";
 import { chargeRefunded, latestPayment, payFakeSession, sendWebhook, sessionIdFromCheckoutUrl, stubCheckoutPage } from "./support/stripe";
 
@@ -19,7 +19,7 @@ async function paidEvent(page: Page): Promise<PaidEvent> {
   await loginWithMagicLink(page, await createOrganizer());
   await gotoHydrated(page, "/events/new");
   await page.getByLabel("Numele evenimentului").fill(uniqueName("Nunta rambursată"));
-  await page.getByLabel("Data evenimentului").fill(futureDate(20));
+  await fillDate(page, "Data evenimentului", futureDate(20));
   await page.getByRole("checkbox", { name: /Accept termenii/ }).check();
   await page.getByRole("button", { name: "Creează evenimentul" }).click();
   await expect(page).toHaveURL(/\/events\/[0-9a-f-]{36}$/);
