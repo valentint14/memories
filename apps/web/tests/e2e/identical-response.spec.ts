@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { createOrganizer, randomEmail } from "./support/db";
-import { gotoHydrated, uniqueName } from "./support/page";
+import { fillDate, gotoHydrated, uniqueName } from "./support/page";
 import { futureDate } from "./support/self-service";
 
 // Răspuns identic pentru adrese existente și inexistente (002: FR-003, FR-011, SC-004).
@@ -49,7 +49,7 @@ async function run(page: Page, kind: "create" | "login"): Promise<Sample[]> {
             async () => {
               await page.getByLabel("Adresa de email").fill(email);
               await page.getByLabel("Numele evenimentului").fill(uniqueName("Timp"));
-              await page.getByLabel("Data evenimentului").fill(futureDate(30));
+              await fillDate(page, "Data evenimentului", futureDate(30));
               await page.getByRole("checkbox", { name: /Accept termenii/ }).check();
             },
             "Creează evenimentul",

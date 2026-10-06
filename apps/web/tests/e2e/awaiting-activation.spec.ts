@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { loginWithMagicLink } from "./support/auth";
 import { createOrganizer, serviceClient } from "./support/db";
-import { gotoHydrated, uniqueName } from "./support/page";
+import { fillDate, gotoHydrated, uniqueName } from "./support/page";
 import { futureDate } from "./support/self-service";
 
 // US3 (002) — evenimentul în așteptarea activării: prețul, ce include, data ștergerii (FR-017–FR-019);
@@ -13,7 +13,7 @@ test("panoul arată prețul, ce include, data ștergerii și plata, fără cerer
   const name = uniqueName("Nunta Elena");
   await gotoHydrated(page, "/events/new");
   await page.getByLabel("Numele evenimentului").fill(name);
-  await page.getByLabel("Data evenimentului").fill(futureDate(20));
+  await fillDate(page, "Data evenimentului", futureDate(20));
   await page.getByRole("checkbox", { name: /Accept termenii/ }).check();
   await page.getByRole("button", { name: "Creează evenimentul" }).click();
   await expect(page).toHaveURL(/\/events\/[0-9a-f-]{36}$/);

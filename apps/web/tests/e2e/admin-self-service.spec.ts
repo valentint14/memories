@@ -1,7 +1,7 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { loginAsNewAdmin, loginWithMagicLink } from "./support/auth";
 import { createAdmin, createOrganizer, serviceClient } from "./support/db";
-import { gotoHydrated, uniqueName } from "./support/page";
+import { fillDate, gotoHydrated, uniqueName } from "./support/page";
 import { futureDate } from "./support/self-service";
 
 // US4 — administratorul gestionează evenimentele self-service (002: FR-022–FR-029, FR-028a).
@@ -43,7 +43,7 @@ test.beforeAll(async ({ browser }) => {
   name = uniqueName("Nuntă de activat");
   await gotoHydrated(organizer, "/events/new");
   await organizer.getByLabel("Numele evenimentului").fill(name);
-  await organizer.getByLabel("Data evenimentului").fill(futureDate(20));
+  await fillDate(organizer, "Data evenimentului", futureDate(20));
   await organizer.getByRole("checkbox", { name: /Accept termenii/ }).check();
   await organizer.getByRole("button", { name: "Creează evenimentul" }).click();
   await expect(organizer).toHaveURL(/\/events\/[0-9a-f-]{36}$/);

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { randomEmail, serviceClient } from "./support/db";
-import { uniqueName } from "./support/page";
+import { fillDate, uniqueName } from "./support/page";
 import { futureDate } from "./support/self-service";
 
 // Widgetul Cloudflare Turnstile real (002: FR-037; research R3). Proiectul `turnstile-smoke` rulează
@@ -20,7 +20,7 @@ test("scriptul se încarcă cu nonce-ul CSP și produce un token acceptat de ser
   const name = uniqueName("Turnstile real");
   await page.getByLabel("Adresa de email").fill(email);
   await page.getByLabel("Numele evenimentului").fill(name);
-  await page.getByLabel("Data evenimentului").fill(futureDate(20));
+  await fillDate(page, "Data evenimentului", futureDate(20));
   await page.getByRole("checkbox", { name: /Accept termenii/ }).check();
   await page.getByRole("button", { name: "Creează evenimentul" }).click();
   await expect(page).toHaveURL(/\/auth\/code\?request=/);
