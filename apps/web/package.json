@@ -10,6 +10,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@internationalized/date": "3.12.4",
     "@memories/shared": "workspace:*",
     "@sentry/nextjs": "11.0.0",
     "@supabase/ssr": "0.12.7",

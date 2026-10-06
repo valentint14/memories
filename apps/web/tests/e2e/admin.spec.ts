@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { TOTP } from "otpauth";
 import { loginAsNewAdmin, loginWithMagicLink as login } from "./support/auth";
 import { createAdmin, randomEmail } from "./support/db";
-import { gotoHydrated, uniqueName, waitForHydration } from "./support/page";
+import { fillDate, gotoHydrated, uniqueName, waitForHydration } from "./support/page";
 
 // US1 — administratorul creează un eveniment și obține codul QR (quickstart 1–3, 15, 17).
 test.describe.configure({ mode: "serial" });
@@ -26,10 +26,10 @@ function inputDateTime(offsetMs: number): string {
 async function createEvent(page: Page, name: string): Promise<string> {
   await gotoHydrated(page, "/admin/events/new");
   await page.getByLabel("Numele evenimentului").fill(name);
-  await page.getByLabel("Data evenimentului").fill(new Date().toISOString().slice(0, 10));
+  await fillDate(page, "Data evenimentului", new Date().toISOString().slice(0, 10));
   await page.getByLabel("Emailul organizatorului").fill(randomEmail("org"));
-  await page.getByLabel("Începutul încărcărilor").fill(inputDateTime(-3_600_000));
-  await page.getByLabel("Sfârșitul încărcărilor").fill(inputDateTime(86_400_000));
+  await fillDate(page, "Începutul încărcărilor", inputDateTime(-3_600_000));
+  await fillDate(page, "Sfârșitul încărcărilor", inputDateTime(86_400_000));
   await page.getByLabel("Preț de bază (lei)").fill("299");
   await expect(page.getByTestId("price-preview")).toContainText("299,00");
   await expect(page.getByTestId("purge-preview")).toContainText(/\d{4}/);
@@ -101,8 +101,8 @@ test("validarea formularului arată erorile lângă câmpuri (FR-002)", async ({
   await gotoHydrated(page, "/admin/events/new");
   await page.getByLabel("Numele evenimentului").fill("Test");
   await page.getByLabel("Emailul organizatorului").fill("nu-e-email");
-  await page.getByLabel("Începutul încărcărilor").fill(inputDateTime(86_400_000));
-  await page.getByLabel("Sfârșitul încărcărilor").fill(inputDateTime(3_600_000));
+  await fillDate(page, "Începutul încărcărilor", inputDateTime(86_400_000));
+  await fillDate(page, "Sfârșitul încărcărilor", inputDateTime(3_600_000));
   await page.getByRole("button", { name: "Creează evenimentul" }).click();
   await expect(page.getByText("Adresa de email nu este validă.")).toBeVisible();
   await expect(page.getByText("Sfârșitul trebuie să fie după început.")).toBeVisible();

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { randomEmail, serviceClient } from "./support/db";
-import { gotoHydrated, uniqueName } from "./support/page";
+import { fillDate, gotoHydrated, uniqueName } from "./support/page";
 import { futureDate } from "./support/self-service";
 
 // Verificarea anti-bot respinsă (002: FR-037, SC-007). Rulează în proiectul `captcha-reject`,
@@ -11,7 +11,7 @@ test("formularul respins de verificare nu creează nimic și nu trimite email", 
   await gotoHydrated(page, "/");
   await page.getByLabel("Adresa de email").fill(email);
   await page.getByLabel("Numele evenimentului").fill(name);
-  await page.getByLabel("Data evenimentului").fill(futureDate(20));
+  await fillDate(page, "Data evenimentului", futureDate(20));
   await page.getByRole("checkbox", { name: /Accept termenii/ }).check();
   await page.getByRole("button", { name: "Creează evenimentul" }).click();
 

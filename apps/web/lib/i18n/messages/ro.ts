@@ -90,6 +90,9 @@ export const ro = {
   // Comune
   "common.cancel": "Renunță",
   "common.close": "Închide",
+  "date.openCalendar": "Alege din calendar",
+  "date.previousMonth": "Luna anterioară",
+  "date.nextMonth": "Luna următoare",
 
   // Validare formulare
   "validation.required": "Câmpul este obligatoriu.",

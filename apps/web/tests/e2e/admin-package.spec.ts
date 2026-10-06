@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { loginAsNewAdmin, loginWithMagicLink } from "./support/auth";
 import { createAdmin, createEvent, createOrganizer, serviceClient } from "./support/db";
-import { gotoHydrated, uniqueName } from "./support/page";
+import { fillDate, gotoHydrated, uniqueName } from "./support/page";
 import { futureDate } from "./support/self-service";
 
 // US5 — configurarea pachetului complet (002: FR-015, FR-016). Modifică pachetul global: rulează în
@@ -39,7 +39,7 @@ test("noile limite apar la evenimentele neactivate; cele active le păstrează p
     await loginWithMagicLink(organizer, await createOrganizer());
     await gotoHydrated(organizer, "/events/new");
     await organizer.getByLabel("Numele evenimentului").fill(uniqueName("Neactivat"));
-    await organizer.getByLabel("Data evenimentului").fill(futureDate(20));
+    await fillDate(organizer, "Data evenimentului", futureDate(20));
     await organizer.getByRole("checkbox", { name: /Accept termenii/ }).check();
     await organizer.getByRole("button", { name: "Creează evenimentul" }).click();
     await expect(organizer.getByRole("region", { name: "Activarea pachetului complet" })).toContainText(`până la ${String(next)} de fișiere`);

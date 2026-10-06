@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { updatePendingEvent } from "@/lib/actions/admin";
 import { t, type MessageKey } from "@/lib/i18n";
 import { ui } from "@/lib/ui";
+import { DateField } from "../ui/DateField";
 import { SheetActions } from "../ui/SheetActions";
 
 /** Editarea unui eveniment neactivat: doar numele și data (002: FR-028). */
@@ -49,13 +50,14 @@ export function PendingEventForm({ eventId, name, eventDate }: { eventId: string
           <input id="pe-name" name="name" defaultValue={name} required maxLength={120} className={ui.input} />
           {fields.name !== undefined && <p className={ui.fieldError}>{t(fields.name as MessageKey)}</p>}
         </div>
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="pe-date" className={ui.label}>
-            {t("home.date")}
-          </label>
-          <input id="pe-date" name="eventDate" type="date" defaultValue={eventDate} required className={`${ui.input} ${ui.data}`} />
-          {fields.eventDate !== undefined && <p className={ui.fieldError}>{t(fields.eventDate as MessageKey)}</p>}
-        </div>
+        <DateField
+          label={t("home.date")}
+          name="eventDate"
+          defaultValue={eventDate}
+          isRequired
+          isInvalid={fields.eventDate !== undefined}
+          {...(fields.eventDate !== undefined && { errorMessage: t(fields.eventDate as MessageKey) })}
+        />
       </div>
       <SheetActions
         status={
