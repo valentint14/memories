@@ -17,10 +17,18 @@ export interface FakeSession {
 }
 
 /** Ultima plată a evenimentului, din baza de date. */
-export async function latestPayment(eventId: string): Promise<{ id: string; status: string; amount_minor: number; stripe_session_id: string | null }> {
+export async function latestPayment(eventId: string): Promise<{
+  id: string;
+  status: string;
+  amount_minor: number;
+  stripe_session_id: string | null;
+  stripe_payment_intent_id: string | null;
+  refunded_minor: number;
+  refund_effect: string | null;
+}> {
   const { data } = await serviceClient()
     .from("payments")
-    .select("id, status, amount_minor, stripe_session_id")
+    .select("id, status, amount_minor, stripe_session_id, stripe_payment_intent_id, refunded_minor, refund_effect")
     .eq("event_id", eventId)
     .order("created_at", { ascending: false })
     .limit(1)
@@ -50,6 +58,19 @@ export async function sendWebhook(page: Page, type: string, object: unknown, id 
     data: payload,
   });
   return response.status();
+}
+
+/** Obiectul `Charge` minim al unui `charge.refunded` (004), cu suma rambursată cumulată. */
+export function chargeRefunded(paymentIntentId: string, amountMinor: number, amountRefundedMinor: number) {
+  return {
+    id: `ch_${crypto.randomUUID().replaceAll("-", "").slice(0, 24)}`,
+    object: "charge",
+    payment_intent: paymentIntentId,
+    amount: amountMinor,
+    amount_refunded: amountRefundedMinor,
+    currency: "ron",
+    refunded: amountRefundedMinor === amountMinor,
+  };
 }
 
 /**

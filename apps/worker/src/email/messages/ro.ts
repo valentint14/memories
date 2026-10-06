@@ -56,8 +56,11 @@ export const ro = {
       EVENT_DELETED: "A sosit o plată pentru un eveniment care fusese deja șters.",
       EXTENSION_NOT_POSSIBLE: "A sosit o plată pentru o prelungire a păstrării care nu mai este posibilă (eveniment expirat, suspendat sau cu o perioadă deja egală sau mai lungă).",
       DISPUTE: "Organizatorul a contestat plata la bancă.",
+      RETENTION_MANUAL:
+        "Plata prelungirii a fost rambursată, dar păstrarea nu a putut fi readusă automat (a fost schimbată între timp sau data de dinainte e prea aproape).",
     },
     actionRefund: "Ce ai de făcut: rambursează plata din contul Stripe (Payments › plata › Refund).",
+    actionRetention: "Ce ai de făcut: ajustează păstrarea din fișa evenimentului, din editarea evenimentului.",
     actionDispute:
       "Ce ai de făcut: răspunde contestației din contul Stripe. Dacă evenimentul era activ, a fost suspendat automat; reactivează-l din administrare după rezolvarea disputei.",
     event: "Eveniment",

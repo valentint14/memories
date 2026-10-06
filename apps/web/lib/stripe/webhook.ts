@@ -14,6 +14,8 @@ export interface WebhookDb {
   failPayment: (sessionId: string) => Promise<void>;
   expirePayment: (sessionId: string) => Promise<void>;
   registerDispute: (paymentIntentId: string) => Promise<string>;
+  /** Suma cumulată rambursată (004); efectul îl decide baza de date. */
+  registerRefund: (paymentIntentId: string, refundedMinor: number, refundedAt: string) => Promise<string>;
 }
 
 export interface WebhookDeps {
@@ -56,6 +58,13 @@ export async function handleStripeEvent(event: Stripe.Event, db: WebhookDb): Pro
       const intent = paymentIntentId(event.data.object.payment_intent);
       if (intent === null) return "ignored";
       return db.registerDispute(intent);
+    }
+    case "charge.refunded": {
+      // `amount_refunded` e cumulat: procesarea nu depinde de ordinea sau de repetarea anunțurilor (004, R1).
+      const charge = event.data.object;
+      const intent = paymentIntentId(charge.payment_intent);
+      if (intent === null || charge.currency !== "ron") return "ignored";
+      return db.registerRefund(intent, charge.amount_refunded, new Date(event.created * 1000).toISOString());
     }
     default:
       return "ignored";

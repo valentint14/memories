@@ -1,4 +1,4 @@
-/** Plată de verificat de administrator: de rambursat sau contestată (003: FR-011, FR-016a). */
+/** Plată de verificat de administrator: de rambursat, contestată (003: FR-011, FR-016a) sau prelungire rambursată cu păstrarea de ajustat (004: FR-009). */
 import { APP_TIME_ZONE } from "@memories/shared";
 import { emailDocument, emailStyle, escapeHtml } from "../html.ts";
 import { ro } from "../messages/ro.ts";
@@ -26,7 +26,7 @@ export function adminPaymentNoticeEmail(input: {
     ...(input.paidAt === null ? [] : ([[m.paidAt, dateTime.format(input.paidAt)]] as [string, string][])),
     [m.reference, input.reference],
   ];
-  const action = input.reason === "DISPUTE" ? m.actionDispute : m.actionRefund;
+  const action = input.reason === "DISPUTE" ? m.actionDispute : input.reason === "RETENTION_MANUAL" ? m.actionRetention : m.actionRefund;
   const text = [
     m.reasons[input.reason],
     "",
