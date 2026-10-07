@@ -16,6 +16,7 @@ function db(overrides: Partial<WebhookDb> = {}): WebhookDb {
     failPayment: vi.fn().mockResolvedValue(undefined),
     expirePayment: vi.fn().mockResolvedValue(undefined),
     registerDispute: vi.fn().mockResolvedValue("suspended"),
+    registerRefund: vi.fn().mockResolvedValue("partial"),
     ...overrides,
   };
 }
@@ -162,3 +163,24 @@ describe("contestația (US3)", () => {
   });
 });
 
+describe("rambursarea (004)", () => {
+  const charge = { id: "ch_1", object: "charge", payment_intent: "pi_1", amount: 29_900, amount_refunded: 29_900, currency: "ron", refunded: true };
+
+  it("charge.refunded → register_refund cu intenția, suma cumulată și momentul evenimentului", async () => {
+    const id = "evt_refund";
+    deps = db({ registerRefund: vi.fn().mockResolvedValue("suspended") });
+    const response = await handleWebhookRequest(signed(event("charge.refunded", charge, id)), { secret: SECRET, stripe, db: deps });
+    expect(response.status).toBe(200);
+    expect(deps.registerRefund).toHaveBeenCalledWith("pi_1", 29_900, new Date(1_000).toISOString());
+    expect(deps.finishEvent).toHaveBeenCalledWith(id, "suspended");
+  });
+
+  it("fără intenție de plată sau în altă monedă se marchează „ignored”, fără apel", async () => {
+    for (const object of [{ ...charge, payment_intent: null }, { ...charge, currency: "eur" }]) {
+      const id = `evt_${crypto.randomUUID()}`;
+      await handleWebhookRequest(signed(event("charge.refunded", object, id)), { secret: SECRET, stripe, db: deps });
+      expect(deps.finishEvent).toHaveBeenCalledWith(id, "ignored");
+    }
+    expect(deps.registerRefund).not.toHaveBeenCalled();
+  });
+});

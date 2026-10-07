@@ -67,4 +67,12 @@ export const serverEnv = {
     if (!Number.isInteger(value) || value < 1) throw new Error("RATE_LIMIT_IP_PER_HOUR trebuie să fie un întreg pozitiv");
     return value;
   },
+  /** Încercările de coduri de reducere per IP pe oră (005: FR-011); local și în teste toate vin de pe aceeași adresă. */
+  get discountRateLimitIpPerHour(): number {
+    const raw = process.env.RATE_LIMIT_DISCOUNT_IP_PER_HOUR;
+    if (raw === undefined || raw === "") return 30;
+    const value = Number(raw);
+    if (!Number.isInteger(value) || value < 1) throw new Error("RATE_LIMIT_DISCOUNT_IP_PER_HOUR trebuie să fie un întreg pozitiv");
+    return value;
+  },
 };

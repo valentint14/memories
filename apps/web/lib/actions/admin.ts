@@ -247,3 +247,48 @@ export async function updatePackage(input: PackageInput): Promise<ActionResult<n
     return null;
   });
 }
+
+const discountSchema = z.object({
+  kind: z.enum(["personal", "campaign"]),
+  discountType: z.enum(["fixed", "percent"]),
+  /** Lei la sumă fixă, procent întreg la procent. */
+  value: z.coerce.number().positive("validation.discountValue"),
+  count: z.coerce.number().int().min(1, "validation.discountCount").max(100, "validation.discountCount"),
+  maxUses: z.coerce.number().int().min(2, "validation.discountMaxUses").max(1000, "validation.discountMaxUses").optional(),
+  expiresOn: z.iso.date().optional(),
+  note: z.string().trim().max(200, "validation.discountNote").optional(),
+});
+export type DiscountInput = z.input<typeof discountSchema>;
+
+/** Generează coduri de reducere (005: FR-001–FR-003); întoarce codurile formatate. */
+export async function generateDiscountCodes(input: DiscountInput): Promise<ActionResult<{ codes: string[] }>> {
+  return runAction(discountSchema, input, async (data) => {
+    const supabase = await requireAdmin();
+    const campaign = data.kind === "campaign";
+    if (data.discountType === "percent" && (!Number.isInteger(data.value) || data.value > 99)) throw new ActionError("VALIDATION");
+    if (campaign && data.maxUses === undefined) throw new ActionError("VALIDATION");
+    const { data: rows, error } = await supabase.rpc("generate_discount_codes", {
+      p_kind: data.kind,
+      p_discount_type: data.discountType,
+      p_discount_value: data.discountType === "fixed" ? leiToMinor(data.value) : data.value,
+      p_count: campaign ? 1 : data.count,
+      p_max_uses: campaign ? (data.maxUses ?? 0) : 1,
+      // Codul expiră la sfârșitul zilei alese, în ora României (Postgres interpretează fusul orar).
+      p_expires_at: (data.expiresOn === undefined ? null : `${data.expiresOn} 23:59:59 Europe/Bucharest`) as string,
+      p_note: (data.note === undefined || data.note === "" ? null : data.note) as string,
+    });
+    throwIfDbError(error);
+    revalidatePath("/admin/discounts");
+    return { codes: (rows ?? []).map((r) => r.code) };
+  });
+}
+
+/** Dezactivează un cod (005: FR-004); utilizările deja făcute rămân în evidență. */
+export async function disableDiscountCode(id: string): Promise<ActionResult<null>> {
+  return runAction(z.uuid(), id, async (codeId) => {
+    const supabase = await requireAdmin();
+    throwIfDbError((await supabase.rpc("disable_discount_code", { p_id: codeId })).error);
+    revalidatePath("/admin/discounts");
+    return null;
+  });
+}

@@ -15,7 +15,7 @@ export type JobMessage =
   | {
       type: "admin_payment_notice";
       payment_id: string;
-      reason: "EVENT_NOT_AWAITING" | "DUPLICATE_PAYMENT" | "EVENT_DELETED" | "EXTENSION_NOT_POSSIBLE" | "DISPUTE";
+      reason: "EVENT_NOT_AWAITING" | "DUPLICATE_PAYMENT" | "EVENT_DELETED" | "EXTENSION_NOT_POSSIBLE" | "DISPUTE" | "RETENTION_MANUAL";
     };
 
 export type JobType = JobMessage["type"];

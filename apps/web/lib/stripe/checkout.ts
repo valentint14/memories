@@ -1,5 +1,6 @@
 import "server-only";
 import type Stripe from "stripe";
+import { formatMoney } from "../i18n";
 
 /** Ce trimite aplicația la Stripe pentru o plată (contracts/stripe-webhooks.md › Crearea sesiunii). */
 export interface CheckoutInput {
@@ -12,6 +13,8 @@ export interface CheckoutInput {
   amountMinor: number;
   expiresAt: string;
   appUrl: string;
+  /** Codul de reducere aplicat (005) și reducerea; `amountMinor` de mai sus e deja suma redusă. */
+  discount?: { code: string; amountMinor: number };
 }
 
 /** Parametrii sesiunii Checkout găzduite (003: FR-002, FR-003, FR-008, FR-012, FR-012a; research R1, R4). */
@@ -20,7 +23,12 @@ export function checkoutSessionParams(input: CheckoutInput): Stripe.Checkout.Ses
     input.purpose === "activation"
       ? `Memories — pachet complet, ${String(input.retentionMonths)} luni`
       : `Memories — prelungirea păstrării la ${String(input.retentionMonths)} luni`;
-  const metadata = { payment_id: input.paymentId, event_id: input.eventId, purpose: input.purpose };
+  const metadata: Record<string, string> = { payment_id: input.paymentId, event_id: input.eventId, purpose: input.purpose };
+  if (input.discount !== undefined) metadata.discount_code = input.discount.code;
+  const description =
+    input.discount === undefined
+      ? input.eventName
+      : `${input.eventName} · Reducere ${formatMoney(input.discount.amountMinor)} (cod ${input.discount.code})`;
   const eventUrl = new URL(`/events/${input.eventId}`, input.appUrl).toString();
   return {
     mode: "payment",
@@ -33,7 +41,7 @@ export function checkoutSessionParams(input: CheckoutInput): Stripe.Checkout.Ses
         price_data: {
           currency: "ron",
           unit_amount: input.amountMinor,
-          product_data: { name, description: input.eventName },
+          product_data: { name, description },
         },
       },
     ],

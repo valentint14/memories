@@ -39,6 +39,16 @@ function db(): WebhookDb {
       const rows = must(await supabase.rpc("register_dispute", { p_payment_intent_id: paymentIntentId }));
       return rows?.[0]?.outcome ?? "ignored";
     },
+    registerRefund: async (paymentIntentId, refundedMinor, refundedAt) => {
+      const rows = must(
+        await supabase.rpc("register_refund", {
+          p_payment_intent_id: paymentIntentId,
+          p_refunded_minor: refundedMinor,
+          p_refunded_at: refundedAt,
+        }),
+      );
+      return rows?.[0]?.outcome ?? "ignored";
+    },
   };
 }
 

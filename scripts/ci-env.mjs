@@ -71,8 +71,8 @@ if (process.argv.includes("--write")) {
       "STRIPE_WEBHOOK_SECRET",
       "STRIPE_API_BASE",
     ]) +
-      // Doar local, pentru testarea de mână: toate cererile vin de pe aceeași adresă (producția: 20).
-      "RATE_LIMIT_IP_PER_HOUR=1000\n",
+      // Doar local, pentru testarea de mână: toate cererile vin de pe aceeași adresă (producția: 20, respectiv 30).
+      "RATE_LIMIT_IP_PER_HOUR=1000\nRATE_LIMIT_DISCOUNT_IP_PER_HOUR=1000\n",
   );
   writeFileSync(
     "apps/worker/.env",

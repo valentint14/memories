@@ -245,7 +245,7 @@ lungă, plătește diferența, iar noua dată de ștergere se aplică doar după
   „activare solicitată” (002/FR-027).
 - **FR-016**: Suspendarea, reactivarea și ștergerea evenimentelor de către administrator
   (002/FR-028, 001/FR-006b) TREBUIE să rămână neschimbate; o rambursare nu schimbă automat
-  starea evenimentului.
+  starea evenimentului. *Înlocuită pentru rambursările plăților aplicate de 004/FR-004 și FR-007.*
 - **FR-016a**: Când procesatorul anunță contestarea unei plăți a evenimentului (activare sau
   prelungire), un eveniment activ TREBUIE suspendat automat, cu efectele din 002/FR-028a și
   FR-031 (fișierele rămân, încărcările se opresc), iar schimbarea TREBUIE înregistrată cu sursa

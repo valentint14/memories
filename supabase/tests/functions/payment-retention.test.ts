@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { closePool, createTestEvent, randomEmail, sql } from "../support/clients.ts";
-import { awaitingEvent, insertPayment } from "../support/payments.ts";
+import { awaitingEvent, insertPayment, optionId, paidActivation, paidExtension } from "../support/payments.ts";
 
 // Păstrarea datelor de plată (003: FR-018; data-model.md › Retenție).
 afterAll(closePool);
@@ -53,5 +53,23 @@ describe("purge_payment_noise", () => {
     expect(await sql("select 1 from public.payments where id = $1", [stale])).toHaveLength(0);
     expect(await sql("select 1 from public.payments where id = $1", [kept])).toHaveLength(1);
     expect(await sql("select 1 from public.stripe_webhook_events where received_at < now() - interval '90 days'")).toHaveLength(0);
+  });
+});
+
+describe("opțiunea de dinaintea prelungirii (004: FR-007, research R5)", () => {
+  it("prelungirea aplicată reține opțiunea, lunile și suplimentul de dinainte; activarea nu", async () => {
+    const extension = await paidExtension("prev-ext");
+    const [row] = await sql<{ option: string; months: number; surcharge: string }>(
+      "select previous_retention_option_id as option, previous_retention_months as months, previous_surcharge_minor as surcharge from public.payments where id = $1",
+      [extension.paymentId],
+    );
+    const [three] = await sql<{ surcharge_minor: string }>("select surcharge_minor from public.retention_options where months = 3");
+    expect(row).toEqual({ option: await optionId(3), months: 3, surcharge: three?.surcharge_minor });
+
+    const activation = await paidActivation("prev-act");
+    const [act] = await sql<{ option: string | null }>("select previous_retention_option_id as option from public.payments where id = $1", [
+      activation.paymentId,
+    ]);
+    expect(act?.option).toBeNull();
   });
 });

@@ -1,5 +1,6 @@
 import type Stripe from "stripe";
 import { describe, expect, it, vi } from "vitest";
+import { formatMoney } from "../../lib/i18n";
 import { billingFromSession } from "../../lib/stripe/billing";
 import { checkoutSessionParams, createCheckoutSession, type CheckoutInput } from "../../lib/stripe/checkout";
 
@@ -60,6 +61,17 @@ describe("checkoutSessionParams", () => {
   it("numește prelungirea altfel", () => {
     const extension = checkoutSessionParams({ ...input, purpose: "retention_extension", amountMinor: 9_900 });
     expect(extension.line_items?.[0]?.price_data?.product_data?.name).toBe("Memories — prelungirea păstrării la 12 luni");
+  });
+
+  it("cu un cod de reducere (005): suma redusă, reducerea și codul în descriere și în metadata", () => {
+    const discounted = checkoutSessionParams({ ...input, amountMinor: 34_800, discount: { code: "K7QM-3XPA", amountMinor: 5_000 } });
+    const item = discounted.line_items?.[0]?.price_data;
+    expect(item?.unit_amount).toBe(34_800);
+    expect(item?.product_data?.description).toBe(`Nunta Ana și Mihai · Reducere ${formatMoney(5_000)} (cod K7QM-3XPA)`);
+    expect(discounted.metadata).toMatchObject({ discount_code: "K7QM-3XPA" });
+    // Fără cod, descrierea și metadata rămân cele din 003.
+    expect(params.line_items?.[0]?.price_data?.product_data?.description).toBe("Nunta Ana și Mihai");
+    expect(params.metadata).not.toHaveProperty("discount_code");
   });
 });
 
