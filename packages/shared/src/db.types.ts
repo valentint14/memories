@@ -199,6 +199,51 @@ export type Database = {
           },
         ]
       }
+      discount_codes: {
+        Row: {
+          batch_id: string
+          code: string
+          created_at: string
+          created_by: string | null
+          disabled_at: string | null
+          discount_type: Database["public"]["Enums"]["discount_type"]
+          discount_value: number
+          expires_at: string | null
+          id: string
+          kind: Database["public"]["Enums"]["discount_kind"]
+          max_uses: number
+          note: string | null
+        }
+        Insert: {
+          batch_id: string
+          code: string
+          created_at?: string
+          created_by?: string | null
+          disabled_at?: string | null
+          discount_type: Database["public"]["Enums"]["discount_type"]
+          discount_value: number
+          expires_at?: string | null
+          id?: string
+          kind: Database["public"]["Enums"]["discount_kind"]
+          max_uses: number
+          note?: string | null
+        }
+        Update: {
+          batch_id?: string
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          disabled_at?: string | null
+          discount_type?: Database["public"]["Enums"]["discount_type"]
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["discount_kind"]
+          max_uses?: number
+          note?: string | null
+        }
+        Relationships: []
+      }
       event_retention_changes: {
         Row: {
           actor_kind: Database["public"]["Enums"]["retention_actor"]
@@ -643,10 +688,13 @@ export type Database = {
           created_at: string
           created_by: string | null
           currency: string
+          discount_code_id: string | null
+          discount_minor: number | null
           disputed_at: string | null
           event_id: string | null
           event_name: string | null
           expires_at: string
+          full_amount_minor: number | null
           id: string
           organizer_email: string | null
           paid_at: string | null
@@ -677,10 +725,13 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string
+          discount_code_id?: string | null
+          discount_minor?: number | null
           disputed_at?: string | null
           event_id?: string | null
           event_name?: string | null
           expires_at: string
+          full_amount_minor?: number | null
           id?: string
           organizer_email?: string | null
           paid_at?: string | null
@@ -711,10 +762,13 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string
+          discount_code_id?: string | null
+          discount_minor?: number | null
           disputed_at?: string | null
           event_id?: string | null
           event_name?: string | null
           expires_at?: string
+          full_amount_minor?: number | null
           id?: string
           organizer_email?: string | null
           paid_at?: string | null
@@ -735,6 +789,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "payments_discount_code_id_fkey"
+            columns: ["discount_code_id"]
+            isOneToOne: false
+            referencedRelation: "discount_codes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "payments_event_id_fkey"
             columns: ["event_id"]
@@ -1039,6 +1100,24 @@ export type Database = {
           surcharge_minor: number
         }[]
       }
+      admin_discount_codes: {
+        Args: never
+        Returns: {
+          code: string
+          created_at: string
+          disabled_at: string
+          discount_type: Database["public"]["Enums"]["discount_type"]
+          discount_value: number
+          expires_at: string
+          id: string
+          kind: Database["public"]["Enums"]["discount_kind"]
+          max_uses: number
+          note: string
+          redemptions: Json
+          status: string
+          uses: number
+        }[]
+      }
       admin_event_stats: {
         Args: { p_event_id?: string }
         Returns: {
@@ -1083,6 +1162,14 @@ export type Database = {
           event_name: string
           purpose: Database["public"]["Enums"]["auth_request_purpose"]
         }[]
+      }
+      check_discount_code: {
+        Args: {
+          p_code: Database["public"]["Tables"]["discount_codes"]["Row"]
+          p_email: string
+          p_ignore_payment?: string
+        }
+        Returns: undefined
       }
       check_rate_limit: {
         Args: { p_key: string; p_limit: number; p_window: string }
@@ -1135,6 +1222,18 @@ export type Database = {
           paths: string[]
         }[]
       }
+      disable_discount_code: { Args: { p_id: string }; Returns: undefined }
+      discount_amount: {
+        Args: {
+          p_code: Database["public"]["Tables"]["discount_codes"]["Row"]
+          p_full: number
+        }
+        Returns: number
+      }
+      discount_code_uses: {
+        Args: { p_code_id: string; p_ignore_payment?: string }
+        Returns: number
+      }
       enqueue_activation_notices: { Args: { p_now?: string }; Returns: number }
       enqueue_retention_notices: { Args: { p_now?: string }; Returns: number }
       event_organizer_email: { Args: { p_event_id: string }; Returns: string }
@@ -1166,6 +1265,22 @@ export type Database = {
       finish_webhook_event: {
         Args: { p_id: string; p_outcome: string }
         Returns: undefined
+      }
+      format_discount_code: { Args: { p_code: string }; Returns: string }
+      generate_discount_codes: {
+        Args: {
+          p_count: number
+          p_discount_type: Database["public"]["Enums"]["discount_type"]
+          p_discount_value: number
+          p_expires_at: string
+          p_kind: Database["public"]["Enums"]["discount_kind"]
+          p_max_uses: number
+          p_note: string
+        }
+        Returns: {
+          code: string
+          id: string
+        }[]
       }
       guest_open_event: {
         Args: { p_token: string }
@@ -1229,6 +1344,7 @@ export type Database = {
         Returns: string
       }
       new_event_token: { Args: { p_name: string }; Returns: string }
+      normalize_discount_code: { Args: { p_code: string }; Returns: string }
       organizer_event_token: { Args: { p_event_id: string }; Returns: string }
       organizer_needs_terms: { Args: never; Returns: boolean }
       organizer_owns_active_event: {
@@ -1412,6 +1528,8 @@ export type Database = {
       archive_status: "pending" | "building" | "ready" | "failed" | "expired"
       auth_request_purpose: "create" | "login"
       auth_request_status: "pending" | "used" | "invalidated"
+      discount_kind: "personal" | "campaign"
+      discount_type: "fixed" | "percent"
       event_origin: "admin" | "self_service"
       event_status:
         | "unconfirmed"
@@ -1569,6 +1687,8 @@ export const Constants = {
       archive_status: ["pending", "building", "ready", "failed", "expired"],
       auth_request_purpose: ["create", "login"],
       auth_request_status: ["pending", "used", "invalidated"],
+      discount_kind: ["personal", "campaign"],
+      discount_type: ["fixed", "percent"],
       event_origin: ["admin", "self_service"],
       event_status: [
         "unconfirmed",

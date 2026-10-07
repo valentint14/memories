@@ -16,6 +16,7 @@ const LINKS: Record<Exclude<NavContext, "public">, { href: string; key: MessageK
     { href: "/admin/events", key: "admin.events" },
     { href: "/admin/retention", key: "admin.retention" },
     { href: "/admin/package", key: "admin.package.nav" },
+    { href: "/admin/discounts", key: "admin.discounts.nav" },
   ],
 };
 
