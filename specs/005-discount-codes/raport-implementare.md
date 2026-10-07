@@ -61,7 +61,8 @@ modul test (de parcurs de proprietar).
 ## Limitări și pași următori
 
 - **T033 — scenariile manuale** din [quickstart.md](./quickstart.md) cu Stripe în modul test.
-- **Câmpul de cod cere JavaScript doar pentru „Elimină codul”**; aplicarea și plata merg și fără.
+- **„Elimină codul” cere JavaScript** (acțiunea își setează intenția în browser). Aplicarea și plata
+  folosesc formularul nativ, dar funcționarea fără JavaScript nu a fost testată.
 - **Deploy**: migrația e compatibilă cu versiunea în producție (coloane noi nule, `prepare_payment`
   cu parametru opțional, funcții noi), deci se aplică cu `supabase db push` înainte de merge.
   `RATE_LIMIT_DISCOUNT_IP_PER_HOUR` poate lipsi din `web.env` (implicit 30).
