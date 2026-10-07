@@ -18,6 +18,12 @@ Completează [003](../../003-stripe-payment-activation/contracts/database-functi
 
 Setează `disabled_at` (idempotent). `NOT_FOUND` dacă lipsește.
 
+### `delete_discount_code(p_id uuid) → void`
+
+Șterge un cod fără plăți `open` / `paid` / `refund_due` (altfel `DISCOUNT_UNAVAILABLE`); plățile
+abandonate (`expired`, `failed`) pierd legătura cu codul. `NOT_FOUND` dacă lipsește. Migrația
+`20261008000100_delete_discount_code.sql`.
+
 ### `admin_discount_codes()` (vedere sau funcție) → rânduri pentru listă
 
 Pentru fiecare cod: câmpurile din data-model, `uses` (utilizări rezervate + definitive), `status`

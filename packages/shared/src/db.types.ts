@@ -1255,6 +1255,7 @@ export type Database = {
           version: string
         }[]
       }
+      delete_discount_code: { Args: { p_id: string }; Returns: undefined }
       delete_media: {
         Args: { p_event_id: string; p_media_ids: string[] }
         Returns: {

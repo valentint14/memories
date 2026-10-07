@@ -37,10 +37,13 @@ Link nou în meniul de administrare: „Coduri de reducere”.
 
 - **Foaia „Generează coduri”**: felul (personal / de campanie), tipul (sumă fixă în lei / procent),
   valoarea, câte coduri (personal, 1–100) sau numărul maxim de utilizări (campanie, 2–1000),
-  expirarea (opțional, `DateField`), nota. După generare: codurile noi, cu „Copiază tot”.
+  expirarea (opțional, `DateField`), nota. După generare, formularul se golește și se deschide o
+  **fereastră de succes**: „N coduri generate”, rezumatul (reducerea, felul, expirarea), codurile
+  (fiecare cu buton de copiere; lista se derulează la multe coduri), „Copiază tot” și „Închide”.
 - **Foaia „Coduri”**: lista, filtrabilă după stare (disponibil, epuizat, expirat, dezactivat):
   codul, felul, reducerea, utilizări „x din y”, expirarea, nota, data; extinsă: utilizările
-  (eveniment cu link, organizator, data sau „plată în curs”) și „Dezactivează”.
+  (eveniment cu link, organizator, data sau „plată în curs”), „Dezactivează” (cod disponibil) și
+  „Șterge” (cod fără utilizări), fiecare cu fereastră de confirmare.
 
 ## Foaia „Plăți” (administrare › eveniment)
 

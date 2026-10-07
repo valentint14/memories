@@ -28,12 +28,22 @@ test("adminul generează coduri personale și de campanie, apoi dezactivează un
   await form.getByLabel("Notă internă (opțional)").fill("Test e2e");
   await form.getByRole("button", { name: "Generează" }).click();
 
-  const generated = page.getByRole("region", { name: "Coduri generate" });
-  await expect(generated.getByRole("listitem")).toHaveCount(3);
-  const codes = await generated.getByRole("listitem").allInnerTexts();
-  for (const c of codes) expect(c.trim()).toMatch(CODE);
+  // Fereastra de succes: titlul, rezumatul și codurile, fiecare cu copiere.
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByRole("heading", { name: "3 coduri generate" })).toBeVisible();
+  await expect(dialog).toContainText("personal");
+  const generated = dialog.getByRole("list", { name: "Coduri generate" }).getByRole("listitem");
+  await expect(generated).toHaveCount(3);
+  const codes = (await generated.allInnerTexts()).map((c) => c.trim());
+  for (const c of codes) expect(c).toMatch(CODE);
   expect(new Set(codes).size).toBe(3);
-  await expect(generated.getByRole("button", { name: "Copiază tot" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: `Copiază codul ${codes[0] ?? ""}` })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Copiază tot" })).toBeVisible();
+  await waitForHydration(page);
+  const dialogA11y = await new AxeBuilder({ page }).include("[role=dialog]").withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+  expect(dialogA11y.violations.map((v) => v.id)).toEqual([]);
+  await dialog.getByRole("button", { name: "Închide" }).click();
+  await expect(dialog).toHaveCount(0);
 
   // Cod de campanie: 15%, maxim 30 de utilizări.
   await form.getByRole("button", { name: /Felul codului/ }).click();
@@ -43,8 +53,9 @@ test("adminul generează coduri personale și de campanie, apoi dezactivează un
   await form.getByLabel("Valoarea reducerii").fill("15");
   await form.getByLabel("Numărul maxim de utilizări").fill("30");
   await form.getByRole("button", { name: "Generează" }).click();
-  await expect(generated.getByRole("listitem")).toHaveCount(1);
-  const campaign = (await generated.getByRole("listitem").innerText()).trim();
+  await expect(dialog.getByRole("heading", { name: "1 cod generat" })).toBeVisible();
+  const campaign = (await generated.innerText()).trim();
+  await dialog.getByRole("button", { name: "Închide" }).click();
 
   await page.reload();
   const list = page.getByRole("region", { name: "Coduri" }).last();
@@ -57,6 +68,13 @@ test("adminul generează coduri personale și de campanie, apoi dezactivează un
   await personal.getByRole("button", { name: "Dezactivează" }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Dezactivează" }).click();
   await expect(personal).toContainText("Dezactivat");
+
+  // Ștergerea unui cod nefolosit: dispare din listă.
+  const removable = list.getByRole("listitem").filter({ hasText: codes[1] ?? "" });
+  await removable.getByRole("button", { name: "Șterge" }).click();
+  await expect(page.getByRole("alertdialog")).toContainText("Ștergi definitiv");
+  await page.getByRole("alertdialog").getByRole("button", { name: "Șterge" }).click();
+  await expect(list.getByRole("listitem").filter({ hasText: codes[1] ?? "" })).toHaveCount(0);
 
   await waitForHydration(page);
   const accessibility = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
@@ -170,6 +188,8 @@ test("adminul vede utilizarea codului și reducerea în foaia „Plăți” (US3
     const row = admin.getByRole("region", { name: "Coduri" }).last().getByRole("listitem").filter({ hasText: code });
     await expect(row).toContainText("Epuizat");
     await expect(row).toContainText("1 din 1 utilizări");
+    // Un cod folosit nu se poate șterge, doar dezactiva.
+    await expect(row.getByRole("button", { name: "Șterge" })).toHaveCount(0);
     await row.getByText("Utilizări (1)").click();
     await expect(row.getByRole("link")).toHaveAttribute("href", `/admin/events/${eventId}`);
   } finally {

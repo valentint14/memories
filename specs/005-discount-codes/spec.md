@@ -141,7 +141,9 @@ evenimentul și data, iar foaia „Plăți” a evenimentului arată codul și s
 - **FR-003**: Fiecare cod TREBUIE să fie unic, generat aleator, greu de ghicit și ușor de dictat sau
   copiat (fără caractere care se confundă, ca O/0 sau I/1).
 - **FR-004**: Administratorul TREBUIE să poată dezactiva un cod; un cod dezactivat sau expirat nu mai
-  poate fi aplicat, iar utilizările deja făcute rămân în evidență.
+  poate fi aplicat, iar utilizările deja făcute rămân în evidență. Un cod **nefolosit** (fără plăți
+  reușite sau în curs) TREBUIE să poată fi și șters definitiv, după confirmare; un cod folosit se
+  poate doar dezactiva, ca foaia „Plăți” să-l arate în continuare.
 - **FR-005**: Doar administratorii TREBUIE să poată genera, vedea și dezactiva coduri.
 
 **Folosirea codului**

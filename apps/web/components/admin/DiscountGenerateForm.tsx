@@ -1,14 +1,97 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Button } from "react-aria-components";
+import { useRouter } from "next/navigation";
+import { useRef, useState, useTransition } from "react";
+import { Button, Dialog, Heading, Modal, ModalOverlay } from "react-aria-components";
 import { generateDiscountCodes } from "@/lib/actions/admin";
-import { t, type MessageKey } from "@/lib/i18n";
+import { formatDate, formatMoney, t, tp, type MessageKey } from "@/lib/i18n";
 import { ui } from "@/lib/ui";
 import { DateField } from "../ui/DateField";
 import { SelectField } from "../ui/SelectField";
 import { Sheet } from "../ui/Sheet";
 import { SheetActions } from "../ui/SheetActions";
+import { CheckIcon, CopyIcon } from "../ui/icons";
+
+interface Generated {
+  codes: string[];
+  /** Reducerea, felul și expirarea, pentru rândul de sub titlu. */
+  summary: string;
+}
+
+/**
+ * Fereastra de după generare: confirmarea, codurile noi (fiecare cu copiere) și „Copiază tot”.
+ * La multe coduri, lista se derulează, iar butoanele rămân jos.
+ */
+function GeneratedDialog({ generated, onClose }: { generated: Generated | null; onClose: () => void }) {
+  const [copied, setCopied] = useState<string | null>(null);
+  const copy = (text: string, message: string) => {
+    void navigator.clipboard.writeText(text).then(() => {
+      setCopied(message);
+    });
+  };
+  return (
+    <ModalOverlay
+      isOpen={generated !== null}
+      isDismissable
+      onOpenChange={(open) => {
+        if (!open) {
+          setCopied(null);
+          onClose();
+        }
+      }}
+      className={ui.overlay}
+    >
+      <Modal className={`${ui.dialog} flex max-h-[85dvh] flex-col`}>
+        <Dialog className="flex min-h-0 flex-col gap-4 outline-none">
+          {({ close }) => (
+            <>
+              <Heading slot="title" className={`${ui.dialogTitle} flex items-center gap-3`}>
+                <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-full bg-success text-paper-raised">
+                  <CheckIcon className="size-4" />
+                </span>
+                {tp("plural.generatedCodes", generated?.codes.length ?? 0)}
+              </Heading>
+              <p className="text-ink-muted">{generated?.summary}</p>
+              <ul aria-label={t("admin.discounts.generated")} className="flex min-h-0 flex-col overflow-y-auto border-t border-rule">
+                {generated?.codes.map((c) => (
+                  <li key={c} className="flex items-center justify-between gap-3 border-b border-rule py-1 last:border-b-0">
+                    <span className={`${ui.data} text-lg`}>{c}</span>
+                    <Button
+                      aria-label={t("admin.discounts.copyCode", { code: c })}
+                      onPress={() => {
+                        copy(c, t("admin.discounts.copiedOne", { code: c }));
+                      }}
+                      className="flex size-11 cursor-pointer items-center justify-center rounded-xs outline-none data-focus-visible:outline-2 data-focus-visible:outline-ink data-hovered:bg-rule/40"
+                    >
+                      <CopyIcon />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+              {/* Regiunea live există mereu (anunțul „copiat”), dar nu ocupă loc cât e goală. */}
+              <p role="status" className={copied === null ? "sr-only" : "text-sm text-success"}>
+                {copied ?? ""}
+              </p>
+              <div className={ui.dialogActions}>
+                <Button
+                  onPress={() => {
+                    copy(generated?.codes.join("\n") ?? "", t("admin.discounts.copied"));
+                  }}
+                  className={ui.buttonSecondary}
+                >
+                  {t("admin.discounts.copyAll")}
+                </Button>
+                <Button onPress={close} className={ui.buttonPrimary}>
+                  {t("common.close")}
+                </Button>
+              </div>
+            </>
+          )}
+        </Dialog>
+      </Modal>
+    </ModalOverlay>
+  );
+}
 
 /**
  * Generarea codurilor de reducere (005: FR-001–FR-003): felul (personal în lot sau de campanie cu
@@ -21,9 +104,10 @@ export function DiscountGenerateForm() {
   const [expiresOn, setExpiresOn] = useState("");
   const [fields, setFields] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
-  const [codes, setCodes] = useState<string[]>([]);
-  const [copied, setCopied] = useState(false);
+  const [generated, setGenerated] = useState<Generated | null>(null);
   const [pending, startTransition] = useTransition();
+  const formRef = useRef<HTMLFormElement>(null);
+  const router = useRouter();
 
   function field(id: string, name: string, label: MessageKey, props: React.InputHTMLAttributes<HTMLInputElement>, hint?: MessageKey) {
     const message = fields[name];
@@ -57,6 +141,7 @@ export function DiscountGenerateForm() {
   return (
     <Sheet id="discount-generate-title" title={t("admin.discounts.generate.title")}>
       <form
+        ref={formRef}
         noValidate
         className={ui.sheetForm}
         onSubmit={(e) => {
@@ -68,7 +153,6 @@ export function DiscountGenerateForm() {
           };
           setError(null);
           setFields({});
-          setCopied(false);
           startTransition(async () => {
             const result = await generateDiscountCodes({
               kind,
@@ -80,7 +164,21 @@ export function DiscountGenerateForm() {
               note: text("note"),
             });
             if (result.ok) {
-              setCodes(result.data.codes);
+              const value = Number(text("value").replace(",", "."));
+              const reduction = discountType === "fixed" ? formatMoney(Math.round(value * 100)) : t("admin.discounts.percent", { percent: value });
+              setGenerated({
+                codes: result.data.codes,
+                summary: [
+                  reduction,
+                  t(`admin.discounts.kindShort.${kind}`),
+                  expiresOn === "" ? null : t("admin.discounts.expires", { date: formatDate(expiresOn) }),
+                ]
+                  .filter(Boolean)
+                  .join(" · "),
+              });
+              formRef.current?.reset();
+              setExpiresOn("");
+              router.refresh();
             } else if (result.fields) {
               setFields(result.fields);
             } else {
@@ -141,36 +239,12 @@ export function DiscountGenerateForm() {
         </SheetActions>
       </form>
 
-      {codes.length > 0 && (
-        <section aria-labelledby="discount-generated-title" className="flex flex-col gap-3 border-t border-rule pt-4">
-          <h3 id="discount-generated-title" className={ui.label}>
-            {t("admin.discounts.generated")}
-          </h3>
-          <ul className="grid gap-2 sm:grid-cols-3">
-            {codes.map((c) => (
-              <li key={c} className={`${ui.data} border border-rule px-3 py-2 text-center`}>
-                {c}
-              </li>
-            ))}
-          </ul>
-          <SheetActions
-            status={
-              <p role="status" className="text-sm text-success">
-                {copied ? t("admin.discounts.copied") : ""}
-              </p>
-            }
-          >
-            <Button
-              onPress={() => {
-                void navigator.clipboard.writeText(codes.join("\n")).then(() => { setCopied(true); });
-              }}
-              className={ui.buttonSecondary}
-            >
-              {t("admin.discounts.copyAll")}
-            </Button>
-          </SheetActions>
-        </section>
-      )}
+      <GeneratedDialog
+        generated={generated}
+        onClose={() => {
+          setGenerated(null);
+        }}
+      />
     </Sheet>
   );
 }

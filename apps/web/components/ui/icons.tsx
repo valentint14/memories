@@ -33,6 +33,14 @@ export function ChevronDownIcon({ className = "size-4" }: { className?: string }
   );
 }
 
+export function CopyIcon({ className = "size-5" }: { className?: string }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+      <path d="M5.5 5.5h8v8h-8zM10.5 5.5v-3h-8v8h3" />
+    </svg>
+  );
+}
+
 export function CalendarIcon({ className = "size-5" }: { className?: string }) {
   return (
     <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
