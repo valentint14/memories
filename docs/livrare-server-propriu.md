@@ -350,6 +350,11 @@ _Packages_), apoi `docker compose up -d`.
    erori.
 8. Probă: o plată reală mică pe un eveniment de test, apoi rambursată integral din Stripe;
    evenimentul trebuie să devină suspendat.
+9. **Codurile de reducere** (005) se generează din _Administrare › Coduri de reducere_: personale
+   (o singură utilizare) sau de campanie (un număr maxim de utilizări, una per organizator), ca sumă
+   fixă sau procent. Se aplică doar plății de activare, iar suma de plată nu coboară sub 3,00 lei
+   (minimul Stripe, cu marjă pentru conturile care virează în euro). Pentru factură, foaia **Plăți**
+   arată prețul întreg, reducerea și codul.
 
 ---
 

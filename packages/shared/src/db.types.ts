@@ -1275,7 +1275,13 @@ export type Database = {
         Returns: number
       }
       discount_quote: {
-        Args: { p_code: string; p_event_id: string; p_ip_hash: string }
+        Args: {
+          p_code: string
+          p_email: string
+          p_event_id: string
+          p_ip_hash: string
+          p_ip_limit: number
+        }
         Returns: {
           amount_minor: number
           code: string

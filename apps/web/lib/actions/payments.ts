@@ -42,8 +42,17 @@ export async function applyDiscountForm(_prev: DiscountState, formData: FormData
   const raw = formData.get("discountCode");
   const code = typeof raw === "string" ? raw.trim() : "";
   if (formData.get("intent") === "remove" || code === "" || typeof eventId !== "string") return { status: "idle" };
-  const supabase = await serverSupabase();
-  const { data, error } = await supabase.rpc("discount_quote", { p_event_id: eventId, p_code: code, p_ip_hash: await hashedClientIp() });
+  // Emailul vine din sesiunea verificată; funcția e doar a serverului (limita pe IP nu poate fi ocolită).
+  const { data: auth } = await (await serverSupabase()).auth.getUser();
+  const email = auth.user?.email;
+  if (email === undefined) return { status: "error", error: "FORBIDDEN", code };
+  const { data, error } = await adminSupabase().rpc("discount_quote", {
+    p_event_id: eventId,
+    p_code: code,
+    p_email: email,
+    p_ip_hash: await hashedClientIp(),
+    p_ip_limit: serverEnv.discountRateLimitIpPerHour,
+  });
   if (error) return { status: "error", error: "INTERNAL", code };
   const first = data[0];
   if (first === undefined) return { status: "error", error: "PAYMENT_NOT_ALLOWED", code };

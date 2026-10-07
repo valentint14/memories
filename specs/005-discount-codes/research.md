@@ -70,6 +70,11 @@ Nicio dependență nouă.
   emailurile de autentificare). Peste limită: `RATE_LIMITED`, fără a dezvălui dacă codul există.
   `prepare_payment` cu cod verifică aceeași limită per email, pentru apelurile directe ale funcției.
 - **Rationale**: FR-011, SC-005. Un organizator legitim aplică un cod de 1–3 ori.
+- **Ajustări la implementare**: (1) o excepție în aceeași tranzacție ar anula și numărarea, deci
+  `discount_quote` întoarce refuzul într-o coloană; (2) `discount_quote` e doar a serverului, cu
+  emailul verificat și limita pe IP din `RATE_LIMIT_DISCOUNT_IP_PER_HOUR`, ca IP-ul să nu poată fi
+  ales de client; (3) `prepare_payment` acceptă doar un cod aplicat pe eveniment
+  (`discount_applications`), ca să nu devină o cale ocolitoare de încercare a codurilor.
 
 ## R7. Ce vede organizatorul la Stripe și în chitanță
 

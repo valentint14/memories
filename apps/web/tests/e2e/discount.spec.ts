@@ -144,3 +144,35 @@ test("„Elimină codul” readuce prețurile întregi (US2)", async ({ page }) 
   await expect(panel.getByText(`Cod ${code}`)).toHaveCount(0);
   await expect(panel.locator("s")).toHaveCount(0);
 });
+
+test("adminul vede utilizarea codului și reducerea în foaia „Plăți” (US3)", async ({ page, browser }) => {
+  const code = await newCode(5_000);
+  const eventId = await newAwaitingEvent(page);
+  const panel = page.getByRole("region", { name: "Activarea pachetului complet" });
+  await panel.getByLabel("Cod de reducere").fill(code);
+  await panel.getByRole("button", { name: "Aplică" }).click();
+  await expect(panel.getByText(`Cod ${code}`)).toBeVisible();
+  await stubCheckoutPage(page);
+  await panel.getByRole("button", { name: "Plătește și activează" }).click();
+  const session = await payFakeSession(await sessionIdFromCheckoutUrl(page));
+  expect(await sendWebhook(page, "checkout.session.completed", session)).toBe(200);
+
+  const context = await browser.newContext(test.info().project.use);
+  const admin = await context.newPage();
+  try {
+    await loginAsNewAdmin(admin, await createAdmin());
+    await gotoHydrated(admin, `/admin/events/${eventId}`);
+    const payments = admin.getByRole("region", { name: "Plăți" });
+    await expect(payments).toContainText("Preț întreg");
+    await expect(payments).toContainText(`(cod ${code})`);
+
+    await gotoHydrated(admin, "/admin/discounts");
+    const row = admin.getByRole("region", { name: "Coduri" }).last().getByRole("listitem").filter({ hasText: code });
+    await expect(row).toContainText("Epuizat");
+    await expect(row).toContainText("1 din 1 utilizări");
+    await row.getByText("Utilizări (1)").click();
+    await expect(row.getByRole("link")).toHaveAttribute("href", `/admin/events/${eventId}`);
+  } finally {
+    await context.close();
+  }
+});

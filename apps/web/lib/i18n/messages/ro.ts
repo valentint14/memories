@@ -302,6 +302,7 @@ export const ro = {
   "admin.payments.status.refund_due": "De rambursat",
   "admin.payments.status.refunded": "Rambursată",
   "admin.payments.disputed": "contestată",
+  "admin.payments.discount": "Preț întreg {full} · reducere {discount} (cod {code})",
   "admin.payments.refund.partial": "Rambursat parțial: {amount} · {date}",
   "admin.payments.refund.full": "Rambursare pe {date}",
   "admin.payments.refund.effect.suspended": "Eveniment suspendat",

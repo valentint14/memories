@@ -38,6 +38,16 @@ Constrângere `payments_discount`: fie toate trei null, fie toate setate, cu rel
 Index `payments_discount_code_idx` pe `(discount_code_id)` `where status in ('open', 'paid', 'refund_due')`.
 Anonimizarea plății (003) nu atinge aceste coloane (FR-015).
 
+## `discount_applications` (nou)
+
+| Coloană | Tip | Reguli |
+| --- | --- | --- |
+| `event_id` | `uuid` pk → `events` (`on delete cascade`) | un cod aplicat per eveniment |
+| `discount_code_id` | `uuid` → `discount_codes` (`on delete cascade`) | |
+| `applied_at` | `timestamptz` | `now()`; valabil 24 h pentru `prepare_payment` |
+
+RLS activ, fără drepturi pentru clienți; scris doar de `discount_quote`.
+
 ## Utilizările (derivate, R2)
 
 Utilizare = plată cu `discount_code_id` și `status in ('open', 'paid', 'refund_due')`:

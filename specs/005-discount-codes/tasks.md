@@ -113,13 +113,13 @@ Monorepo: `apps/web/`, `apps/worker/`, `packages/shared/`, `supabase/`. Migrați
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T027 [P] [US3] În `apps/web/tests/e2e/discount.spec.ts`: după plata cu cod, adminul vede la cod utilizarea (evenimentul cu link și data), iar în `/admin/events/{id}` foaia „Plăți” arată „Preț întreg … · reducere … (cod …)”; filtrul „epuizat” arată codul
+- [X] T027 [P] [US3] În `apps/web/tests/e2e/discount.spec.ts`: după plata cu cod, adminul vede la cod utilizarea (evenimentul cu link și data), iar în `/admin/events/{id}` foaia „Plăți” arată „Preț întreg … · reducere … (cod …)”; filtrul „epuizat” arată codul
 
 ### Implementation for User Story 3
 
-- [ ] T028 [US3] În `apps/web/lib/admin/queries.ts › listPayments` citește `full_amount_minor`, `discount_minor` și codul (`discount_codes(code)`), expuse ca `fullAmountMinor`, `discountMinor`, `discountCode`
-- [ ] T029 [US3] În `apps/web/components/admin/PaymentsSheet.tsx`: pentru o plată cu cod, rândul „Preț întreg {sumă} · reducere {sumă} (cod {COD})” (contracts/web-interface.md); textul `admin.payments.discount` în `ro.ts`
-- [ ] T030 [US3] Rulează e2e-ul din T027 pe desktop și mobil
+- [X] T028 [US3] În `apps/web/lib/admin/queries.ts › listPayments` citește `full_amount_minor`, `discount_minor` și codul (`discount_codes(code)`), expuse ca `fullAmountMinor`, `discountMinor`, `discountCode`
+- [X] T029 [US3] În `apps/web/components/admin/PaymentsSheet.tsx`: pentru o plată cu cod, rândul „Preț întreg {sumă} · reducere {sumă} (cod {COD})” (contracts/web-interface.md); textul `admin.payments.discount` în `ro.ts`
+- [X] T030 [US3] Rulează e2e-ul din T027 pe desktop și mobil
 
 **Checkpoint**: toate poveștile funcționează independent
 
@@ -127,10 +127,10 @@ Monorepo: `apps/web/`, `apps/worker/`, `packages/shared/`, `supabase/`. Migrați
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T031 [P] În `docs/livrare-server-propriu.md › 8. Plățile` adaugă o notă despre codurile de reducere (generate din administrare, suma minimă de 3,00 lei, factura cu prețul întreg și reducerea din foaia „Plăți”)
-- [ ] T032 Porțile complete: `corepack pnpm lint`, `corepack pnpm typecheck`, `corepack pnpm test:unit`, `corepack pnpm test:db`, `corepack pnpm test:worker`, e2e (desktop + mobil) cu serverul Stripe fals
+- [X] T031 [P] În `docs/livrare-server-propriu.md › 8. Plățile` adaugă o notă despre codurile de reducere (generate din administrare, suma minimă de 3,00 lei, factura cu prețul întreg și reducerea din foaia „Plăți”)
+- [X] T032 Porțile complete: `corepack pnpm lint`, `corepack pnpm typecheck`, `corepack pnpm test:unit`, `corepack pnpm test:db`, `corepack pnpm test:worker`, e2e (desktop + mobil) cu serverul Stripe fals
 - [ ] T033 Scenariile manuale 1–12 din [quickstart.md](./quickstart.md) cu Stripe în modul test
-- [ ] T034 Scrie `specs/005-discount-codes/raport-implementare.md` (constituția: ce s-a realizat, cum, verificare, limitări)
+- [X] T034 Scrie `specs/005-discount-codes/raport-implementare.md` (constituția: ce s-a realizat, cum, verificare, limitări)
 
 ---
 

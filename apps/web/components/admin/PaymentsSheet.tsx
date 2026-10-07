@@ -44,6 +44,15 @@ export function PaymentsSheet({ payments }: { payments: AdminPaymentRow[] }) {
                     {p.disputedAt !== null && ` · ${t("admin.payments.disputed")}`}
                   </span>
                 </span>
+                {p.discount !== null && (
+                  <span className="text-sm text-ink-muted">
+                    {t("admin.payments.discount", {
+                      full: formatMoney(p.discount.fullAmountMinor),
+                      discount: formatMoney(p.discount.amountMinor),
+                      code: p.discount.code,
+                    })}
+                  </span>
+                )}
                 {p.refundReason !== null && !fullyRefunded && (
                   <span className="text-sm text-danger">{t(`admin.payments.reason.${p.refundReason}` as MessageKey)}</span>
                 )}

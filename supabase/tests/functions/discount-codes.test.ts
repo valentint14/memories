@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { adminClient, closePool, serviceClient, sql } from "../support/clients.ts";
-import { awaitingEvent, discountCode, insertPayment, optionId, prepareWithCode } from "../support/payments.ts";
+import { awaitingEvent, discountCode, insertPayment, optionId, prepareWithCode, quoteAsServer } from "../support/payments.ts";
 
 // Codurile de reducere (005: FR-001–FR-015; data-model.md; contracts/database-functions.md).
 afterAll(closePool);
@@ -166,11 +166,17 @@ describe("generarea și administrarea (US1: FR-001–FR-005)", () => {
 });
 
 describe("aplicarea și plata cu cod (US2: FR-006–FR-012)", () => {
+  it("discount_quote e doar a serverului (adresa IP nu poate fi aleasă de client)", async () => {
+    const { client, eventId } = await awaitingEvent("dq-server-only");
+    const direct = await client.rpc("discount_quote", { p_event_id: eventId, p_code: "ZZZZZZZZ", p_email: "x@example.test", p_ip_hash: "x", p_ip_limit: 1000 });
+    expect(direct.error).not.toBeNull();
+  });
+
   type Client = Awaited<ReturnType<typeof awaitingEvent>>["client"];
 
   /** `discount_quote` nu ridică erori pentru codurile refuzate (limita de încercări rămâne numărată): motivul vine în `error`. */
-  async function quote(client: Client, eventId: string, code: string) {
-    const result = await client.rpc("discount_quote", { p_event_id: eventId, p_code: code, p_ip_hash: `ip-${crypto.randomUUID()}` });
+  async function quote(_client: Client, eventId: string, code: string) {
+    const result = await quoteAsServer(eventId, code);
     const refused = result.data?.[0]?.error;
     return refused ? { data: null, error: { message: refused } } : { data: result.data, error: result.error };
   }
@@ -298,11 +304,19 @@ describe("aplicarea și plata cu cod (US2: FR-006–FR-012)", () => {
   it("două pregătiri simultane cu același cod personal: una reușește, cealaltă e refuzată", async () => {
     const { code } = await discountCode();
     const [a, b] = await Promise.all([awaitingEvent("dp-race-a"), awaitingEvent("dp-race-b")]);
+    // Ambii aplică întâi codul; apoi doar pregătirile plăților rulează în paralel.
     const amount = Number((await quote(a.client, a.eventId, code)).data?.find((o) => o.months === 3)?.amount_minor);
-    const results = await Promise.all([
-      prepareWithCode(a.client, a.eventId, 3, code, amount),
-      prepareWithCode(b.client, b.eventId, 3, code, amount),
-    ]);
+    await quote(b.client, b.eventId, code);
+    const option = await optionId(3);
+    const prepare = (client: Client, eventId: string) =>
+      client.rpc("prepare_payment", {
+        p_event_id: eventId,
+        p_purpose: "activation",
+        p_option_id: option,
+        p_expected_amount_minor: amount,
+        p_discount_code: code,
+      });
+    const results = await Promise.all([prepare(a.client, a.eventId), prepare(b.client, b.eventId)]);
     expect(results.filter((r) => r.error === null)).toHaveLength(1);
     expect(results.find((r) => r.error !== null)?.error.message).toBe("DISCOUNT_RESERVED");
   });

@@ -24,16 +24,22 @@ Pentru fiecare cod: câmpurile din data-model, `uses` (utilizări rezervate + de
 derivat și, pentru fiecare utilizare: `event_id`, `event_name`, `organizer_email`, `paid_at` sau
 starea plății.
 
-## Organizator (`authenticated`, proprietarul evenimentului)
+## Aplicarea codului (doar `service_role`, din Server Action)
 
-### `discount_quote(p_event_id uuid, p_code text, p_ip_hash text) → table(option_id uuid, months int, full_amount_minor bigint, discount_minor bigint, amount_minor bigint, purge_at timestamptz, included boolean, code text)`
+### `discount_quote(p_event_id uuid, p_code text, p_email citext, p_ip_hash text, p_ip_limit int) → table(option_id uuid, months int, full_amount_minor bigint, discount_minor bigint, amount_minor bigint, purge_at timestamptz, included boolean, code text, error text)`
 
-1. Eveniment al utilizatorului, în `awaiting_activation`; altfel nimic.
-2. Limitarea încercărilor (research R6): `discount:email:` 10/oră, `discount:ip:` 30/oră → `RATE_LIMITED`.
+Serverul trimite emailul din sesiunea verificată, IP-ul hash-uit și limita din
+`RATE_LIMIT_DISCOUNT_IP_PER_HOUR` (implicit 30): un client care ar apela funcția direct și-ar alege
+adresa IP, ocolind limita.
+
+1. Eveniment al emailului, în `awaiting_activation`; altfel nimic.
+2. Limitarea încercărilor (research R6): `discount:email:` 10/oră, `discount:ip:{limită}:` → rând cu
+   `error = RATE_LIMITED`.
 3. Normalizează codul; validează (`DISCOUNT_INVALID`, `DISCOUNT_UNAVAILABLE`, `DISCOUNT_RESERVED`),
-   fără blocare (previzualizare).
-4. Întoarce opțiunile din `activation_quote` (003), cu reducerea calculată per opțiune (R4) și codul
-   formatat.
+   fără blocare. **Refuzul vine în coloana `error`** (un singur rând), nu ca excepție: o excepție ar
+   anula și numărarea încercării.
+4. La succes reține aplicarea în `discount_applications` (eveniment → cod) și întoarce opțiunile
+   active, cu prețul întreg, reducerea (R4), suma și codul formatat.
 
 ## Modificate
 
@@ -45,7 +51,8 @@ Rămâne prețul fără cod; pagina o folosește când nu e aplicat niciun cod.
 
 Ca în 003, plus, când `p_discount_code` nu e null:
 - doar pentru `activation` (altfel `PAYMENT_NOT_ALLOWED`);
-- limita per email din R6;
+- acceptă doar un cod **aplicat** pe eveniment în ultimele 24 h (`discount_applications`), altfel
+  `DISCOUNT_INVALID`: apelată direct, funcția nu devine o cale de încercare a codurilor fără limită;
 - blochează rândul codului (`for update`), validează ca `discount_quote` (fără plata deschisă a
   aceluiași eveniment și scop, care va fi înlocuită);
 - calculează reducerea (R4); `p_expected_amount_minor` trebuie să fie suma redusă, altfel
@@ -60,6 +67,6 @@ ceea ce îi eliberează utilizarea.
 ```sql
 grant execute on function public.generate_discount_codes(...) to authenticated;   -- verifică is_admin()
 grant execute on function public.disable_discount_code(uuid) to authenticated;    -- verifică is_admin()
-grant execute on function public.discount_quote(uuid, text, text) to authenticated;
+grant execute on function public.discount_quote(uuid, text, citext, text, int) to service_role;
 -- prepare_payment: semnătura nouă primește aceleași drepturi ca în 003
 ```

@@ -297,7 +297,9 @@ revoke all on table public.discount_applications from anon, authenticated;
 
 -- Prețurile cu codul aplicat (US2: FR-007, FR-011, FR-012). Încercările se numără înainte de
 -- validare, iar refuzul vine în coloana `error`, nu ca excepție: o excepție ar anula și numărarea.
-create function public.discount_quote(p_event_id uuid, p_code text, p_ip_hash text)
+-- Doar serverul o apelează, cu emailul verificat al utilizatorului și IP-ul real: un client care ar
+-- apela-o direct și-ar putea alege adresa IP, ocolind limita.
+create function public.discount_quote(p_event_id uuid, p_code text, p_email extensions.citext, p_ip_hash text, p_ip_limit int)
 returns table (
   option_id uuid, months int, full_amount_minor bigint, discount_minor bigint, amount_minor bigint,
   purge_at timestamptz, included boolean, code text, error text
@@ -309,9 +311,11 @@ as $$
 declare
   e public.events;
   c public.discount_codes;
-  v_email extensions.citext := (auth.jwt() ->> 'email')::extensions.citext;
+  v_email extensions.citext := p_email;
   v_open uuid;
   v_ok boolean;
+  pkg public.packages;
+  v_end timestamptz;
 begin
   select * into e from public.events ev where ev.id = p_event_id and ev.organizer_email = v_email;
   if not found or e.status <> 'awaiting_activation' then
@@ -320,7 +324,7 @@ begin
 
   v_ok := public.check_rate_limit('discount:email:' || encode(extensions.digest(lower(v_email::text), 'sha256'), 'hex'), 10, interval '1 hour');
   if p_ip_hash is not null then
-    v_ok := public.check_rate_limit('discount:ip:' || p_ip_hash, 30, interval '1 hour') and v_ok;
+    v_ok := public.check_rate_limit('discount:ip:' || p_ip_limit || ':' || p_ip_hash, p_ip_limit, interval '1 hour') and v_ok;
   end if;
   if not v_ok then
     return query select null::uuid, null::int, null::bigint, null::bigint, null::bigint, null::timestamptz, null::boolean, null::text, 'RATE_LIMITED'::text;
@@ -340,16 +344,25 @@ begin
   insert into public.discount_applications (event_id, discount_code_id) values (p_event_id, c.id)
   on conflict (event_id) do update set discount_code_id = excluded.discount_code_id, applied_at = now();
 
+  -- Opțiunile ca în `activation_quote` (003), aceeași regulă de dată; aici apelantul e serverul,
+  -- deci proprietarul s-a verificat mai sus după emailul primit.
+  select * into pkg from public.packages p where p.code = 'complete';
+  v_end := (greatest(e.event_date, (now() at time zone 'Europe/Bucharest')::date) + 2)::timestamp at time zone 'Europe/Bucharest';
   return query
-    select q.option_id, q.months, q.amount_minor, public.discount_amount(c, q.amount_minor),
-           q.amount_minor - public.discount_amount(c, q.amount_minor), q.purge_at, q.included,
+    select ro.id, ro.months, pkg.price_minor + ro.surcharge_minor,
+           public.discount_amount(c, pkg.price_minor + ro.surcharge_minor),
+           pkg.price_minor + ro.surcharge_minor - public.discount_amount(c, pkg.price_minor + ro.surcharge_minor),
+           ((v_end at time zone 'Europe/Bucharest') + make_interval(months => ro.months)) at time zone 'Europe/Bucharest',
+           ro.id = pkg.retention_option_id,
            public.format_discount_code(c.code), null::text
-      from public.activation_quote(p_event_id) q;
+      from public.retention_options ro
+     where ro.active
+     order by ro.months;
 end;
 $$;
 
-revoke execute on function public.discount_quote(uuid, text, text) from public, anon;
-grant execute on function public.discount_quote(uuid, text, text) to authenticated;
+revoke execute on function public.discount_quote(uuid, text, extensions.citext, text, int) from public, anon, authenticated;
+grant execute on function public.discount_quote(uuid, text, extensions.citext, text, int) to service_role;
 
 -- Ca în 20261002000400 (expirarea la 23 h), plus codul de reducere (US2: FR-006–FR-010; research
 -- R3, R4): doar la activare, doar un cod aplicat pe eveniment, cu rândul codului blocat cât se

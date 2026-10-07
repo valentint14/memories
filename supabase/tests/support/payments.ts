@@ -91,9 +91,21 @@ export async function discountCode(opts: {
   return { id: row.id, code };
 }
 
+/** `discount_quote` ca serverul (005): emailul organizatorului evenimentului, o adresă IP proprie testului. */
+export async function quoteAsServer(eventId: string, code: string) {
+  const [event] = await sql<{ organizer_email: string }>("select organizer_email::text from public.events where id = $1", [eventId]);
+  return serviceClient().rpc("discount_quote", {
+    p_event_id: eventId,
+    p_code: code,
+    p_email: event?.organizer_email ?? "",
+    p_ip_hash: `ip-${crypto.randomUUID()}`,
+    p_ip_limit: 30,
+  });
+}
+
 /** Aplică codul (`discount_quote`, ca butonul „Aplică”) și întoarce suma redusă a opțiunii. */
-async function quotedAmount(client: SupabaseClient, eventId: string, months: number, code: string): Promise<number> {
-  const quote = await client.rpc("discount_quote", { p_event_id: eventId, p_code: code, p_ip_hash: `ip-${crypto.randomUUID()}` });
+async function quotedAmount(_client: SupabaseClient, eventId: string, months: number, code: string): Promise<number> {
+  const quote = await quoteAsServer(eventId, code);
   return quote.data?.find((o) => o.months === months)?.amount_minor ?? 0;
 }
 
