@@ -2,7 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { isErrorCode, type ErrorCode } from "@memories/shared";
 import { z } from "zod";
+import type { ActivationOption } from "../organizer/activation";
+import { hashedClientIp } from "../security/ip-hash";
 import { serverEnv } from "../server-env";
 import { createCheckoutSession, expireCheckoutSession } from "../stripe/checkout";
 import { stripe } from "../stripe/client";
@@ -16,7 +19,60 @@ const startSchema = z.object({
   purpose: z.enum(["activation", "retention_extension"]),
   optionId: z.uuid(),
   expectedAmountMinor: z.coerce.number().int().positive(),
+  discountCode: z.string().trim().max(20).optional(),
 });
+
+/** „K7QM3XPA” → „K7QM-3XPA” (forma afișată a unui cod de reducere). */
+function formatCode(raw: string): string {
+  return `${raw.slice(0, 4)}-${raw.slice(4)}`;
+}
+
+export type DiscountState =
+  | { status: "idle" }
+  | { status: "applied"; code: string; options: ActivationOption[] }
+  | { status: "error"; error: ErrorCode; code: string };
+
+/**
+ * Aplică un cod de reducere pe foaia de plată a activării (005: FR-007, FR-011): baza de date
+ * numără încercarea, validează codul și întoarce prețurile reduse. Butonul „Elimină codul”
+ * (`intent=remove`) revine la prețurile întregi.
+ */
+export async function applyDiscountForm(_prev: DiscountState, formData: FormData): Promise<DiscountState> {
+  const eventId = formData.get("eventId");
+  const raw = formData.get("discountCode");
+  const code = typeof raw === "string" ? raw.trim() : "";
+  if (formData.get("intent") === "remove" || code === "" || typeof eventId !== "string") return { status: "idle" };
+  // Emailul vine din sesiunea verificată; funcția e doar a serverului (limita pe IP nu poate fi ocolită).
+  const { data: auth } = await (await serverSupabase()).auth.getUser();
+  const email = auth.user?.email;
+  if (email === undefined) return { status: "error", error: "FORBIDDEN", code };
+  const { data, error } = await adminSupabase().rpc("discount_quote", {
+    p_event_id: eventId,
+    p_code: code,
+    p_email: email,
+    p_ip_hash: await hashedClientIp(),
+    p_ip_limit: serverEnv.discountRateLimitIpPerHour,
+  });
+  if (error) return { status: "error", error: "INTERNAL", code };
+  const first = data[0];
+  if (first === undefined) return { status: "error", error: "PAYMENT_NOT_ALLOWED", code };
+  // Tipurile generate pentru `returns table` nu marchează coloanele nule; `error` e null la succes.
+  const refused = first.error as string | null;
+  if (refused !== null) return { status: "error", error: isErrorCode(refused) ? refused : "INTERNAL", code };
+  return {
+    status: "applied",
+    code: first.code,
+    options: data.map((o) => ({
+      id: o.option_id,
+      months: o.months,
+      amountMinor: o.amount_minor,
+      fullAmountMinor: o.full_amount_minor,
+      discountMinor: o.discount_minor,
+      purgeAt: o.purge_at,
+      included: o.included,
+    })),
+  };
+}
 
 /**
  * Pornește plata (003: FR-002, FR-007, FR-008; contracts/web-interface.md › startPayment): suma o
@@ -38,6 +94,7 @@ export async function startPaymentForm(_prev: FormState, formData: FormData): Pr
       p_purpose: input.purpose,
       p_option_id: input.optionId,
       p_expected_amount_minor: input.expectedAmountMinor,
+      ...(input.discountCode !== undefined && input.discountCode !== "" && { p_discount_code: input.discountCode }),
     });
     if (error?.message === "PRICE_CHANGED") revalidatePath(`/events/${input.eventId}`);
     throwIfDbError(error);
@@ -57,7 +114,7 @@ export async function startPaymentForm(_prev: FormState, formData: FormData): Pr
       if (replacedSessionId !== null) await expireCheckoutSession(client, replacedSessionId);
       const { data: payment, error: readError } = await admin
         .from("payments")
-        .select("event_name, organizer_email, retention_months, amount_minor, expires_at")
+        .select("event_name, organizer_email, retention_months, amount_minor, expires_at, discount_minor, discount_codes(code)")
         .eq("id", prepared.payment_id)
         .single();
       throwIfDbError(readError);
@@ -73,6 +130,8 @@ export async function startPaymentForm(_prev: FormState, formData: FormData): Pr
         amountMinor: payment.amount_minor,
         expiresAt: payment.expires_at,
         appUrl: serverEnv.appUrl,
+        ...(payment.discount_minor !== null &&
+          payment.discount_codes !== null && { discount: { code: formatCode(payment.discount_codes.code), amountMinor: payment.discount_minor } }),
       });
       throwIfDbError(
         (await admin.rpc("attach_checkout_session", { p_payment_id: prepared.payment_id, p_session_id: session.id, p_checkout_url: session.url }))

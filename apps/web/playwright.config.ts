@@ -49,7 +49,7 @@ const webServer: PlaywrightTestConfig["webServer"] = process.env.E2E_BASE_URL
         reuseExistingServer: !process.env.CI,
         timeout: 300_000,
         // Toată suita rulează de pe 127.0.0.1; limitele per adresă rămân cele reale.
-        env: { RATE_LIMIT_IP_PER_HOUR: "100000" },
+        env: { RATE_LIMIT_IP_PER_HOUR: "100000", RATE_LIMIT_DISCOUNT_IP_PER_HOUR: "100000" },
       },
       ...extraServers.map((server) => ({
         // Pornește după serverul principal și refolosește build-ul lui.

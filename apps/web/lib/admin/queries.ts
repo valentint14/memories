@@ -241,6 +241,8 @@ export interface AdminPaymentRow {
   refundedAt: string | null;
   refundEffect: "suspended" | "retention_reverted" | "manual_adjustment" | "none" | null;
   previousRetentionMonths: number | null;
+  /** Codul de reducere (005): prețul întreg, reducerea și codul formatat; null fără cod. */
+  discount: { fullAmountMinor: number; amountMinor: number; code: string } | null;
 }
 
 /** Plățile unui eveniment, cu datele de facturare (003: FR-013); RLS: doar administratorii aal2. */
@@ -249,7 +251,7 @@ export async function listPayments(eventId: string): Promise<AdminPaymentRow[]> 
   const { data, error } = await supabase
     .from("payments")
     .select(
-      "id, purpose, status, amount_minor, retention_months, created_at, paid_at, disputed_at, refund_reason, stripe_payment_intent_id, stripe_session_id, billing_name, billing_address, billing_company, billing_tax_id, refunded_minor, refunded_at, refund_effect, previous_retention_months",
+      "id, purpose, status, amount_minor, retention_months, created_at, paid_at, disputed_at, refund_reason, stripe_payment_intent_id, stripe_session_id, billing_name, billing_address, billing_company, billing_tax_id, refunded_minor, refunded_at, refund_effect, previous_retention_months, full_amount_minor, discount_minor, discount_codes(code)",
     )
     .eq("event_id", eventId)
     .order("created_at", { ascending: false });
@@ -274,6 +276,14 @@ export async function listPayments(eventId: string): Promise<AdminPaymentRow[]> 
     // Valorile sunt limitate de constrângerea `payments_refund_effect` (data-model.md).
     refundEffect: p.refund_effect as AdminPaymentRow["refundEffect"],
     previousRetentionMonths: p.previous_retention_months,
+    discount:
+      p.full_amount_minor !== null && p.discount_minor !== null && p.discount_codes !== null
+        ? {
+            fullAmountMinor: p.full_amount_minor,
+            amountMinor: p.discount_minor,
+            code: `${p.discount_codes.code.slice(0, 4)}-${p.discount_codes.code.slice(4)}`,
+          }
+        : null,
   }));
 }
 

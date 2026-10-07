@@ -67,6 +67,65 @@ export async function insertPayment(values: {
   return row.id;
 }
 
+const CODE_ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
+
+/** Inserează direct un cod de reducere (005), ca `postgres`; întoarce id-ul și textul codului. */
+export async function discountCode(opts: {
+  kind?: "personal" | "campaign";
+  type?: "fixed" | "percent";
+  value?: number;
+  maxUses?: number;
+  expiresAt?: Date | null;
+  disabled?: boolean;
+} = {}): Promise<{ id: string; code: string }> {
+  const code = Array.from(crypto.getRandomValues(new Uint8Array(8)), (b) => CODE_ALPHABET[b % CODE_ALPHABET.length]).join("");
+  const kind = opts.kind ?? "personal";
+  const [row] = await sql<{ id: string }>(
+    `insert into public.discount_codes (code, kind, discount_type, discount_value, max_uses, expires_at, disabled_at, batch_id)
+     values ($1, $2::public.discount_kind, $3::public.discount_type, $4::bigint, $5::int, $6::timestamptz,
+             case when $7::boolean then now() end, gen_random_uuid())
+     returning id`,
+    [code, kind, opts.type ?? "fixed", opts.value ?? 5_000, opts.maxUses ?? (kind === "personal" ? 1 : 10), opts.expiresAt ?? null, opts.disabled ?? false],
+  );
+  if (!row) throw new Error("Codul nu a fost inserat");
+  return { id: row.id, code };
+}
+
+/** `discount_quote` ca serverul (005): emailul organizatorului evenimentului, o adresă IP proprie testului. */
+export async function quoteAsServer(eventId: string, code: string) {
+  const [event] = await sql<{ organizer_email: string }>("select organizer_email::text from public.events where id = $1", [eventId]);
+  return serviceClient().rpc("discount_quote", {
+    p_event_id: eventId,
+    p_code: code,
+    p_email: event?.organizer_email ?? "",
+    p_ip_hash: `ip-${crypto.randomUUID()}`,
+    p_ip_limit: 30,
+  });
+}
+
+/** Aplică codul (`discount_quote`, ca butonul „Aplică”) și întoarce suma redusă a opțiunii. */
+async function quotedAmount(_client: SupabaseClient, eventId: string, months: number, code: string): Promise<number> {
+  const quote = await quoteAsServer(eventId, code);
+  return quote.data?.find((o) => o.months === months)?.amount_minor ?? 0;
+}
+
+/** `prepare_payment` pentru activare cu un cod de reducere; suma așteptată implicită: cea din `discount_quote`. */
+export async function prepareWithCode(client: SupabaseClient, eventId: string, months: number, code: string, expected?: number) {
+  let amount = expected;
+  if (amount === undefined) {
+    amount = await quotedAmount(client, eventId, months, code);
+  } else {
+    await quotedAmount(client, eventId, months, code);
+  }
+  return client.rpc("prepare_payment", {
+    p_event_id: eventId,
+    p_purpose: "activation",
+    p_option_id: await optionId(months),
+    p_expected_amount_minor: amount,
+    p_discount_code: code,
+  });
+}
+
 export interface PaidPayment {
   eventId: string;
   paymentId: string;
