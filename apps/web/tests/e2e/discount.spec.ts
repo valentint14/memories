@@ -1,17 +1,23 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test } from "@playwright/test";
-import { loginAsNewAdmin } from "./support/auth";
-import { createAdmin } from "./support/db";
-import { fillDate, gotoHydrated, waitForHydration } from "./support/page";
+import { expect, test, type Page } from "@playwright/test";
+import { loginAsNewAdmin, loginWithMagicLink } from "./support/auth";
+import { createAdmin, createOrganizer, serviceClient } from "./support/db";
+import { fillDate, gotoHydrated, uniqueName, waitForHydration } from "./support/page";
 import { futureDate } from "./support/self-service";
+import { payFakeSession, sendWebhook, sessionIdFromCheckoutUrl, stubCheckoutPage } from "./support/stripe";
 
 // Codurile de reducere (005).
 const CODE = /^[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{4}-[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{4}$/;
 
 test("adminul generează coduri personale și de campanie, apoi dezactivează unul (US1)", async ({ page }) => {
   await loginAsNewAdmin(page, await createAdmin());
-  await gotoHydrated(page, "/admin/events");
-  await page.getByRole("link", { name: "Coduri de reducere" }).first().click();
+  // Pe telefon, linkurile stau în „Meniu”; pe desktop, linkul e în bară.
+  if (!test.info().project.name.startsWith("mobile")) {
+    await gotoHydrated(page, "/admin/events");
+    await page.getByRole("link", { name: "Coduri de reducere" }).first().click();
+  } else {
+    await gotoHydrated(page, "/admin/discounts");
+  }
   await expect(page.getByRole("heading", { level: 1, name: "Coduri de reducere" })).toBeVisible();
   await waitForHydration(page);
 
@@ -55,4 +61,86 @@ test("adminul generează coduri personale și de campanie, apoi dezactivează un
   await waitForHydration(page);
   const accessibility = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
   expect(accessibility.violations.map((v) => v.id)).toEqual([]);
+});
+
+const ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
+
+/** Un cod personal nou, inserat direct (ca generarea din administrare), formatat „XXXX-XXXX”. */
+async function newCode(valueMinor = 5_000): Promise<string> {
+  const raw = Array.from(crypto.getRandomValues(new Uint8Array(8)), (b) => ALPHABET[b % ALPHABET.length]).join("");
+  const { error } = await serviceClient()
+    .from("discount_codes")
+    .insert({ code: raw, kind: "personal", discount_type: "fixed", discount_value: valueMinor, max_uses: 1, batch_id: crypto.randomUUID() });
+  if (error) throw new Error(error.message);
+  return `${raw.slice(0, 4)}-${raw.slice(4)}`;
+}
+
+async function newAwaitingEvent(page: Page): Promise<string> {
+  await loginWithMagicLink(page, await createOrganizer());
+  await gotoHydrated(page, "/events/new");
+  await page.getByLabel("Numele evenimentului").fill(uniqueName("Nunta cu reducere"));
+  await fillDate(page, "Data evenimentului", futureDate(20));
+  await page.getByRole("checkbox", { name: /Accept termenii/ }).check();
+  await page.getByRole("button", { name: "Creează evenimentul" }).click();
+  await expect(page).toHaveURL(/\/events\/[0-9a-f-]{36}$/);
+  return page.url().split("/").pop() ?? "";
+}
+
+test("organizatorul aplică un cod, plătește suma redusă, iar codul nu mai poate fi folosit (US2)", async ({ page, browser }) => {
+  const code = await newCode(5_000);
+  const eventId = await newAwaitingEvent(page);
+  const panel = page.getByRole("region", { name: "Activarea pachetului complet" });
+
+  // Un cod greșit: mesaj lângă câmp, prețul rămâne întreg.
+  await panel.getByLabel("Cod de reducere").fill("ZZZZ-ZZZZ");
+  await panel.getByRole("button", { name: "Aplică" }).click();
+  await expect(panel.getByRole("alert")).toHaveText("Codul nu există sau nu mai este valabil.");
+
+  await panel.getByLabel("Cod de reducere").fill(code.toLowerCase().replace("-", " "));
+  await panel.getByRole("button", { name: "Aplică" }).click();
+  await expect(panel.getByText(`Cod ${code}`)).toBeVisible();
+  await expect(panel.locator("s").first()).toBeVisible(); // prețul întreg, tăiat
+
+  await waitForHydration(page);
+  const accessibility = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+  expect(accessibility.violations.map((v) => v.id)).toEqual([]);
+
+  await stubCheckoutPage(page);
+  await panel.getByRole("button", { name: "Plătește și activează" }).click();
+  const session = await payFakeSession(await sessionIdFromCheckoutUrl(page));
+  expect(await sendWebhook(page, "checkout.session.completed", session)).toBe(200);
+
+  const { data: payment } = await serviceClient()
+    .from("payments")
+    .select("status, amount_minor, full_amount_minor, discount_minor")
+    .eq("event_id", eventId)
+    .single();
+  expect(payment).toMatchObject({ status: "paid", discount_minor: 5_000 });
+  expect(payment?.amount_minor).toBe((payment?.full_amount_minor ?? 0) - 5_000);
+  expect(session.amount_total).toBe(payment?.amount_minor);
+
+  // Alt organizator: codul a fost deja folosit.
+  const context = await browser.newContext(test.info().project.use);
+  const other = await context.newPage();
+  try {
+    await newAwaitingEvent(other);
+    const otherPanel = other.getByRole("region", { name: "Activarea pachetului complet" });
+    await otherPanel.getByLabel("Cod de reducere").fill(code);
+    await otherPanel.getByRole("button", { name: "Aplică" }).click();
+    await expect(otherPanel.getByRole("alert")).toHaveText("Codul a fost deja folosit.");
+  } finally {
+    await context.close();
+  }
+});
+
+test("„Elimină codul” readuce prețurile întregi (US2)", async ({ page }) => {
+  const code = await newCode(5_000);
+  await newAwaitingEvent(page);
+  const panel = page.getByRole("region", { name: "Activarea pachetului complet" });
+  await panel.getByLabel("Cod de reducere").fill(code);
+  await panel.getByRole("button", { name: "Aplică" }).click();
+  await expect(panel.getByText(`Cod ${code}`)).toBeVisible();
+  await panel.getByRole("button", { name: "Elimină codul" }).click();
+  await expect(panel.getByText(`Cod ${code}`)).toHaveCount(0);
+  await expect(panel.locator("s")).toHaveCount(0);
 });

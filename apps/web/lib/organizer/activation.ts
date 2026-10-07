@@ -6,7 +6,11 @@ import { serverSupabase } from "../supabase/server";
 export interface ActivationOption {
   id: string;
   months: number;
+  /** Suma de plată (redusă, dacă e aplicat un cod de reducere — 005). */
   amountMinor: number;
+  /** Prețul întreg și reducerea (0 fără cod). */
+  fullAmountMinor: number;
+  discountMinor: number;
   purgeAt: string;
   included: boolean;
 }
@@ -42,6 +46,8 @@ export async function activationInfo(eventId: string): Promise<ActivationInfo> {
       id: o.option_id,
       months: o.months,
       amountMinor: o.amount_minor,
+      fullAmountMinor: o.amount_minor,
+      discountMinor: 0,
       purgeAt: o.purge_at,
       included: o.included,
     })),

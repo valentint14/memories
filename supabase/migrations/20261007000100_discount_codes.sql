@@ -283,3 +283,208 @@ revoke execute on function public.disable_discount_code(uuid) from public, anon;
 grant execute on function public.disable_discount_code(uuid) to authenticated;
 revoke execute on function public.admin_discount_codes() from public, anon;
 grant execute on function public.admin_discount_codes() to authenticated;
+
+-- Codul aplicat cu succes pe un eveniment (butonul „Aplică”). `prepare_payment` acceptă doar un cod
+-- aplicat: altfel, apelată direct, ar fi o cale de încercare a codurilor fără limită (FR-011).
+create table public.discount_applications (
+  event_id uuid primary key references public.events (id) on delete cascade,
+  discount_code_id uuid not null references public.discount_codes (id) on delete cascade,
+  applied_at timestamptz not null default now()
+);
+
+alter table public.discount_applications enable row level security;
+revoke all on table public.discount_applications from anon, authenticated;
+
+-- Prețurile cu codul aplicat (US2: FR-007, FR-011, FR-012). Încercările se numără înainte de
+-- validare, iar refuzul vine în coloana `error`, nu ca excepție: o excepție ar anula și numărarea.
+create function public.discount_quote(p_event_id uuid, p_code text, p_ip_hash text)
+returns table (
+  option_id uuid, months int, full_amount_minor bigint, discount_minor bigint, amount_minor bigint,
+  purge_at timestamptz, included boolean, code text, error text
+)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  e public.events;
+  c public.discount_codes;
+  v_email extensions.citext := (auth.jwt() ->> 'email')::extensions.citext;
+  v_open uuid;
+  v_ok boolean;
+begin
+  select * into e from public.events ev where ev.id = p_event_id and ev.organizer_email = v_email;
+  if not found or e.status <> 'awaiting_activation' then
+    return;
+  end if;
+
+  v_ok := public.check_rate_limit('discount:email:' || encode(extensions.digest(lower(v_email::text), 'sha256'), 'hex'), 10, interval '1 hour');
+  if p_ip_hash is not null then
+    v_ok := public.check_rate_limit('discount:ip:' || p_ip_hash, 30, interval '1 hour') and v_ok;
+  end if;
+  if not v_ok then
+    return query select null::uuid, null::int, null::bigint, null::bigint, null::bigint, null::timestamptz, null::boolean, null::text, 'RATE_LIMITED'::text;
+    return;
+  end if;
+
+  select * into c from public.discount_codes dc where dc.code = public.normalize_discount_code(p_code);
+  select p.id into v_open from public.payments p
+   where p.event_id = p_event_id and p.purpose = 'activation' and p.status = 'open';
+  begin
+    perform public.check_discount_code(c, v_email, v_open);
+  exception when raise_exception then
+    return query select null::uuid, null::int, null::bigint, null::bigint, null::bigint, null::timestamptz, null::boolean, null::text, sqlerrm;
+    return;
+  end;
+
+  insert into public.discount_applications (event_id, discount_code_id) values (p_event_id, c.id)
+  on conflict (event_id) do update set discount_code_id = excluded.discount_code_id, applied_at = now();
+
+  return query
+    select q.option_id, q.months, q.amount_minor, public.discount_amount(c, q.amount_minor),
+           q.amount_minor - public.discount_amount(c, q.amount_minor), q.purge_at, q.included,
+           public.format_discount_code(c.code), null::text
+      from public.activation_quote(p_event_id) q;
+end;
+$$;
+
+revoke execute on function public.discount_quote(uuid, text, text) from public, anon;
+grant execute on function public.discount_quote(uuid, text, text) to authenticated;
+
+-- Ca în 20261002000400 (expirarea la 23 h), plus codul de reducere (US2: FR-006–FR-010; research
+-- R3, R4): doar la activare, doar un cod aplicat pe eveniment, cu rândul codului blocat cât se
+-- numără utilizările; reducerea se îngheață pe plată alături de prețul întreg.
+drop function public.prepare_payment(uuid, public.payment_purpose, uuid, bigint);
+
+create function public.prepare_payment(
+  p_event_id uuid,
+  p_purpose public.payment_purpose,
+  p_option_id uuid,
+  p_expected_amount_minor bigint,
+  p_discount_code text default null
+)
+returns table (payment_id uuid, amount_minor bigint, reuse_url text, expires_at timestamptz, replaced_session_id text)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  e public.events;
+  o public.retention_options;
+  pkg public.packages;
+  c public.discount_codes;
+  open_pay public.payments;
+  v_base bigint;
+  v_surcharge bigint;
+  v_full bigint;
+  v_discount bigint;
+  v_amount bigint;
+  v_deadline timestamptz;
+  v_expires timestamptz;
+  v_replaced text;
+  v_id uuid;
+begin
+  select * into e from public.events ev
+   where ev.id = p_event_id
+     and ev.organizer_email = (auth.jwt() ->> 'email')::extensions.citext
+   for update;
+  if not found then
+    perform public.raise_app_error('PAYMENT_NOT_ALLOWED');
+  end if;
+
+  select * into o from public.retention_options ro where ro.id = p_option_id;
+  if not found or not o.active then
+    perform public.raise_app_error('OPTION_INACTIVE');
+  end if;
+
+  if p_purpose = 'activation' then
+    if e.status <> 'awaiting_activation' then
+      perform public.raise_app_error('PAYMENT_NOT_ALLOWED');
+    end if;
+    select * into pkg from public.packages p where p.code = 'complete';
+    v_base := pkg.price_minor;
+    v_surcharge := o.surcharge_minor;
+    v_full := v_base + v_surcharge;
+    v_deadline := e.pending_purge_at;
+  else
+    -- Prelungirea plătită (003/FR-020): diferența față de prețul final deja plătit, fără reducere.
+    if p_discount_code is not null then
+      perform public.raise_app_error('PAYMENT_NOT_ALLOWED');
+    end if;
+    if e.status <> 'active' or now() >= e.purge_at then
+      perform public.raise_app_error('PAYMENT_NOT_ALLOWED');
+    end if;
+    if o.months <= e.retention_months then
+      perform public.raise_app_error('RETENTION_NOT_LONGER');
+    end if;
+    v_base := e.base_price_minor;
+    v_surcharge := o.surcharge_minor;
+    v_full := v_base + v_surcharge - e.final_price_minor;
+    v_deadline := e.purge_at;
+  end if;
+
+  select * into open_pay from public.payments p
+   where p.event_id = p_event_id and p.purpose = p_purpose and p.status = 'open'
+   for update;
+
+  v_discount := 0;
+  if p_discount_code is not null then
+    select * into c from public.discount_codes dc
+     where dc.code = public.normalize_discount_code(p_discount_code)
+       and exists (
+         select 1 from public.discount_applications a
+          where a.event_id = p_event_id and a.discount_code_id = dc.id and a.applied_at > now() - interval '24 hours'
+       )
+     for update;
+    if not found then
+      perform public.raise_app_error('DISCOUNT_INVALID');
+    end if;
+    perform public.check_discount_code(c, e.organizer_email, open_pay.id);
+    v_discount := public.discount_amount(c, v_full);
+    -- Fără reducere efectivă (preț deja sub minim), plata nu reține codul.
+    if v_discount = 0 then
+      c := null;
+    end if;
+  end if;
+  v_amount := v_full - v_discount;
+
+  if v_amount <> p_expected_amount_minor then
+    perform public.raise_app_error('PRICE_CHANGED', jsonb_build_object('amountMinor', v_amount));
+  end if;
+  if v_amount <= 0 then
+    perform public.raise_app_error('PAYMENT_NOT_ALLOWED');
+  end if;
+
+  -- Cel mult 23 h și cu cel puțin 1 h înainte de ștergere (003/FR-008; Stripe: sub 24 h).
+  v_expires := least(now() + interval '23 hours', coalesce(v_deadline, now() + interval '25 hours') - interval '1 hour');
+  if v_expires < now() + interval '30 minutes' then
+    perform public.raise_app_error('PAYMENT_WINDOW_CLOSED');
+  end if;
+
+  if open_pay.id is not null then
+    if open_pay.retention_option_id = p_option_id and open_pay.amount_minor = v_amount
+       and open_pay.discount_code_id is not distinct from c.id
+       and open_pay.expires_at >= now() + interval '10 minutes' and open_pay.checkout_url is not null then
+      return query select open_pay.id, open_pay.amount_minor, open_pay.checkout_url, open_pay.expires_at, null::text;
+      return;
+    end if;
+    update public.payments set status = 'expired', checkout_url = null where id = open_pay.id;
+    v_replaced := open_pay.stripe_session_id;
+  end if;
+
+  insert into public.payments (
+    event_id, event_name, organizer_email, created_by, purpose, retention_option_id, retention_months,
+    base_price_minor, surcharge_minor, amount_minor, expires_at, discount_code_id, full_amount_minor, discount_minor
+  ) values (
+    e.id, coalesce(e.name, ''), e.organizer_email, auth.uid(), p_purpose, o.id, o.months,
+    v_base, v_surcharge, v_amount, v_expires,
+    c.id, case when c.id is null then null else v_full end, case when c.id is null then null else v_discount end
+  )
+  returning id into v_id;
+
+  return query select v_id, v_amount, null::text, v_expires, v_replaced;
+end;
+$$;
+
+revoke execute on function public.prepare_payment(uuid, public.payment_purpose, uuid, bigint, text) from public, anon;
+grant execute on function public.prepare_payment(uuid, public.payment_purpose, uuid, bigint, text) to authenticated;

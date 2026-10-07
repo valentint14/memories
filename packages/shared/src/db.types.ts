@@ -199,6 +199,46 @@ export type Database = {
           },
         ]
       }
+      discount_applications: {
+        Row: {
+          applied_at: string
+          discount_code_id: string
+          event_id: string
+        }
+        Insert: {
+          applied_at?: string
+          discount_code_id: string
+          event_id: string
+        }
+        Update: {
+          applied_at?: string
+          discount_code_id?: string
+          event_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discount_applications_discount_code_id_fkey"
+            columns: ["discount_code_id"]
+            isOneToOne: false
+            referencedRelation: "discount_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discount_applications_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discount_applications_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "organizer_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       discount_codes: {
         Row: {
           batch_id: string
@@ -1234,6 +1274,20 @@ export type Database = {
         Args: { p_code_id: string; p_ignore_payment?: string }
         Returns: number
       }
+      discount_quote: {
+        Args: { p_code: string; p_event_id: string; p_ip_hash: string }
+        Returns: {
+          amount_minor: number
+          code: string
+          discount_minor: number
+          error: string
+          full_amount_minor: number
+          included: boolean
+          months: number
+          option_id: string
+          purge_at: string
+        }[]
+      }
       enqueue_activation_notices: { Args: { p_now?: string }; Returns: number }
       enqueue_retention_notices: { Args: { p_now?: string }; Returns: number }
       event_organizer_email: { Args: { p_event_id: string }; Returns: string }
@@ -1376,6 +1430,7 @@ export type Database = {
       orphan_organizer_user_id: { Args: { p_email: string }; Returns: string }
       prepare_payment: {
         Args: {
+          p_discount_code?: string
           p_event_id: string
           p_expected_amount_minor: number
           p_option_id: string

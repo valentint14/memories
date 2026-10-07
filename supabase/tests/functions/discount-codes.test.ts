@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, it } from "vitest";
-import { adminClient, closePool, sql } from "../support/clients.ts";
-import { awaitingEvent, discountCode, insertPayment } from "../support/payments.ts";
+import { adminClient, closePool, serviceClient, sql } from "../support/clients.ts";
+import { awaitingEvent, discountCode, insertPayment, optionId, prepareWithCode } from "../support/payments.ts";
 
 // Codurile de reducere (005: FR-001–FR-015; data-model.md; contracts/database-functions.md).
 afterAll(closePool);
@@ -162,5 +162,166 @@ describe("generarea și administrarea (US1: FR-001–FR-005)", () => {
 
     const { client: organizer } = await awaitingEvent("dc-list-forbidden");
     expect((await organizer.rpc("admin_discount_codes")).error?.message).toBe("FORBIDDEN");
+  });
+});
+
+describe("aplicarea și plata cu cod (US2: FR-006–FR-012)", () => {
+  type Client = Awaited<ReturnType<typeof awaitingEvent>>["client"];
+
+  /** `discount_quote` nu ridică erori pentru codurile refuzate (limita de încercări rămâne numărată): motivul vine în `error`. */
+  async function quote(client: Client, eventId: string, code: string) {
+    const result = await client.rpc("discount_quote", { p_event_id: eventId, p_code: code, p_ip_hash: `ip-${crypto.randomUUID()}` });
+    const refused = result.data?.[0]?.error;
+    return refused ? { data: null, error: { message: refused } } : { data: result.data, error: result.error };
+  }
+
+  /** Plata pregătită cu cod devine încasată, ca după webhook. */
+  async function pay(paymentId: string) {
+    const sessionId = `cs_test_${paymentId.replaceAll("-", "")}`;
+    await serviceClient().rpc("attach_checkout_session", {
+      p_payment_id: paymentId,
+      p_session_id: sessionId,
+      p_checkout_url: "https://checkout.stripe.com/c/pay/x",
+    });
+    return serviceClient().rpc("complete_payment", { p_session_id: sessionId, p_payment_intent_id: `pi_${sessionId.slice(-14)}`, p_billing: {} });
+  }
+
+  it("discount_quote: prețurile reduse per opțiune, codul normalizat și formatat", async () => {
+    const { client, eventId } = await awaitingEvent("dq-ok");
+    const { code } = await discountCode({ type: "fixed", value: 5_000 });
+    const loose = `${code.slice(0, 4).toLowerCase()} ${code.slice(4).toLowerCase()}`;
+    const { data, error } = await quote(client, eventId, loose);
+    expect(error).toBeNull();
+    const three = data?.find((o) => o.months === 3);
+    expect(Number(three?.discount_minor)).toBe(5_000);
+    expect(Number(three?.amount_minor)).toBe(Number(three?.full_amount_minor) - 5_000);
+    expect(three?.code).toBe(`${code.slice(0, 4)}-${code.slice(4)}`);
+  });
+
+  it("refuză codurile inexistente, expirate, dezactivate și pe cele folosite", async () => {
+    const { client, eventId } = await awaitingEvent("dq-refuse");
+    const expired = await discountCode({ expiresAt: new Date(Date.now() - 1000) });
+    const disabled = await discountCode({ disabled: true });
+    expect((await quote(client, eventId, "ZZZZ-ZZZZ")).error?.message).toBe("DISCOUNT_INVALID");
+    expect((await quote(client, eventId, expired.code)).error?.message).toBe("DISCOUNT_INVALID");
+    expect((await quote(client, eventId, disabled.code)).error?.message).toBe("DISCOUNT_INVALID");
+
+    // Cod personal: rezervat de plata altui organizator, apoi folosit.
+    const used = await discountCode();
+    const other = await awaitingEvent("dq-other");
+    const prepared = await prepareWithCode(other.client, other.eventId, 3, used.code);
+    expect(prepared.error).toBeNull();
+    expect((await quote(client, eventId, used.code)).error?.message).toBe("DISCOUNT_RESERVED");
+    await pay(prepared.data?.[0]?.payment_id ?? "");
+    expect((await quote(client, eventId, used.code)).error?.message).toBe("DISCOUNT_UNAVAILABLE");
+  });
+
+  it("codul de campanie: o dată per organizator, până la maxim", async () => {
+    const campaign = await discountCode({ kind: "campaign", type: "percent", value: 20, maxUses: 2 });
+    const a = await awaitingEvent("dq-camp-a");
+    const prepA = await prepareWithCode(a.client, a.eventId, 3, campaign.code);
+    expect(prepA.error).toBeNull();
+    await pay(prepA.data?.[0]?.payment_id ?? "");
+    const second = await a.client.rpc("create_event_as_organizer", {
+      p_name: "Al doilea",
+      p_event_date: new Date(Date.now() + 40 * 86_400_000).toISOString().slice(0, 10),
+    });
+    expect((await quote(a.client, second.data ?? "", campaign.code)).error?.message).toBe("DISCOUNT_UNAVAILABLE");
+
+    const b = await awaitingEvent("dq-camp-b");
+    const prepB = await prepareWithCode(b.client, b.eventId, 3, campaign.code);
+    expect(prepB.error).toBeNull();
+    await pay(prepB.data?.[0]?.payment_id ?? "");
+    const c = await awaitingEvent("dq-camp-c");
+    expect((await quote(c.client, c.eventId, campaign.code)).error?.message).toBe("DISCOUNT_UNAVAILABLE");
+  });
+
+  it("prepare_payment îngheață prețul întreg, reducerea și suma; PRICE_CHANGED la suma întreagă", async () => {
+    const { client, eventId } = await awaitingEvent("dp-freeze");
+    const { code, id } = await discountCode({ type: "percent", value: 10 });
+    const { data: q } = await quote(client, eventId, code);
+    const three = q?.find((o) => o.months === 3);
+    const wrong = await prepareWithCode(client, eventId, 3, code, Number(three?.full_amount_minor));
+    expect(wrong.error?.message).toBe("PRICE_CHANGED");
+    const { data, error } = await prepareWithCode(client, eventId, 3, code);
+    expect(error).toBeNull();
+    const [row] = await sql<{ discount_code_id: string; full_amount_minor: string; discount_minor: string; amount_minor: string }>(
+      "select discount_code_id, full_amount_minor, discount_minor, amount_minor from public.payments where id = $1",
+      [data?.[0]?.payment_id],
+    );
+    expect(row).toEqual({
+      discount_code_id: id,
+      full_amount_minor: String(three?.full_amount_minor),
+      discount_minor: String(three?.discount_minor),
+      amount_minor: String(three?.amount_minor),
+    });
+  });
+
+  it("codul nu se aplică prelungirii; o plată expirată eliberează codul", async () => {
+    const { client, eventId } = await awaitingEvent("dp-release");
+    const { code } = await discountCode();
+    const ext = await client.rpc("prepare_payment", {
+      p_event_id: eventId,
+      p_purpose: "retention_extension",
+      p_option_id: await optionId(12),
+      p_expected_amount_minor: 1,
+      p_discount_code: code,
+    });
+    expect(ext.error?.message).toBe("PAYMENT_NOT_ALLOWED");
+
+    const { data } = await prepareWithCode(client, eventId, 3, code);
+    await sql("update public.payments set status = 'expired', checkout_url = null where id = $1", [data?.[0]?.payment_id]);
+    const other = await awaitingEvent("dp-release-2");
+    expect((await prepareWithCode(other.client, other.eventId, 3, code)).error).toBeNull();
+  });
+
+  it("prepare_payment refuză un cod neaplicat anterior pe eveniment (fără ocolirea limitei)", async () => {
+    const { client, eventId } = await awaitingEvent("dp-not-applied");
+    const { code } = await discountCode();
+    const direct = await client.rpc("prepare_payment", {
+      p_event_id: eventId,
+      p_purpose: "activation",
+      p_option_id: await optionId(3),
+      p_expected_amount_minor: 1,
+      p_discount_code: code,
+    });
+    expect(direct.error?.message).toBe("DISCOUNT_INVALID");
+  });
+
+  it("o nouă pregătire a aceluiași eveniment înlocuiește plata și nu se blochează singură", async () => {
+    const { client, eventId } = await awaitingEvent("dp-replace");
+    const { code } = await discountCode();
+    expect((await prepareWithCode(client, eventId, 3, code)).error).toBeNull();
+    expect((await prepareWithCode(client, eventId, 6, code)).error).toBeNull();
+  });
+
+  it("două pregătiri simultane cu același cod personal: una reușește, cealaltă e refuzată", async () => {
+    const { code } = await discountCode();
+    const [a, b] = await Promise.all([awaitingEvent("dp-race-a"), awaitingEvent("dp-race-b")]);
+    const amount = Number((await quote(a.client, a.eventId, code)).data?.find((o) => o.months === 3)?.amount_minor);
+    const results = await Promise.all([
+      prepareWithCode(a.client, a.eventId, 3, code, amount),
+      prepareWithCode(b.client, b.eventId, 3, code, amount),
+    ]);
+    expect(results.filter((r) => r.error === null)).toHaveLength(1);
+    expect(results.find((r) => r.error !== null)?.error.message).toBe("DISCOUNT_RESERVED");
+  });
+
+  it("plata cu cod activează evenimentul cu prețul de bază neschimbat", async () => {
+    const { client, eventId } = await awaitingEvent("dp-activate");
+    const { code } = await discountCode({ value: 5_000 });
+    const { data } = await prepareWithCode(client, eventId, 3, code);
+    expect((await pay(data?.[0]?.payment_id ?? "")).data?.[0]?.outcome).toBe("activated");
+    const [event] = await sql<{ status: string; base_price_minor: string }>("select status::text, base_price_minor from public.events where id = $1", [
+      eventId,
+    ]);
+    const [pkg] = await sql<{ price_minor: string }>("select price_minor from public.packages where code = 'complete'");
+    expect(event).toEqual({ status: "active", base_price_minor: pkg?.price_minor });
+  });
+
+  it("după 10 încercări per organizator, aplicarea e blocată temporar", async () => {
+    const { client, eventId } = await awaitingEvent("dq-limit");
+    for (let i = 0; i < 10; i++) expect((await quote(client, eventId, "ZZZZ-ZZZZ")).error?.message).toBe("DISCOUNT_INVALID");
+    expect((await quote(client, eventId, "ZZZZ-ZZZZ")).error?.message).toBe("RATE_LIMITED");
   });
 });

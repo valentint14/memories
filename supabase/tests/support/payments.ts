@@ -91,13 +91,19 @@ export async function discountCode(opts: {
   return { id: row.id, code };
 }
 
+/** Aplică codul (`discount_quote`, ca butonul „Aplică”) și întoarce suma redusă a opțiunii. */
+async function quotedAmount(client: SupabaseClient, eventId: string, months: number, code: string): Promise<number> {
+  const quote = await client.rpc("discount_quote", { p_event_id: eventId, p_code: code, p_ip_hash: `ip-${crypto.randomUUID()}` });
+  return quote.data?.find((o) => o.months === months)?.amount_minor ?? 0;
+}
+
 /** `prepare_payment` pentru activare cu un cod de reducere; suma așteptată implicită: cea din `discount_quote`. */
 export async function prepareWithCode(client: SupabaseClient, eventId: string, months: number, code: string, expected?: number) {
   let amount = expected;
   if (amount === undefined) {
-    const quote = await client.rpc("discount_quote", { p_event_id: eventId, p_code: code, p_ip_hash: "test" });
-    if (quote.error) return { data: null, error: quote.error };
-    amount = Number(quote.data.find((o) => o.months === months)?.amount_minor);
+    amount = await quotedAmount(client, eventId, months, code);
+  } else {
+    await quotedAmount(client, eventId, months, code);
   }
   return client.rpc("prepare_payment", {
     p_event_id: eventId,
