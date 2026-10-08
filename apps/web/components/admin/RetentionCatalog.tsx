@@ -33,7 +33,8 @@ const COLUMNS = "sm:grid sm:grid-cols-[minmax(0,1fr)_8rem_minmax(0,1fr)_4rem_6re
 /**
  * O opțiune ca rând de tabel: perioada, suplimentul (editabil pe loc), prețul pentru organizator
  * (pachet + supliment), activarea și câte evenimente o folosesc. „Salvează” apare doar după o
- * modificare, iar „Șterge” doar la o opțiune nefolosită (și care nu e cea inclusă în pachet).
+ * modificare, iar „Șterge” doar la o opțiune nefolosită (și care nu e cea inclusă în pachet); ștergerea
+ * cere confirmare, iar dacă opțiunea a ajuns între timp folosită, fereastra oferă dezactivarea.
  * Pe telefon, rândul devine un bloc: perioada și cifrele sus, controalele dedesubt.
  */
 function OptionRow({ option, basePriceMinor, included }: { option: CatalogRow; basePriceMinor: number; included: boolean }) {
@@ -42,6 +43,10 @@ function OptionRow({ option, basePriceMinor, included }: { option: CatalogRow; b
   const [active, setActive] = useState(option.active);
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
   const [pending, startTransition] = useTransition();
+  // Fereastra de ștergere: confirmarea, apoi (dacă opțiunea a ajuns între timp folosită) oferta de dezactivare.
+  const [removal, setRemoval] = useState<"confirm" | "inUse" | null>(null);
+  const [removalError, setRemovalError] = useState<string | null>(null);
+  const period = tp("plural.months", option.months);
   const labelId = `option-${option.id}`;
   const surchargeMinor = toMinor(surcharge);
   const dirty = surchargeMinor !== option.surchargeMinor || active !== option.active;
@@ -53,7 +58,7 @@ function OptionRow({ option, basePriceMinor, included }: { option: CatalogRow; b
       <div className="flex items-baseline justify-between gap-3">
         <span className="flex flex-col">
           <span id={labelId} className="font-medium">
-            {tp("plural.months", option.months)}
+            {period}
           </span>
           {included && <span className="text-xs text-ink-muted">{t("admin.retentionPage.included")}</span>}
         </span>
@@ -122,11 +127,8 @@ function OptionRow({ option, basePriceMinor, included }: { option: CatalogRow; b
               type="button"
               disabled={pending}
               onClick={() => {
-                startTransition(async () => {
-                  const result = await deleteRetentionOption(option.id);
-                  if (result.ok) router.refresh();
-                  else setMessage({ text: result.error === "OPTION_IN_USE" ? t("admin.retentionPage.inUse") : errorText(result), ok: false });
-                });
+                setRemovalError(null);
+                setRemoval("confirm");
               }}
               className={`${ui.buttonText} text-sm text-danger`}
             >
@@ -140,6 +142,89 @@ function OptionRow({ option, basePriceMinor, included }: { option: CatalogRow; b
           )}
         </div>
       </div>
+
+      <ModalOverlay
+        isOpen={removal !== null}
+        isDismissable={!pending}
+        onOpenChange={(open) => {
+          if (!open) setRemoval(null);
+        }}
+        className={ui.overlay}
+      >
+        <Modal className={ui.dialog}>
+          <Dialog role="alertdialog" className="flex flex-col gap-4 outline-none">
+            <Heading slot="title" className={ui.dialogTitle}>
+              {removal === "inUse" ? t("admin.retentionPage.inUseTitle") : t("admin.retentionPage.deleteTitle", { period })}
+            </Heading>
+            <p className="leading-relaxed">{t(removal === "inUse" ? "admin.retentionPage.inUseBody" : "admin.retentionPage.deleteBody")}</p>
+            {removalError !== null && (
+              <p role="alert" className={ui.fieldError}>
+                {removalError}
+              </p>
+            )}
+            <div className={ui.dialogActions}>
+              <Button
+                onPress={() => {
+                  setRemoval(null);
+                }}
+                isDisabled={pending}
+                className={ui.buttonSecondary}
+              >
+                {t("common.cancel")}
+              </Button>
+              {removal === "inUse" ? (
+                <Button
+                  isDisabled={pending}
+                  className={ui.buttonPrimary}
+                  onPress={() => {
+                    setRemovalError(null);
+                    startTransition(async () => {
+                      const result = await upsertRetentionOption({
+                        id: option.id,
+                        months: option.months,
+                        surchargeLei: String(option.surchargeMinor / 100),
+                        active: false,
+                      });
+                      if (result.ok) {
+                        setActive(false);
+                        setRemoval(null);
+                        router.refresh();
+                      } else {
+                        setRemovalError(errorText(result));
+                      }
+                    });
+                  }}
+                >
+                  {t("admin.retentionPage.deactivate")}
+                </Button>
+              ) : (
+                <Button
+                  isDisabled={pending}
+                  className={ui.buttonDangerSolid}
+                  onPress={() => {
+                    setRemovalError(null);
+                    startTransition(async () => {
+                      const result = await deleteRetentionOption(option.id);
+                      if (result.ok) {
+                        setRemoval(null);
+                        router.refresh();
+                      } else if (result.error === "OPTION_IN_USE") {
+                        // Între timp, un eveniment a ales opțiunea: în loc de eroare, oferta de dezactivare.
+                        setRemoval("inUse");
+                        router.refresh();
+                      } else {
+                        setRemovalError(errorText(result));
+                      }
+                    });
+                  }}
+                >
+                  {t("admin.retentionPage.delete")}
+                </Button>
+              )}
+            </div>
+          </Dialog>
+        </Modal>
+      </ModalOverlay>
     </div>
   );
 }

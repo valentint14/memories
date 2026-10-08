@@ -143,7 +143,26 @@ test("administratorul editează catalogul fără efect asupra evenimentelor exis
     await expect(dialog).toHaveCount(0);
     const added = admin.getByRole("group", { name: `${months} de luni` });
     await added.getByRole("button", { name: "Șterge" }).click();
+    const confirm = admin.getByRole("alertdialog");
+    await expect(confirm).toContainText(`Ștergi opțiunea de ${months} de luni?`);
+    await confirm.getByRole("button", { name: "Șterge" }).click();
     await expect(added).toHaveCount(0);
+
+    // Cursa: un eveniment alege opțiunea cât timp fereastra e deschisă; fereastra oferă dezactivarea.
+    const raced = String(Number(months) + 1);
+    await admin.getByRole("button", { name: "Adaugă opțiune" }).click();
+    await dialog.getByLabel("Durata (luni)").fill(raced);
+    await dialog.getByLabel("Supliment (lei)").fill("20");
+    await dialog.getByRole("button", { name: "Adaugă" }).click();
+    const racedRow = admin.getByRole("group", { name: `${raced} de luni` });
+    await racedRow.getByRole("button", { name: "Șterge" }).click();
+    await createEvent({ organizerEmail: email, name: uniqueName("Cursa"), months: Number(raced) });
+    await confirm.getByRole("button", { name: "Șterge" }).click();
+    await expect(confirm).toContainText("Opțiunea nu poate fi ștearsă");
+    await confirm.getByRole("button", { name: "Dezactivează" }).click();
+    await expect(confirm).toHaveCount(0);
+    await expect(racedRow.getByRole("checkbox")).not.toBeChecked();
+    await expect(racedRow.getByRole("button", { name: "Salvează" })).toHaveCount(0);
   } finally {
     await adminContext.close();
   }
