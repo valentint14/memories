@@ -119,7 +119,7 @@ test("administratorul editează catalogul fără efect asupra evenimentelor exis
   try {
     await loginAsNewAdmin(admin, await createAdmin());
     await gotoHydrated(admin, "/admin/retention");
-    const row = admin.getByRole("region", { name: "12 luni" });
+    const row = admin.getByRole("group", { name: "12 luni" });
     await row.getByLabel("Supliment (lei)").fill("149");
     await row.getByRole("button", { name: "Salvează" }).click();
     await expect(row.getByText("Salvat")).toBeVisible();
@@ -127,10 +127,23 @@ test("administratorul editează catalogul fără efect asupra evenimentelor exis
     const { data } = await serviceClient().from("events").select("final_price_minor").eq("id", existing.id).single();
     expect(data?.final_price_minor).toBe(39_800);
 
-    // O opțiune folosită de evenimente nu poate fi ștearsă.
-    await row.getByRole("button", { name: "Șterge" }).click();
-    await expect(row.getByText("folosită de evenimente")).toBeVisible();
+    // O opțiune folosită de evenimente nu poate fi ștearsă: rândul nu are „Șterge”.
+    await expect(row.getByRole("button", { name: "Șterge" })).toHaveCount(0);
     expect(await optionId(12)).toBeTruthy();
+    // Prețul pentru organizator: pachetul + suplimentul nou.
+    await expect(row).toContainText("448,00 RON");
+
+    // O opțiune nouă se adaugă din fereastră și, nefolosită, se poate șterge.
+    const months = String(37 + Math.floor(Math.random() * 20));
+    await admin.getByRole("button", { name: "Adaugă opțiune" }).click();
+    const dialog = admin.getByRole("dialog", { name: "Opțiune nouă" });
+    await dialog.getByLabel("Durata (luni)").fill(months);
+    await dialog.getByLabel("Supliment (lei)").fill("10");
+    await dialog.getByRole("button", { name: "Adaugă" }).click();
+    await expect(dialog).toHaveCount(0);
+    const added = admin.getByRole("group", { name: `${months} de luni` });
+    await added.getByRole("button", { name: "Șterge" }).click();
+    await expect(added).toHaveCount(0);
   } finally {
     await adminContext.close();
   }
