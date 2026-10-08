@@ -97,6 +97,8 @@ export const ui = {
   dialog: "w-full max-w-md rounded-xs border border-ink bg-paper-raised p-6 shadow-dialog",
   dialogTitle: "font-serif text-2xl leading-tight",
   dialogActions: "flex flex-wrap justify-end gap-3 border-t border-rule pt-4",
+  /** Butoanele unui dialog al cărui conținut se încheie deja cu o linie (de ex. o listă încadrată). */
+  dialogActionsBare: "flex flex-wrap justify-end gap-3",
 
   table: "w-full border-collapse text-left",
   th: "px-2 py-3 font-mono text-xs font-medium uppercase tracking-[0.08em] text-ink-muted",
