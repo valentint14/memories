@@ -28,11 +28,16 @@ export const emailStyle = {
   list: `margin: 0 0 16px; padding: 0 0 0 20px`,
 } as const;
 
-/** Documentul comun: hârtie caldă, foaia pe mijloc cu linie subțire, numele produsului în serif. */
+/**
+ * Documentul comun: hârtie caldă, foaia pe mijloc cu linie subțire, numele produsului în serif.
+ * Orice email se încheie cu un element cu marginea de jos de 16 px (`emailStyle`), iar clienții de
+ * email nu știu `:last-child`: foaia are jos 12 px, ca spațiul de sub ultimul rând (16 + 12) să fie
+ * egal cu cel de sus (28).
+ */
 export function emailDocument(inner: string): string {
   return `<!doctype html>
 <html lang="ro"><body style="margin: 0; padding: 24px 12px; background: ${PAPER}; font-family: ${SANS}; font-size: 16px; line-height: 1.5; color: ${INK}">
-<div style="max-width: 560px; margin: 0 auto; padding: 28px 24px; background: ${PAPER_RAISED}; border: 1px solid ${RULE}; border-radius: 2px">
+<div style="max-width: 560px; margin: 0 auto; padding: 28px 24px 12px; background: ${PAPER_RAISED}; border: 1px solid ${RULE}; border-radius: 2px">
 <p style="margin: 0 0 24px; padding-bottom: 12px; border-bottom: 1px solid ${INK}; font-family: ${SERIF}; font-size: 24px; color: ${INK}">Memories</p>
 ${inner}
 </div>
