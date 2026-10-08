@@ -87,11 +87,12 @@ export const ui = {
   /**
    * Bara de acțiuni a unei foi (singurul loc al butoanelor dintr-o foaie): la baza foii; pe ecrane
    * late la dreapta, cu acțiunea principală ultima; pe telefon pe toată lățimea, principala sus.
-   * Fără linie deasupra: separarea o face spațiul. Se folosește prin `SheetActions`. Fără butoane
+   * Fără linie deasupra și fără spațiu propriu: deasupra butoanelor e aceeași distanță ca între
+   * celelalte rânduri ale foii sau ale formularului. Se folosește prin `SheetActions`. Fără butoane
    * (de ex. cererea de activare trimisă), bara dispare, ca foaia să nu aibă spațiu gol jos.
    */
   sheetActions:
-    "mt-auto flex flex-col-reverse gap-3 pt-2 empty:hidden sm:flex-row sm:flex-wrap sm:items-center sm:justify-end [&>*]:w-full sm:[&>*]:w-auto",
+    "mt-auto flex flex-col-reverse gap-3 empty:hidden sm:flex-row sm:flex-wrap sm:items-center sm:justify-end [&>*]:w-full sm:[&>*]:w-auto",
   /** Un formular care umple foaia, ca bara lui de acțiuni să coboare la baza foii. */
   sheetForm: "flex flex-1 flex-col gap-5",
 
