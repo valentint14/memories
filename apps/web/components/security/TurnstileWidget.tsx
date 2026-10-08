@@ -55,6 +55,8 @@ export function TurnstileWidget({ siteKey, nonce }: { siteKey: string; nonce: st
           sitekey: siteKey,
           language: "ro",
           appearance: "interaction-only",
+          // Când apare, ocupă toată lățimea formularului (minimum 300 px), ca butoanele și câmpurile.
+          size: "flexible",
           "response-field-name": "cf-turnstile-response",
         });
       })
@@ -67,5 +69,5 @@ export function TurnstileWidget({ siteKey, nonce }: { siteKey: string; nonce: st
     };
   }, [siteKey, nonce]);
 
-  return <div ref={container} />;
+  return <div ref={container} className="w-full" />;
 }
