@@ -6,7 +6,7 @@ const TONE: Record<string, string> = {
   suspended: "border-danger text-danger",
 };
 
-/** Starea unui eveniment ca ștampilă: text mono majuscul, contur în culoarea stării, fără fundal. */
+/** Starea unui eveniment ca ștampilă: majuscule semibold (ca etichetele), contur în culoarea stării, fără fundal. */
 export function StatusStamp({
   status,
   prefix = "status",
@@ -21,7 +21,7 @@ export function StatusStamp({
   const box = size === "bar" ? "min-h-10 w-full justify-center px-3 sm:w-fit" : "w-fit px-2.5 py-1";
   return (
     <span
-      className={`inline-flex items-center border ${box} font-mono text-xs font-medium uppercase tracking-[0.08em] ${TONE[status] ?? "border-ink-muted text-ink-muted"}`}
+      className={`inline-flex items-center border ${box} font-sans text-xs font-semibold uppercase tracking-[0.06em] ${TONE[status] ?? "border-ink-muted text-ink-muted"}`}
     >
       {t(`${prefix}.${status}` as MessageKey)}
     </span>

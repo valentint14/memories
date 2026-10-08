@@ -20,10 +20,10 @@ export const ui = {
   pageTitle: "font-serif text-4xl leading-[1.05] tracking-tight text-balance sm:text-5xl",
   /** Titlul unei secțiuni sau al unui dialog. */
   sectionTitle: "font-serif text-2xl leading-tight",
-  /** Etichetă de secțiune sau de date: mono, majuscule, spațiere largă. */
-  kicker: "font-mono text-xs font-medium uppercase tracking-[0.08em]",
+  /** Etichetă de secțiune sau de date: Plex Sans semibold, majuscule, ușor rărite (cifrele rămân în mono). */
+  kicker: "font-sans text-xs font-semibold uppercase tracking-[0.06em]",
   /** Eticheta de pe un cadru (video, în procesare). */
-  frameTag: "font-mono text-[11px] font-medium uppercase tracking-[0.08em] px-1.5 py-0.5",
+  frameTag: "font-sans text-[11px] font-semibold uppercase tracking-[0.06em] px-1.5 py-0.5",
   /** Date, coduri, dimensiuni, procente (fără mărime: se combină cu una). */
   data: "font-mono tabular-nums",
 
@@ -77,18 +77,18 @@ export const ui = {
   /** Foaie: ramă subțire cu o bandă de titlu sus (galeria, fișa unui eveniment). */
   sheet: "flex flex-col rounded-xs border border-rule bg-paper-raised",
   sheetDanger: "flex flex-col rounded-xs border border-danger bg-paper-raised",
-  sheetTitle: "font-mono text-xs font-medium uppercase tracking-[0.08em] border-b border-rule px-4 py-3 text-ink-muted",
-  sheetTitleDanger: "font-mono text-xs font-medium uppercase tracking-[0.08em] border-b border-danger px-4 py-3 text-danger",
+  sheetTitle: "font-sans text-xs font-semibold uppercase tracking-[0.06em] border-b border-rule px-4 py-3 text-ink-muted",
+  sheetTitleDanger: "font-sans text-xs font-semibold uppercase tracking-[0.06em] border-b border-danger px-4 py-3 text-danger",
   sheetBody: "flex flex-1 flex-col gap-4 p-4",
   /** Banda unei foi cu înălțime fixă (48 px), pentru foi alăturate cu sau fără ștampilă în bandă. */
   sheetBar:
-    "flex min-h-12 items-center justify-between gap-3 border-b border-rule px-4 font-mono text-xs font-medium uppercase tracking-[0.08em] text-ink-muted",
+    "flex min-h-12 items-center justify-between gap-3 border-b border-rule px-4 font-sans text-xs font-semibold uppercase tracking-[0.06em] text-ink-muted",
   /** Banda unei foi care se deschide (`<details class="group">`): linia de sub ea apare doar deschisă. */
   sheetSummary:
-    "flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 font-mono text-xs font-medium uppercase tracking-[0.08em] text-ink-muted group-open:border-b group-open:border-rule [&::-webkit-details-marker]:hidden",
+    "flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 font-sans text-xs font-semibold uppercase tracking-[0.06em] text-ink-muted group-open:border-b group-open:border-rule [&::-webkit-details-marker]:hidden",
   /** Ca `sheetBar`, în teracotă: grupa care cere atenție (cererile de activare). */
   sheetBarAccent:
-    "flex min-h-12 items-center justify-between gap-3 border-b border-rule px-4 font-mono text-xs font-medium uppercase tracking-[0.08em] text-accent",
+    "flex min-h-12 items-center justify-between gap-3 border-b border-rule px-4 font-sans text-xs font-semibold uppercase tracking-[0.06em] text-accent",
   /**
    * Bara de acțiuni a unei foi (singurul loc al butoanelor dintr-o foaie): imediat după conținut;
    * pe ecrane late la dreapta, cu acțiunea principală ultima; pe telefon pe toată lățimea, principala sus.
@@ -109,7 +109,7 @@ export const ui = {
   dialogActionsBare: "flex flex-wrap justify-end gap-3",
 
   table: "w-full border-collapse text-left",
-  th: "px-2 py-3 font-mono text-xs font-medium uppercase tracking-[0.08em] text-ink-muted",
+  th: "px-2 py-3 font-sans text-xs font-semibold uppercase tracking-[0.06em] text-ink-muted",
   theadRow: "border-b border-ink",
   row: "border-b border-rule",
   td: "p-2 align-top",

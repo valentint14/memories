@@ -36,81 +36,86 @@ export function OrganizerCreateForm({
           <input type="hidden" name="privacyVersion" value={versions.privacy} />
         </>
       )}
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="oc-name" className={ui.label}>
-          {t("home.name")}
-        </label>
-        <input
-          id="oc-name"
-          name="name"
-          type="text"
-          defaultValue={values.name}
-          required
-          maxLength={120}
-          aria-invalid={fields.name !== undefined}
-          aria-describedby="oc-name-error"
-          className={ui.input}
-        />
-        {fields.name !== undefined && (
-          <p id="oc-name-error" className={ui.fieldError}>
-            {t(fields.name as MessageKey)}
-          </p>
-        )}
-      </div>
-      <DateField
-        label={t("home.date")}
-        name="eventDate"
-        defaultValue={values.eventDate}
-        isRequired
-        minValue={minDate}
-        maxValue={maxDate}
-        isInvalid={fields.eventDate !== undefined}
-        {...(fields.eventDate !== undefined && { errorMessage: t(fields.eventDate as MessageKey) })}
-      />
-      {versions !== null && (
+      {/* Numele și data pe un rând, ca la modificarea evenimentului (EditEventForm). */}
+      <div className="grid gap-5 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="flex flex-col gap-1.5">
-          <div className="flex items-start gap-3">
-            <input
-              id="oc-accept"
-              name="accepted"
-              type="checkbox"
-              defaultChecked={values.accepted === "on"}
-              required
-              aria-invalid={fields.accepted !== undefined}
-              aria-describedby="oc-accept-error"
-              className={`${ui.checkbox} mt-0.5`}
-            />
-            <label htmlFor="oc-accept" className="leading-snug">
-              {t("home.acceptBefore")}
-              <Link href="/terms" target="_blank" className={ui.link}>
-                {t("home.terms")}
-              </Link>
-              {t("home.acceptMiddle")}
-              <Link href="/privacy" target="_blank" className={ui.link}>
-                {t("home.privacy")}
-              </Link>
-            </label>
-          </div>
-          {fields.accepted !== undefined && (
-            <p id="oc-accept-error" className={ui.fieldError}>
-              {t(fields.accepted as MessageKey)}
+          <label htmlFor="oc-name" className={ui.label}>
+            {t("home.name")}
+          </label>
+          <input
+            id="oc-name"
+            name="name"
+            type="text"
+            defaultValue={values.name}
+            required
+            maxLength={120}
+            aria-invalid={fields.name !== undefined}
+            aria-describedby="oc-name-error"
+            className={ui.input}
+          />
+          {fields.name !== undefined && (
+            <p id="oc-name-error" className={ui.fieldError}>
+              {t(fields.name as MessageKey)}
             </p>
           )}
         </div>
+        <DateField
+          label={t("home.date")}
+          name="eventDate"
+          defaultValue={values.eventDate}
+          isRequired
+          minValue={minDate}
+          maxValue={maxDate}
+          isInvalid={fields.eventDate !== undefined}
+          {...(fields.eventDate !== undefined && { errorMessage: t(fields.eventDate as MessageKey) })}
+        />
+      </div>
+      {general !== undefined && (
+        <p role="alert" className={ui.alert}>
+          {t(`errors.${general}`)}
+        </p>
       )}
-      <SheetActions
-        status={
-          general !== undefined && (
-            <p role="alert" className={ui.alert}>
-              {t(`errors.${general}`)}
-            </p>
-          )
-        }
-      >
-        <button type="submit" disabled={pending} className={ui.buttonPrimary}>
-          {pending ? t("home.submitting") : t("home.submit")}
-        </button>
-      </SheetActions>
+      {/* Acceptarea (dacă trebuie) în stânga, butonul în dreapta; pe telefon, unul sub altul. */}
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+        {versions !== null && (
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-start gap-3">
+              <input
+                id="oc-accept"
+                name="accepted"
+                type="checkbox"
+                defaultChecked={values.accepted === "on"}
+                required
+                aria-invalid={fields.accepted !== undefined}
+                aria-describedby="oc-accept-error"
+                className={`${ui.checkbox} mt-0.5`}
+              />
+              <label htmlFor="oc-accept" className="leading-snug">
+                {t("home.acceptBefore")}
+                <Link href="/terms" target="_blank" className={ui.link}>
+                  {t("home.terms")}
+                </Link>
+                {t("home.acceptMiddle")}
+                <Link href="/privacy" target="_blank" className={ui.link}>
+                  {t("home.privacy")}
+                </Link>
+              </label>
+            </div>
+            {fields.accepted !== undefined && (
+              <p id="oc-accept-error" className={ui.fieldError}>
+                {t(fields.accepted as MessageKey)}
+              </p>
+            )}
+          </div>
+        )}
+        <div className="sm:ml-auto">
+          <SheetActions>
+            <button type="submit" disabled={pending} className={ui.buttonPrimary}>
+              {pending ? t("home.submitting") : t("home.submit")}
+            </button>
+          </SheetActions>
+        </div>
+      </div>
     </form>
   );
 }
