@@ -10,12 +10,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  checks:
-    # Doar pe PR: protecția lui main cere ca PR-ul să fie la zi și cu `checks` trecut, deci pe main
-    # ar repeta exact aceleași teste.
+  # Pe PR, verificările rulează în paralel: un job rapid (lint, tipuri, unit, DB, imaginile Docker,
+  # testele worker-ului) și câte un job E2E pe browser, fiecare cu propria instanță Supabase. Pe main
+  # nu rulează: protecția lui main cere ca PR-ul să fie la zi și cu `checks` trecut.
+  verificari:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -33,8 +34,9 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      # Doar serviciile folosite de aplicație (fără Studio, analytics, edge runtime, imgproxy).
       - name: Supabase local
-        run: pnpm db:start
+        run: pnpm db:start:ci
       - name: Env din Supabase local
         run: node scripts/ci-env.mjs >> "$GITHUB_ENV"
       # După mediu: testul „fără secrete în client” face `next build`, care cere variabilele Supabase.
@@ -43,16 +45,30 @@ jobs:
       - name: DB tests (RLS + funcții SQL)
         run: pnpm test:db
 
+      # Straturile Docker se păstrează în cache-ul GitHub Actions, comun cu joburile E2E.
+      - uses: docker/setup-buildx-action@v3
       - name: Build imagine worker
-        run: docker build -f apps/worker/Dockerfile -t memories-worker .
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/worker/Dockerfile
+          tags: memories-worker
+          load: true
+          cache-from: type=gha,scope=worker
+          cache-to: type=gha,scope=worker,mode=max
       # Pe main imaginea web se construiește doar la publicare; aici se prinde un Dockerfile stricat.
       - name: Build imagine web
-        run: >-
-          docker build -f apps/web/Dockerfile -t memories-web
-          --build-arg NEXT_PUBLIC_SUPABASE_URL="$NEXT_PUBLIC_SUPABASE_URL"
-          --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="$NEXT_PUBLIC_SUPABASE_ANON_KEY"
-          --build-arg NEXT_PUBLIC_TURNSTILE_SITE_KEY="$NEXT_PUBLIC_TURNSTILE_SITE_KEY"
-          .
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          tags: memories-web
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,scope=web,mode=max
+          build-args: |
+            NEXT_PUBLIC_SUPABASE_URL=${{ env.NEXT_PUBLIC_SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ env.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+            NEXT_PUBLIC_TURNSTILE_SITE_KEY=${{ env.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
       - name: Test de fum HEIC
         run: docker run --rm memories-worker node scripts/smoke-heic.ts
       # Testele media rulează în imagine (heif-dec, ffmpeg, ExifTool); `--user root` pentru
@@ -65,6 +81,60 @@ jobs:
           -e SMTP_HOST -e SMTP_PORT -e SMTP_FROM -e APP_URL
           memories-worker sh -c "cd /app && node_modules/.bin/vitest run --project worker"
 
+  e2e:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      # Un browser picat nu le oprește pe celelalte: raportul arată toate eșecurile odată.
+      fail-fast: false
+      matrix:
+        include:
+          # Desktop: și serverele suplimentare (limitele reale, CAPTCHA respins, Turnstile real).
+          - name: desktop
+            browsers: desktop-chromium
+            install: chromium
+            extra: "1"
+          # LCP-ul pe profil mobil (CDP, doar Chromium) se măsoară aici.
+          - name: pixel
+            browsers: mobile-chrome
+            install: chromium
+            extra: "0"
+          - name: iphone
+            browsers: mobile-safari
+            install: webkit
+            extra: "0"
+    name: e2e (${{ matrix.name }})
+    env:
+      E2E_BROWSERS: ${{ matrix.browsers }}
+      E2E_EXTRA_SERVERS: ${{ matrix.extra }}
+      E2E_WORKERS: "3"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+        env:
+          COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
+
+      - name: Supabase local
+        run: pnpm db:start:ci
+      - name: Env din Supabase local
+        run: node scripts/ci-env.mjs >> "$GITHUB_ENV"
+
+      # Worker-ul procesează încărcările din teste; imaginea vine în mare parte din cache.
+      - uses: docker/setup-buildx-action@v3
+      - name: Build imagine worker
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/worker/Dockerfile
+          tags: memories-worker
+          load: true
+          cache-from: type=gha,scope=worker
       - name: Pornește worker-ul
         run: >
           docker run -d --name worker --network host
@@ -72,18 +142,42 @@ jobs:
           -e S3_ENDPOINT -e S3_REGION -e S3_ACCESS_KEY_ID -e S3_SECRET_ACCESS_KEY
           -e SMTP_HOST -e SMTP_PORT -e SMTP_FROM -e APP_URL
           memories-worker
-      - name: Instalează browserele Playwright
-        run: pnpm --filter web exec playwright install --with-deps chromium webkit
-      - name: E2E (inclusiv LCP pe profil mobil)
+
+      # Browserul se păstrează în cache după versiunea Playwright; dependențele de sistem se instalează mereu.
+      - name: Versiunea Playwright
+        id: pw
+        run: echo "version=$(node -p "require('./apps/web/node_modules/@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        id: pw-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ steps.pw.outputs.version }}-${{ matrix.install }}
+      - name: Instalează browserul
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: pnpm --filter web exec playwright install --with-deps ${{ matrix.install }}
+      - name: Dependențele de sistem ale browserului
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: pnpm --filter web exec playwright install-deps ${{ matrix.install }}
+
+      - name: E2E
         run: pnpm test:e2e
       - uses: actions/upload-artifact@v5
         if: failure()
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.name }}
           path: apps/web/playwright-report
       - name: Loguri worker
         if: failure()
         run: docker logs worker || echo "worker-ul nu a pornit"
+
+  # Verificarea cerută de protecția lui main: trece doar dacă au trecut toate joburile de mai sus.
+  checks:
+    if: always() && github.event_name == 'pull_request'
+    needs: [verificari, e2e]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Toate verificările au trecut
+        run: test "${{ needs.verificari.result }}" = success && test "${{ needs.e2e.result }}" = success
 
   publish-images:
     # Doar pe main; verificările au trecut deja pe PR. Imaginile merg în GitHub Container Registry,

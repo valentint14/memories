@@ -10,11 +10,13 @@ try {
 const port = Number(process.env.PORT ?? 3000);
 const baseURL = process.env.E2E_BASE_URL ?? `http://localhost:${port}`;
 
+// În CI, fiecare browser rulează într-un job separat (E2E_BROWSERS=nume,…), cu baza lui de date.
+const selected = process.env.E2E_BROWSERS?.split(",").filter(Boolean);
 const browsers = [
   { name: "desktop-chromium", device: devices["Desktop Chrome"] },
   { name: "mobile-chrome", device: devices["Pixel 7"] },
   { name: "mobile-safari", device: devices["iPhone 15"] },
-];
+].filter((b) => selected === undefined || selected.includes(b.name));
 
 // Fișierele care modifică stare globală (catalogul de retenție, pachetul complet) rulează pe rând în
 // cele trei browsere (fiecare proiect depinde de precedentul), niciodată în paralel cu ele însele.
@@ -22,7 +24,8 @@ const RETENTION = /(retention|admin-package)\.spec\.ts/;
 
 // Servere suplimentare pe același build (002, T006): limitele reale de frecvență, secretul
 // Turnstile care respinge mereu și widgetul Turnstile real (are nevoie de internet).
-const extraServers: { name: string; port: number; match: RegExp; env: Record<string, string> }[] = [
+// `E2E_EXTRA_SERVERS=0`: fără serverele suplimentare (joburile CI ale browserelor mobile).
+const extraServers: { name: string; port: number; match: RegExp; env: Record<string, string> }[] = process.env.E2E_EXTRA_SERVERS === "0" ? [] : [
   // Limita de producție, explicit: `.env.local` o ridică pentru testarea de mână.
   { name: "limits", port: 3001, match: /abuse-limits\.spec\.ts/, env: { RATE_LIMIT_IP_PER_HOUR: "20" } },
   { name: "captcha-reject", port: 3002, match: /captcha-reject\.spec\.ts/, env: { TURNSTILE_SECRET_KEY: "2x0000000000000000000000000000000AA" } },
