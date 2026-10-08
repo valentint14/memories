@@ -20,7 +20,7 @@ export function ManageEventSection({
   canEdit: boolean;
 }) {
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid items-start gap-6 lg:grid-cols-2">
       {canEdit && (
         <Sheet id="manage-title" title={t("organizer.manage.title")}>
           <EditEventForm eventId={eventId} name={name} eventDate={eventDate} />

@@ -135,7 +135,7 @@ export function RetentionCatalog({ options }: { options: CatalogRow[] }) {
   const [pending, startTransition] = useTransition();
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid items-start gap-6 lg:grid-cols-2">
       {options.length === 0 && <p className="text-ink-muted lg:col-span-2">{t("admin.retentionPage.empty")}</p>}
       {options.map((o) => (
         <OptionSheet key={`${o.id}-${String(o.surchargeMinor)}-${String(o.active)}`} option={o} />

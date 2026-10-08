@@ -47,7 +47,7 @@ function EventSheet({ event }: { event: EventRow }) {
         </h2>
         {fact !== null && <p className="text-sm leading-relaxed text-ink-muted">{fact}</p>}
         {/* Legătură text, nu buton: rămâne în dreapta pe toate ecranele, fără linie deasupra. */}
-        <div className="mt-auto text-right">
+        <div className="text-right">
           <Link href={href} className={`${ui.buttonText} gap-1 text-sm`} aria-hidden="true" tabIndex={-1}>
             {t("organizer.list.open")}
             <ChevronRightIcon className="size-4" />
@@ -104,7 +104,7 @@ export default async function OrganizerEventsPage({ searchParams }: { searchPara
         ]}
       />
       {events.length === 0 && <p className={ui.notice}>{t("organizer.noEvents")}</p>}
-      <ul className="grid gap-6 lg:grid-cols-2">
+      <ul className="grid items-start gap-6 lg:grid-cols-2">
         {events.map((e) => (
           <EventSheet key={e.id} event={e} />
         ))}

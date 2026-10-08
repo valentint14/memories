@@ -17,7 +17,7 @@ export function UploadLinkSheet({ eventId, uploadUrl, explain }: { eventId: stri
           {uploadUrl}
         </a>
       </p>
-      <div className="mt-auto border-t border-rule pt-4">
+      <div className="border-t border-rule pt-4">
         <QrDownloads eventId={eventId} />
       </div>
     </Sheet>

@@ -85,15 +85,15 @@ export const ui = {
   sheetBarAccent:
     "flex min-h-12 items-center justify-between gap-3 border-b border-rule px-4 font-mono text-xs font-medium uppercase tracking-[0.08em] text-accent",
   /**
-   * Bara de acțiuni a unei foi (singurul loc al butoanelor dintr-o foaie): la baza foii; pe ecrane
-   * late la dreapta, cu acțiunea principală ultima; pe telefon pe toată lățimea, principala sus.
+   * Bara de acțiuni a unei foi (singurul loc al butoanelor dintr-o foaie): imediat după conținut;
+   * pe ecrane late la dreapta, cu acțiunea principală ultima; pe telefon pe toată lățimea, principala sus.
    * Fără linie deasupra și fără spațiu propriu: deasupra butoanelor e aceeași distanță ca între
    * celelalte rânduri ale foii sau ale formularului. Se folosește prin `SheetActions`. Fără butoane
    * (de ex. cererea de activare trimisă), bara dispare, ca foaia să nu aibă spațiu gol jos.
    */
   sheetActions:
-    "mt-auto flex flex-col-reverse gap-3 empty:hidden sm:flex-row sm:flex-wrap sm:items-center sm:justify-end [&>*]:w-full sm:[&>*]:w-auto",
-  /** Un formular care umple foaia, ca bara lui de acțiuni să coboare la baza foii. */
+    "flex flex-col-reverse gap-3 empty:hidden sm:flex-row sm:flex-wrap sm:items-center sm:justify-end [&>*]:w-full sm:[&>*]:w-auto",
+  /** Formularul unei foi: rândurile lui, apoi bara de acțiuni, la aceeași distanță. */
   sheetForm: "flex flex-1 flex-col gap-5",
 
   overlay: "fixed inset-0 z-50 flex items-center justify-center bg-ink/60 p-4",
