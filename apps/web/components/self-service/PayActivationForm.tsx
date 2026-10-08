@@ -1,12 +1,13 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { applyDiscountForm, startPaymentForm, type DiscountState } from "@/lib/actions/payments";
 import type { FormState } from "@/lib/actions/self-service";
 import { formatDate, formatMoney, t, tp } from "@/lib/i18n";
 import type { ActivationOption } from "@/lib/organizer/activation";
 import { ui } from "@/lib/ui";
 import { SheetActions } from "../ui/SheetActions";
+import { CheckIcon, CloseIcon } from "../ui/icons";
 
 /**
  * Alegerea perioadei de păstrare și plata activării (003: FR-001, FR-002), cu un cod de reducere
@@ -21,6 +22,9 @@ export function PayActivationForm({ eventId, options }: { eventId: string; optio
   const shown = applied?.options ?? options;
   const preselected = shown.find((o) => o.included)?.id ?? shown[0]?.id;
   const discountMinor = shown.find((o) => o.id === preselected)?.discountMinor ?? 0;
+  // Codul schimbat după „Aplică” readuce butonul la neutru, până la următoarea aplicare.
+  const [editedFor, setEditedFor] = useState<DiscountState | null>(null);
+  const tone = editedFor === discount ? "idle" : discount.status;
 
   return (
     <form action={action} className={ui.sheetForm}>
@@ -51,7 +55,9 @@ export function PayActivationForm({ eventId, options }: { eventId: string; optio
         ))}
       </fieldset>
 
-      {/* Codul de reducere: câmpul și „Aplică”; cu un cod aplicat, rândul lui și „Elimină codul”. */}
+      {/* Codul de reducere: câmpul și „Aplică”. Rezultatul îl arată doar butonul: verde („Aplicat”,
+          cu bifă) sau roșu (cu „×”); motivul refuzului și reducerea se anunță cititoarelor de ecran.
+          Câmpul golit și „Aplică” elimină codul. */}
       <div className="flex flex-col gap-1.5">
         <label htmlFor={`discount-${eventId}`} className={ui.label}>
           {t("activation.discount.label")}
@@ -65,37 +71,29 @@ export function PayActivationForm({ eventId, options }: { eventId: string; optio
             autoComplete="off"
             autoCapitalize="characters"
             spellCheck={false}
-            aria-invalid={discount.status === "error"}
+            onChange={() => {
+              setEditedFor(discount);
+            }}
+            aria-invalid={tone === "error"}
             aria-describedby={`discount-${eventId}-status`}
             className={`${ui.input} ${ui.data} min-w-0 flex-1 uppercase`}
           />
-          <button type="submit" formAction={applyAction} formNoValidate disabled={applying} className={ui.buttonSecondary}>
-            {t("activation.discount.apply")}
+          <button
+            type="submit"
+            formAction={applyAction}
+            formNoValidate
+            disabled={applying}
+            // Lățime fixă: câmpul nu se mută când textul devine „Aplicat”.
+            className={`${tone === "applied" ? ui.buttonSuccess : tone === "error" ? ui.buttonDanger : ui.buttonSecondary} min-w-32`}
+          >
+            {tone === "applied" && <CheckIcon />}
+            {tone === "error" && <CloseIcon className="size-4" />}
+            {t(tone === "applied" ? "activation.discount.appliedShort" : "activation.discount.apply")}
           </button>
         </div>
-        <div id={`discount-${eventId}-status`}>
-          {discount.status === "error" && (
-            <p role="alert" className={ui.fieldError}>
-              {t(`errors.${discount.error}`)}
-            </p>
-          )}
-          {applied !== null && (
-            <p role="status" className="flex flex-wrap items-baseline gap-x-3 text-sm">
-              <span className={ui.data}>{t("activation.discount.applied", { code: applied.code, amount: formatMoney(discountMinor) })}</span>
-              {/* React nu adaugă butonul apăsat în date când are propria acțiune: intenția se pune explicit. */}
-              <button
-                type="submit"
-                formAction={(data) => {
-                  data.set("intent", "remove");
-                  applyAction(data);
-                }}
-                formNoValidate
-                className={ui.buttonText}
-              >
-                {t("activation.discount.remove")}
-              </button>
-            </p>
-          )}
+        <div id={`discount-${eventId}-status`} className="sr-only">
+          {discount.status === "error" && <p role="alert">{t(`errors.${discount.error}`)}</p>}
+          {applied !== null && <p role="status">{t("activation.discount.applied", { code: applied.code, amount: formatMoney(discountMinor) })}</p>}
         </div>
       </div>
 
