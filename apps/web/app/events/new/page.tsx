@@ -23,7 +23,7 @@ export default async function NewEventPage() {
         <p className="max-w-2xl leading-relaxed text-ink-muted">{t("organizer.newIntro")}</p>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="flex flex-col gap-6">
         <Sheet
           id="new-event-title"
           title={t("organizer.new.formSheet")}

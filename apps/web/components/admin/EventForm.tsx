@@ -47,7 +47,7 @@ function optionLabel(o: RetentionOptionView): string {
 /**
  * Formularul de creare/editare a unui eveniment (FR-001–FR-003, FR-039, FR-040). Câmpurile sunt
  * definite o dată și așezate fie pe o grilă simplă (`grid`, editarea din fișa evenimentului), fie
- * în patru foi pe două coloane (`sheets`, pagina „Eveniment nou”).
+ * în patru foi, una sub alta (`sheets`, pagina „Eveniment nou”).
  */
 export function EventForm({
   options,
@@ -165,7 +165,7 @@ export function EventForm({
   );
   const previewBox = (
     <div
-      className={sheets ? "mt-auto flex flex-col gap-1 border-t border-rule pt-4" : "flex flex-col gap-1 border-y border-ink py-4 sm:col-span-2"}
+      className={sheets ? "flex flex-col gap-1 border-t border-rule pt-4" : "flex flex-col gap-1 border-y border-ink py-4 sm:col-span-2"}
       aria-live="polite"
     >
       <p>
@@ -225,8 +225,8 @@ export function EventForm({
     >
       {sheets ? (
         <>
-          {/* Patru foi egale pe două coloane; butonul de trimitere stă sub ele, la dreapta. */}
-          <div className="grid gap-6 lg:grid-cols-2">
+          {/* Patru foi, una sub alta; butonul de trimitere stă sub ele, la dreapta. */}
+          <div className="flex flex-col gap-6">
             <Sheet id="ef-event-title" title={t("admin.form.sheet.event")}>
               {nameField}
               {eventDateField}
@@ -235,7 +235,7 @@ export function EventForm({
             <Sheet id="ef-uploads-title" title={t("admin.form.sheet.uploads")}>
               {startsField}
               {endsField}
-              <p className={`${ui.hint} mt-auto`}>{t("admin.form.uploadsHint")}</p>
+              <p className={ui.hint}>{t("admin.form.uploadsHint")}</p>
             </Sheet>
             <Sheet id="ef-limits-title" title={t("admin.package.sheet.limits")}>
               {maxFilesField}

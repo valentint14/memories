@@ -41,7 +41,7 @@ export default async function ConfirmPage({
   if (!usable) {
     return (
       <AuthPage title={title}>
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="flex flex-col gap-6">
           <Sheet id="confirm-invalid-title" title={t("confirm.sheet.invalid")} danger>
             <p role="alert" className="leading-relaxed">
               {t("confirm.invalid")}
@@ -66,7 +66,7 @@ export default async function ConfirmPage({
       title={title}
       intro={<p className={authIntro}>{isCreate ? t("confirm.createIntro") : t("confirm.loginIntro")}</p>}
     >
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="flex flex-col gap-6">
         <Sheet
           id="confirm-action-title"
           title={isCreate ? t("confirm.sheet.event") : t("confirm.sheet.login")}
