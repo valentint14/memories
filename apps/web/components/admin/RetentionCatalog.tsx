@@ -123,9 +123,7 @@ function OptionSheet({ option }: { option: CatalogRow }) {
 }
 
 /**
- * Catalogul de retenție (FR-038) ca foi pe o grilă de două coloane: câte una pe opțiune, apoi
- * foaia de adăugare. Cu un număr impar de opțiuni, foaia de adăugare umple golul de pe ultimul
- * rând; altfel ocupă tot rândul.
+ * Catalogul de retenție (FR-038) ca foi, una sub alta: câte una pe opțiune, apoi foaia de adăugare.
  */
 export function RetentionCatalog({ options }: { options: CatalogRow[] }) {
   const router = useRouter();
@@ -135,13 +133,13 @@ export function RetentionCatalog({ options }: { options: CatalogRow[] }) {
   const [pending, startTransition] = useTransition();
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      {options.length === 0 && <p className="text-ink-muted lg:col-span-2">{t("admin.retentionPage.empty")}</p>}
+    <div className="flex flex-col gap-6">
+      {options.length === 0 && <p className="text-ink-muted">{t("admin.retentionPage.empty")}</p>}
       {options.map((o) => (
         <OptionSheet key={`${o.id}-${String(o.surchargeMinor)}-${String(o.active)}`} option={o} />
       ))}
 
-      <Sheet id="add-option-title" title={t("admin.retentionPage.add")} className={options.length % 2 === 0 ? "lg:col-span-2" : ""}>
+      <Sheet id="add-option-title" title={t("admin.retentionPage.add")}>
         <form
           className={ui.sheetForm}
           onSubmit={(e) => {

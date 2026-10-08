@@ -5,7 +5,7 @@ import { QrDownloads } from "./QrDownloads";
 
 /**
  * Foaia „Link și cod QR” a organizatorului (002/FR-009): linkul de încărcare (același ca în codul
- * QR) și descărcările codului, lângă foaia de activare sau lângă cea de păstrare.
+ * QR) și descărcările codului, sub foaia de activare sau sub cea de păstrare.
  */
 export function UploadLinkSheet({ eventId, uploadUrl, explain }: { eventId: string; uploadUrl: string; explain: MessageKey }) {
   return (
@@ -17,9 +17,7 @@ export function UploadLinkSheet({ eventId, uploadUrl, explain }: { eventId: stri
           {uploadUrl}
         </a>
       </p>
-      <div className="mt-auto border-t border-rule pt-4">
-        <QrDownloads eventId={eventId} />
-      </div>
+      <QrDownloads eventId={eventId} />
     </Sheet>
   );
 }

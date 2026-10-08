@@ -28,7 +28,7 @@ export default async function LoginPage({
           {t("login.linkInvalid")}
         </p>
       )}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="flex flex-col gap-6">
         <Sheet id="login-form-title" title={t("login.sheet.form")}>
           <LoginForm next={safeNextPath(params.next)} turnstile={<TurnstileField />} />
         </Sheet>

@@ -5,8 +5,8 @@ import { DeleteEventDialog } from "./DeleteEventDialog";
 import { EditEventForm } from "./EditEventForm";
 
 /**
- * Modificarea și ștergerea evenimentului de către organizator (002: FR-033, FR-035), ca două foi
- * alăturate. În suspendare se poate doar șterge (FR-028a): foaia de ștergere ocupă tot rândul.
+ * Modificarea și ștergerea evenimentului de către organizator (002: FR-033, FR-035), ca două foi,
+ * una sub alta. În suspendare se poate doar șterge (FR-028a): rămâne doar foaia de ștergere.
  */
 export function ManageEventSection({
   eventId,
@@ -20,14 +20,14 @@ export function ManageEventSection({
   canEdit: boolean;
 }) {
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="flex flex-col gap-6">
       {canEdit && (
         <Sheet id="manage-title" title={t("organizer.manage.title")}>
           <EditEventForm eventId={eventId} name={name} eventDate={eventDate} />
         </Sheet>
       )}
-      <Sheet id="delete-title" title={t("admin.delete.section")} danger className={canEdit ? "" : "lg:col-span-2"}>
-        <p className={canEdit ? "" : "max-w-2xl"}>{t("organizer.delete.explain")}</p>
+      <Sheet id="delete-title" title={t("admin.delete.section")} danger>
+        <p>{t("organizer.delete.explain")}</p>
         <SheetActions>
           <DeleteEventDialog eventId={eventId} eventName={name} />
         </SheetActions>

@@ -67,6 +67,11 @@ export const ui = {
   caution: "rounded-xs border border-accent bg-paper-raised p-4",
   /** Eroare de pagină. */
   alert: "rounded-xs border border-danger bg-paper-raised p-4 text-danger",
+  /**
+   * Pagina organizatorului și a autentificării: o singură coloană centrată, de lățimea unui
+   * formular. Foile stau una sub alta, cu aceeași lățime pe orice ecran (fără foi alăturate).
+   */
+  pageColumn: "mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8 sm:px-8 sm:py-10",
   /** Secțiune: se deschide cu o linie de cerneală, nu cu o cutie. */
   section: "flex flex-col gap-4 border-t border-ink pt-4",
   /** Foaie: ramă subțire cu o bandă de titlu sus (galeria, fișa unui eveniment). */
@@ -85,15 +90,15 @@ export const ui = {
   sheetBarAccent:
     "flex min-h-12 items-center justify-between gap-3 border-b border-rule px-4 font-mono text-xs font-medium uppercase tracking-[0.08em] text-accent",
   /**
-   * Bara de acțiuni a unei foi (singurul loc al butoanelor dintr-o foaie): la baza foii; pe ecrane
-   * late la dreapta, cu acțiunea principală ultima; pe telefon pe toată lățimea, principala sus.
+   * Bara de acțiuni a unei foi (singurul loc al butoanelor dintr-o foaie): imediat după conținut;
+   * pe ecrane late la dreapta, cu acțiunea principală ultima; pe telefon pe toată lățimea, principala sus.
    * Fără linie deasupra și fără spațiu propriu: deasupra butoanelor e aceeași distanță ca între
    * celelalte rânduri ale foii sau ale formularului. Se folosește prin `SheetActions`. Fără butoane
    * (de ex. cererea de activare trimisă), bara dispare, ca foaia să nu aibă spațiu gol jos.
    */
   sheetActions:
-    "mt-auto flex flex-col-reverse gap-3 empty:hidden sm:flex-row sm:flex-wrap sm:items-center sm:justify-end [&>*]:w-full sm:[&>*]:w-auto",
-  /** Un formular care umple foaia, ca bara lui de acțiuni să coboare la baza foii. */
+    "flex flex-col-reverse gap-3 empty:hidden sm:flex-row sm:flex-wrap sm:items-center sm:justify-end [&>*]:w-full sm:[&>*]:w-auto",
+  /** Formularul unei foi: rândurile lui, apoi bara de acțiuni, la aceeași distanță. */
   sheetForm: "flex flex-1 flex-col gap-5",
 
   overlay: "fixed inset-0 z-50 flex items-center justify-center bg-ink/60 p-4",

@@ -47,7 +47,7 @@ function EventSheet({ event }: { event: EventRow }) {
         </h2>
         {fact !== null && <p className="text-sm leading-relaxed text-ink-muted">{fact}</p>}
         {/* Legătură text, nu buton: rămâne în dreapta pe toate ecranele, fără linie deasupra. */}
-        <div className="mt-auto text-right">
+        <div className="text-right">
           <Link href={href} className={`${ui.buttonText} gap-1 text-sm`} aria-hidden="true" tabIndex={-1}>
             {t("organizer.list.open")}
             <ChevronRightIcon className="size-4" />
@@ -60,7 +60,7 @@ function EventSheet({ event }: { event: EventRow }) {
 
 /**
  * Lista evenimentelor organizatorului (001/FR-009, 002/FR-012), în formatul fișelor: bandă de
- * cifre și câte o foaie pe eveniment, pe o grilă de două coloane. RLS întoarce toate evenimentele
+ * cifre și câte o foaie pe eveniment, una sub alta. RLS întoarce toate evenimentele
  * adresei, create de el sau de administrator, fără cele neconfirmate.
  */
 export default async function OrganizerEventsPage({ searchParams }: { searchParams: Promise<{ limit?: string }> }) {
@@ -104,18 +104,13 @@ export default async function OrganizerEventsPage({ searchParams }: { searchPara
         ]}
       />
       {events.length === 0 && <p className={ui.notice}>{t("organizer.noEvents")}</p>}
-      <ul className="grid gap-6 lg:grid-cols-2">
+      <ul className="flex flex-col gap-6">
         {events.map((e) => (
           <EventSheet key={e.id} event={e} />
         ))}
-        {/*
-          Foaia „Eveniment nou”, doar pe desktop: cu un număr impar de evenimente umple ultima
-          jumătate de rând; altfel (și fără evenimente) ocupă tot rândul.
-        */}
+        {/* Foaia „Eveniment nou”, doar pe desktop, la capătul listei. */}
         {/* Clasele foii fără `flex` de bază: ascunsă pe telefon, foaie de la `lg` (fără conflict hidden/flex). */}
-        <li
-          className={`hidden flex-col rounded-xs border border-rule bg-paper-raised lg:flex ${events.length % 2 === 0 ? "lg:col-span-2" : ""}`}
-        >
+        <li className="hidden flex-col rounded-xs border border-rule bg-paper-raised lg:flex">
           <div className={ui.sheetBar}>{t("organizer.newEvent")}</div>
           <div className={ui.sheetBody}>
             <p className="font-serif text-2xl leading-tight">{t(events.length === 0 ? "organizer.list.firstTitle" : "organizer.list.newTitle")}</p>
