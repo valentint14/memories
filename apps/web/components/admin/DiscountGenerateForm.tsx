@@ -20,13 +20,16 @@ interface Generated {
 
 /**
  * Fereastra de după generare: confirmarea, codurile noi (fiecare cu copiere) și „Copiază tot”.
- * La multe coduri, lista se derulează, iar butoanele rămân jos.
+ * Simetrică: rezumat, aceeași distanță, lista încadrată de linii, aceeași distanță, butoanele. La
+ * multe coduri lista se derulează, iar butoanele rămân jos. Copierea nu adaugă rânduri: iconița
+ * devine bifă și „Copiază tot” devine „Copiat”; anunțul pentru cititoarele de ecran e ascuns vizual.
  */
 function GeneratedDialog({ generated, onClose }: { generated: Generated | null; onClose: () => void }) {
-  const [copied, setCopied] = useState<string | null>(null);
-  const copy = (text: string, message: string) => {
+  /** Ce s-a copiat ultima dată: un cod sau „all”, plus anunțul. */
+  const [copied, setCopied] = useState<{ key: string; message: string } | null>(null);
+  const copy = (text: string, key: string, message: string) => {
     void navigator.clipboard.writeText(text).then(() => {
-      setCopied(message);
+      setCopied({ key, message });
     });
   };
   return (
@@ -52,34 +55,35 @@ function GeneratedDialog({ generated, onClose }: { generated: Generated | null; 
                 {tp("plural.generatedCodes", generated?.codes.length ?? 0)}
               </Heading>
               <p className="text-ink-muted">{generated?.summary}</p>
-              <ul aria-label={t("admin.discounts.generated")} className="flex min-h-0 flex-col overflow-y-auto border-t border-rule">
+              <ul aria-label={t("admin.discounts.generated")} className="flex min-h-0 flex-col overflow-y-auto border-y border-rule">
                 {generated?.codes.map((c) => (
                   <li key={c} className="flex items-center justify-between gap-3 border-b border-rule py-1 last:border-b-0">
                     <span className={`${ui.data} text-lg`}>{c}</span>
                     <Button
                       aria-label={t("admin.discounts.copyCode", { code: c })}
                       onPress={() => {
-                        copy(c, t("admin.discounts.copiedOne", { code: c }));
+                        copy(c, c, t("admin.discounts.copiedOne", { code: c }));
                       }}
                       className="flex size-11 cursor-pointer items-center justify-center rounded-xs outline-none data-focus-visible:outline-2 data-focus-visible:outline-ink data-hovered:bg-rule/40"
                     >
-                      <CopyIcon />
+                      {copied?.key === c ? <CheckIcon className="size-5 text-success" /> : <CopyIcon />}
                     </Button>
                   </li>
                 ))}
               </ul>
-              {/* Regiunea live există mereu (anunțul „copiat”), dar nu ocupă loc cât e goală. */}
-              <p role="status" className={copied === null ? "sr-only" : "text-sm text-success"}>
-                {copied ?? ""}
-              </p>
-              <div className={ui.dialogActions}>
+              <div className={ui.dialogActionsBare}>
+                {/* Anunțul „copiat”, doar pentru cititoarele de ecran: nu ocupă loc. */}
+                <p role="status" className="sr-only">
+                  {copied?.message ?? ""}
+                </p>
                 <Button
                   onPress={() => {
-                    copy(generated?.codes.join("\n") ?? "", t("admin.discounts.copied"));
+                    copy(generated?.codes.join("\n") ?? "", "all", t("admin.discounts.copied"));
                   }}
-                  className={ui.buttonSecondary}
+                  // Lățime fixă: butoanele nu se mută când textul devine „Copiat”.
+                  className={`${ui.buttonSecondary} min-w-36`}
                 >
-                  {t("admin.discounts.copyAll")}
+                  {copied?.key === "all" ? t("admin.discounts.copiedShort") : t("admin.discounts.copyAll")}
                 </Button>
                 <Button onPress={close} className={ui.buttonPrimary}>
                   {t("common.close")}

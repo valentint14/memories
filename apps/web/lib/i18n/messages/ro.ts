@@ -198,6 +198,7 @@ export const ro = {
   "admin.discounts.submit": "Generează",
   "admin.discounts.generated": "Coduri generate",
   "admin.discounts.copyAll": "Copiază tot",
+  "admin.discounts.copiedShort": "Copiat",
   "admin.discounts.copied": "Codurile au fost copiate.",
   "admin.discounts.list.title": "Coduri",
   "admin.discounts.filter": "Stare",
