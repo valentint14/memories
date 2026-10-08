@@ -13,6 +13,8 @@ export interface DiscountRedemption {
   status: string;
   paidAt: string | null;
   createdAt: string;
+  /** Reducerea acordată la această plată (bani). */
+  discountMinor: number;
 }
 
 export interface DiscountCodeRow {
@@ -40,6 +42,7 @@ interface RawRedemption {
   status: string;
   paid_at: string | null;
   created_at: string;
+  discount_minor: number | null;
 }
 
 /** Codurile de reducere cu starea și utilizările lor (005: FR-013); doar administratorii. */
@@ -67,6 +70,7 @@ export async function listDiscountCodes(): Promise<DiscountCodeRow[]> {
       status: x.status,
       paidAt: x.paid_at,
       createdAt: x.created_at,
+      discountMinor: x.discount_minor ?? 0,
     })),
   }));
 }
