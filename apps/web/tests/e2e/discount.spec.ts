@@ -116,7 +116,8 @@ test("organizatorul aplică un cod, plătește suma redusă, iar codul nu mai po
 
   await panel.getByLabel("Cod de reducere").fill(code.toLowerCase().replace("-", " "));
   await panel.getByRole("button", { name: "Aplică" }).click();
-  await expect(panel.getByText(`Cod ${code}`)).toBeVisible();
+  await expect(panel.getByRole("button", { name: "Aplicat" })).toBeVisible();
+  await expect(panel.getByRole("status")).toContainText(`Cod ${code} aplicat`);
   await expect(panel.locator("s").first()).toBeVisible(); // prețul întreg, tăiat
 
   await waitForHydration(page);
@@ -151,15 +152,17 @@ test("organizatorul aplică un cod, plătește suma redusă, iar codul nu mai po
   }
 });
 
-test("„Elimină codul” readuce prețurile întregi (US2)", async ({ page }) => {
+test("câmpul golit și „Aplică” readuc prețurile întregi (US2)", async ({ page }) => {
   const code = await newCode(5_000);
   await newAwaitingEvent(page);
   const panel = page.getByRole("region", { name: "Activarea pachetului complet" });
   await panel.getByLabel("Cod de reducere").fill(code);
   await panel.getByRole("button", { name: "Aplică" }).click();
-  await expect(panel.getByText(`Cod ${code}`)).toBeVisible();
-  await panel.getByRole("button", { name: "Elimină codul" }).click();
-  await expect(panel.getByText(`Cod ${code}`)).toHaveCount(0);
+  await expect(panel.getByRole("button", { name: "Aplicat" })).toBeVisible();
+  await panel.getByLabel("Cod de reducere").fill("");
+  // Codul schimbat readuce butonul la „Aplică”.
+  await panel.getByRole("button", { name: "Aplică" }).click();
+  await expect(panel.getByRole("status")).toHaveCount(0);
   await expect(panel.locator("s")).toHaveCount(0);
 });
 
@@ -169,7 +172,7 @@ test("adminul vede utilizarea codului și reducerea în foaia „Plăți” (US3
   const panel = page.getByRole("region", { name: "Activarea pachetului complet" });
   await panel.getByLabel("Cod de reducere").fill(code);
   await panel.getByRole("button", { name: "Aplică" }).click();
-  await expect(panel.getByText(`Cod ${code}`)).toBeVisible();
+  await expect(panel.getByRole("button", { name: "Aplicat" })).toBeVisible();
   await stubCheckoutPage(page);
   await panel.getByRole("button", { name: "Plătește și activează" }).click();
   const session = await payFakeSession(await sessionIdFromCheckoutUrl(page));

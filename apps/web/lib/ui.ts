@@ -48,8 +48,10 @@ export const ui = {
   buttonSecondary: `${button} min-h-12 border border-ink font-medium text-ink`,
   /** Acțiune secundară pe o bară de instrumente, la înălțimea lui `inputCompact`. */
   buttonSecondaryCompact: `${button} min-h-10 border border-ink text-sm font-medium text-ink`,
-  /** Ștergere definitivă, în afara dialogului de confirmare. */
+  /** Ștergere definitivă, în afara dialogului de confirmare; și acțiunea secundară refuzată (cod de reducere greșit). */
   buttonDanger: `${button} min-h-12 border border-danger font-medium text-danger`,
+  /** Acțiune secundară reușită (cod de reducere aplicat): contur verde. */
+  buttonSuccess: `${button} min-h-12 border border-success font-medium text-success`,
   /** Ștergere pe o bară de instrumente (bara galeriei), la înălțimea lui `inputCompact`. */
   buttonDangerCompact: `${button} min-h-10 border border-danger text-sm font-medium text-danger`,
   /** Confirmarea finală a unei ștergeri, în dialog (acțiunea principală a dialogului). */
