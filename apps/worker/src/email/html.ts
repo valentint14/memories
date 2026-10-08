@@ -24,7 +24,8 @@ export const emailStyle = {
   button: `display: inline-block; padding: 12px 20px; border-radius: 2px; background: ${INK}; color: ${PAPER_RAISED}; font-weight: 600; text-decoration: none`,
   muted: `margin: 0 0 16px; color: ${INK_MUTED}; font-size: 14px`,
   code: `margin: 0 0 16px; font-family: ${MONO}; font-size: 30px; font-weight: 500; letter-spacing: 8px; color: ${INK}`,
-  label: `margin: 0 0 4px; font-family: ${MONO}; font-size: 12px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; color: ${INK_MUTED}`,
+  /** Eticheta de deasupra codului: ca etichetele aplicației (`ui.kicker`), Plex Sans semibold, majuscule. */
+  label: `margin: 0 0 4px; font-family: ${SANS}; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: ${INK_MUTED}`,
   list: `margin: 0 0 16px; padding: 0 0 0 20px`,
 } as const;
 
