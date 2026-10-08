@@ -21,12 +21,17 @@ test("adminul generează coduri personale și de campanie, apoi dezactivează un
   await expect(page.getByRole("heading", { level: 1, name: "Coduri de reducere" })).toBeVisible();
   await waitForHydration(page);
 
-  const form = page.getByRole("region", { name: "Generează coduri" });
+  // Generarea se face într-o fereastră deschisă din antet.
+  const openForm = async () => {
+    await page.getByRole("button", { name: "Generează coduri" }).click();
+    return page.getByRole("dialog", { name: "Generează coduri" });
+  };
+  let form = await openForm();
   await form.getByLabel("Valoarea reducerii").fill("50");
   await form.getByLabel("Câte coduri").fill("3");
   await fillDate(form, "Valabil până la (opțional)", futureDate(30));
   await form.getByLabel("Notă internă (opțional)").fill("Test e2e");
-  await form.getByRole("button", { name: "Generează" }).click();
+  await form.getByRole("button", { name: "Generează", exact: true }).click();
 
   // Fereastra de succes: titlul, rezumatul și codurile, fiecare cu copiere.
   const dialog = page.getByRole("dialog");
@@ -46,35 +51,51 @@ test("adminul generează coduri personale și de campanie, apoi dezactivează un
   await expect(dialog).toHaveCount(0);
 
   // Cod de campanie: 15%, maxim 30 de utilizări.
+  form = await openForm();
   await form.getByRole("button", { name: /Felul codului/ }).click();
   await page.getByRole("option", { name: /De campanie/ }).click();
   await form.getByRole("button", { name: /Tipul reducerii/ }).click();
   await page.getByRole("option", { name: /Procent/ }).click();
   await form.getByLabel("Valoarea reducerii").fill("15");
   await form.getByLabel("Numărul maxim de utilizări").fill("30");
-  await form.getByRole("button", { name: "Generează" }).click();
+  await form.getByRole("button", { name: "Generează", exact: true }).click();
   await expect(dialog.getByRole("heading", { name: "1 cod generat" })).toBeVisible();
   const campaign = (await generated.innerText()).trim();
   await dialog.getByRole("button", { name: "Închide" }).click();
 
   await page.reload();
-  const list = page.getByRole("region", { name: "Coduri" }).last();
-  const row = list.getByRole("listitem").filter({ hasText: campaign });
-  await expect(row).toContainText("0 din 30 utilizări");
-  await expect(row).toContainText("15%");
+  const list = page.getByRole("region", { name: "Coduri" });
+  // Fiecare cod se deschide într-o fereastră cu datele și acțiunile lui.
+  const openCode = async (code: string) => {
+    await list.getByRole("button", { name: `Detaliile codului ${code}` }).click();
+    return page.getByRole("dialog", { name: code });
+  };
+  let detail = await openCode(campaign);
+  await expect(detail).toContainText("0 din 30");
+  await expect(detail).toContainText("15%");
+  await expect(detail).toContainText("Codul nu a fost folosit încă.");
+  await waitForHydration(page);
+  const detailA11y = await new AxeBuilder({ page }).include("[role=dialog]").withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+  expect(detailA11y.violations.map((v) => v.id)).toEqual([]);
+  await detail.getByRole("button", { name: "Închide" }).click();
 
-  // Dezactivarea unui cod personal.
-  const personal = list.getByRole("listitem").filter({ hasText: codes[0]?.trim() ?? "" });
-  await personal.getByRole("button", { name: "Dezactivează" }).click();
+  // Dezactivarea unui cod personal: fereastra arată noua stare.
+  detail = await openCode(codes[0] ?? "");
+  await detail.getByRole("button", { name: "Dezactivează" }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Dezactivează" }).click();
-  await expect(personal).toContainText("Dezactivat");
+  await expect(detail).toContainText("Dezactivat");
+  await detail.getByRole("button", { name: "Închide" }).click();
+  await list.getByRole("button", { name: /Dezactivate/ }).click();
+  await expect(list.getByRole("button", { name: `Detaliile codului ${codes[0] ?? ""}` })).toBeVisible();
+  await list.getByRole("button", { name: /Toate/ }).click();
 
-  // Ștergerea unui cod nefolosit: dispare din listă.
-  const removable = list.getByRole("listitem").filter({ hasText: codes[1] ?? "" });
-  await removable.getByRole("button", { name: "Șterge" }).click();
+  // Ștergerea unui cod nefolosit: dispare din listă, iar fereastra lui se închide.
+  detail = await openCode(codes[1] ?? "");
+  await detail.getByRole("button", { name: "Șterge" }).click();
   await expect(page.getByRole("alertdialog")).toContainText("Ștergi definitiv");
   await page.getByRole("alertdialog").getByRole("button", { name: "Șterge" }).click();
-  await expect(list.getByRole("listitem").filter({ hasText: codes[1] ?? "" })).toHaveCount(0);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(list.getByRole("button", { name: `Detaliile codului ${codes[1] ?? ""}` })).toHaveCount(0);
 
   await waitForHydration(page);
   const accessibility = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
@@ -191,13 +212,16 @@ test("adminul vede utilizarea codului și reducerea în foaia „Plăți” (US3
     await expect(payments).toContainText(`(cod ${code})`);
 
     await gotoHydrated(admin, "/admin/discounts");
-    const row = admin.getByRole("region", { name: "Coduri" }).last().getByRole("listitem").filter({ hasText: code });
-    await expect(row).toContainText("Epuizat");
-    await expect(row).toContainText("1 din 1 utilizări");
+    // Banda de cifre numără utilizarea; fereastra codului arată evenimentul și reducerea.
+    await expect(admin.getByRole("definition").filter({ hasText: /RON/ }).first()).not.toHaveText("0,00 RON");
+    await admin.getByRole("region", { name: "Coduri" }).getByRole("button", { name: `Detaliile codului ${code}` }).click();
+    const detail = admin.getByRole("dialog", { name: code });
+    await expect(detail).toContainText("Epuizat");
+    await expect(detail).toContainText("1 din 1");
+    await expect(detail).toContainText("Plătită · reducere 50,00 RON");
     // Un cod folosit nu se poate șterge, doar dezactiva.
-    await expect(row.getByRole("button", { name: "Șterge" })).toHaveCount(0);
-    await row.getByText("Utilizări (1)").click();
-    await expect(row.getByRole("link")).toHaveAttribute("href", `/admin/events/${eventId}`);
+    await expect(detail.getByRole("button", { name: "Șterge" })).toHaveCount(0);
+    await expect(detail.getByRole("link")).toHaveAttribute("href", `/admin/events/${eventId}`);
   } finally {
     await context.close();
   }

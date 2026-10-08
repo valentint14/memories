@@ -152,13 +152,13 @@ describe("generarea și administrarea (US1: FR-001–FR-005)", () => {
 
     const { data, error } = await client.rpc("admin_discount_codes");
     expect(error).toBeNull();
-    const rows = data as unknown as { id: string; status: string; uses: number; redemptions: { event_id: string }[] }[];
+    const rows = data as unknown as { id: string; status: string; uses: number; redemptions: { event_id: string; discount_minor: number }[] }[];
     const by = (id: string) => rows.find((r) => r.id === id);
     expect(by(available.id)?.status).toBe("available");
     expect(by(disabled.id)?.status).toBe("disabled");
     expect(by(expired.id)?.status).toBe("expired");
     expect(by(used.id)).toMatchObject({ status: "exhausted", uses: 1 });
-    expect(by(used.id)?.redemptions[0]?.event_id).toBe(eventId);
+    expect(by(used.id)?.redemptions[0]).toMatchObject({ event_id: eventId, discount_minor: 5000 });
 
     const { client: organizer } = await awaitingEvent("dc-list-forbidden");
     expect((await organizer.rpc("admin_discount_codes")).error?.message).toBe("FORBIDDEN");

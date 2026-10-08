@@ -103,6 +103,8 @@ export const ui = {
 
   overlay: "fixed inset-0 z-50 flex items-center justify-center bg-ink/60 p-4",
   dialog: "w-full max-w-md rounded-xs border border-ink bg-paper-raised p-6 shadow-dialog",
+  /** Dialog cu un formular pe două coloane (generarea codurilor de reducere). */
+  dialogWide: "w-full max-w-2xl rounded-xs border border-ink bg-paper-raised p-6 shadow-dialog",
   dialogTitle: "font-serif text-2xl leading-tight",
   dialogActions: "flex flex-wrap justify-end gap-3 border-t border-rule pt-4",
   /** Butoanele unui dialog al cărui conținut se încheie deja cu o linie (de ex. o listă încadrată). */
