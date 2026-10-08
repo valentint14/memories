@@ -217,6 +217,11 @@ export const ro = {
   "admin.discounts.pending": "plată în curs",
   "admin.discounts.disable": "Dezactivează",
   "admin.discounts.disableTitle": "Dezactivezi codul {code}?",
+  "admin.discounts.delete": "Șterge",
+  "admin.discounts.deleteTitle": "Ștergi definitiv codul {code}?",
+  "admin.discounts.deleteBody": "Codul nu poate fi recuperat. Se poate șterge doar un cod care n-a fost folosit; unul folosit se poate doar dezactiva.",
+  "admin.discounts.copyCode": "Copiază codul {code}",
+  "admin.discounts.copiedOne": "Codul {code} a fost copiat.",
   "admin.discounts.disableBody": "Codul nu mai poate fi folosit. Utilizările deja făcute rămân în evidență.",
   "admin.package.title": "Pachetul complet",
   "admin.package.intro": "Valorile se aplică evenimentelor activate de acum înainte. Evenimentele deja active își păstrează prețul și limitele.",
@@ -562,6 +567,7 @@ export const ro = {
   "upload.status.failed": "Nu s-a încărcat",
 
   // Plurale
+  "plural.generatedCodes": { one: "{count} cod generat", few: "{count} coduri generate", other: "{count} de coduri generate" },
   "plural.files": { one: "{count} fișier", few: "{count} fișiere", other: "{count} de fișiere" },
   "plural.months": { one: "{count} lună", few: "{count} luni", other: "{count} de luni" },
   "plural.usedByEvents": {

@@ -292,3 +292,13 @@ export async function disableDiscountCode(id: string): Promise<ActionResult<null
     return null;
   });
 }
+
+/** Șterge un cod nefolosit (005); un cod folosit sau rezervat se poate doar dezactiva (DISCOUNT_UNAVAILABLE). */
+export async function deleteDiscountCode(id: string): Promise<ActionResult<null>> {
+  return runAction(z.uuid(), id, async (codeId) => {
+    const supabase = await requireAdmin();
+    throwIfDbError((await supabase.rpc("delete_discount_code", { p_id: codeId })).error);
+    revalidatePath("/admin/discounts");
+    return null;
+  });
+}
