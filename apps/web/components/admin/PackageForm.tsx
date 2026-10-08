@@ -80,7 +80,7 @@ export function PackageForm({
       }}
     >
       {/* Trei foi egale, pe un rând pe ecrane late; un singur formular, salvat o dată. */}
-      <div className="grid items-start gap-6 lg:grid-cols-3">
+      <div className="flex flex-col gap-6">
         <Sheet id="pk-pricing-title" title={t("admin.package.sheet.pricing")}>
           {field("pk-price", "priceLei", "admin.package.price", { type: "number", min: 0, step: "0.01", defaultValue: initial.priceMinor / 100 })}
           <div className="flex flex-col gap-1.5">

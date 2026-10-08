@@ -78,7 +78,7 @@ export function MfaForm({ factorId: existingFactorId }: { factorId: string | nul
   );
 
   return (
-    <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+    <div className="flex flex-col gap-6">
       {enrolling ? (
         <>
           <Sheet id="enroll-title" title={t("mfa.sheet.setup")}>

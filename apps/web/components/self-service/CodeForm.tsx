@@ -16,7 +16,7 @@ export function CodeForm({ requestId, next }: { requestId: string; next: string 
   const [, resend, resending] = useActionState<FormState, FormData>(resendCodeForm, { status: "idle" });
 
   return (
-    <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+    <div className="flex flex-col gap-6">
       <Sheet id="code-form-title" title={t("code.sheet.code")}>
         <form action={action} className={ui.sheetForm}>
           <input type="hidden" name="requestId" value={requestId} />

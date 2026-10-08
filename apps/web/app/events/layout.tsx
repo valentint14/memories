@@ -16,7 +16,7 @@ export default async function EventsLayout({ children }: { children: ReactNode }
   return (
     <div className="min-h-dvh">
       <SiteHeader context="organizer" email={data.user.email ?? null} />
-      <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-8 sm:py-10">
+      <main className={ui.pageColumn}>
         {isAdminUser === true && (
           <p role="status" className={ui.caution}>
             {t("organizer.adminSession", { email: data.user.email ?? "" })}

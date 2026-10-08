@@ -82,7 +82,7 @@ export default async function EventGalleryPage({
             },
           ]}
         />
-        <div className="grid items-start gap-6 lg:grid-cols-2">
+        <div className="flex flex-col gap-6">
           <EventStatusPanel eventId={eventId} pendingPurgeAt={event.pendingPurgeAt} info={info} />
           {/* Până la activare, invitații care deschid linkul văd că încărcarea nu e încă deschisă. */}
           <UploadLinkSheet eventId={eventId} uploadUrl={uploadUrl} explain="organizer.qrExplain" />
@@ -154,7 +154,7 @@ export default async function EventGalleryPage({
       />
       <ArchivePanel eventId={eventId} readyFiles={readyFiles} initial={archive} />
       {uploadUrl !== null && (
-        <div className="grid items-start gap-6 lg:grid-cols-2">
+        <div className="flex flex-col gap-6">
           <RetentionPanel
             eventId={eventId}
             current={{ months: event.retentionMonths, finalPriceMinor: event.finalPriceMinor ?? 0, purgeAt: event.purgeAt }}

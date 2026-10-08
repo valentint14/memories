@@ -67,6 +67,11 @@ export const ui = {
   caution: "rounded-xs border border-accent bg-paper-raised p-4",
   /** Eroare de pagină. */
   alert: "rounded-xs border border-danger bg-paper-raised p-4 text-danger",
+  /**
+   * Pagina organizatorului și a autentificării: o singură coloană centrată, de lățimea unui
+   * formular. Foile stau una sub alta, cu aceeași lățime pe orice ecran (fără foi alăturate).
+   */
+  pageColumn: "mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8 sm:px-8 sm:py-10",
   /** Secțiune: se deschide cu o linie de cerneală, nu cu o cutie. */
   section: "flex flex-col gap-4 border-t border-ink pt-4",
   /** Foaie: ramă subțire cu o bandă de titlu sus (galeria, fișa unui eveniment). */

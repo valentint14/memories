@@ -5,9 +5,6 @@ import { ui } from "@/lib/ui";
  * Bara de acțiuni a unei foi: toate butoanele dintr-o foaie stau aici, după aceeași regulă (imediat
  * după conținut; pe ecrane late la dreapta, cu acțiunea principală ultima; pe telefon pe toată
  * lățimea, cu principala sus). `status` (salvat, eroare) stă chiar deasupra butoanelor.
- *
- * Foile alăturate nu se întind la aceeași înălțime (grilele lor au `items-start`), deci nu rămâne
- * niciun gol deasupra butoanelor.
  */
 export function SheetActions({ status, children }: { status?: ReactNode; children: ReactNode }) {
   // Aceeași structură cu sau fără mesaj: butoanele nu se remontează (nu pierd focusul) după salvare.

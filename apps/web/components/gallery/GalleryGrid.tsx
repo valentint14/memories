@@ -194,7 +194,7 @@ export function GalleryGrid({
           onAction={(key) => {
             setOpenIndex(items.findIndex((i) => i.id === key));
           }}
-          className="grid grid-cols-2 gap-x-3 gap-y-5 p-3 sm:grid-cols-3 sm:gap-x-4 sm:p-4 lg:grid-cols-6"
+          className="grid grid-cols-2 gap-x-3 gap-y-5 p-3 sm:grid-cols-3 sm:gap-x-4 sm:p-4 lg:grid-cols-4"
         >
           {(item) => {
             const label = item.guestName ?? t("gallery.anonymousGuest");
