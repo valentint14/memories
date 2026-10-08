@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { Button, Dialog, Heading, Modal, ModalOverlay } from "react-aria-components";
-import { disableDiscountCode } from "@/lib/actions/admin";
+import { deleteDiscountCode, disableDiscountCode } from "@/lib/actions/admin";
 import type { DiscountCodeRow, DiscountStatus } from "@/lib/admin/discounts";
 import { formatDate, formatDateTime, formatMoney, t } from "@/lib/i18n";
 import { ui } from "@/lib/ui";
@@ -17,11 +17,13 @@ function reduction(c: DiscountCodeRow): string {
 /**
  * Lista codurilor de reducere (005: FR-004, FR-013): starea, reducerea, utilizările „x din y”,
  * expirarea și nota; extins, fiecare utilizare (eveniment, organizator, data sau „plată în curs”).
- * Un cod disponibil se poate dezactiva, după confirmare.
+ * Un cod disponibil se poate dezactiva, iar unul nefolosit (fără plăți reușite sau în curs) se poate
+ * și șterge; ambele cer confirmare.
  */
 export function DiscountCodesSheet({ codes }: { codes: DiscountCodeRow[] }) {
   const [filter, setFilter] = useState<"all" | DiscountStatus>("all");
-  const [confirm, setConfirm] = useState<DiscountCodeRow | null>(null);
+  const [confirm, setConfirm] = useState<{ row: DiscountCodeRow; action: "disable" | "delete" } | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const shown = filter === "all" ? codes : codes.filter((c) => c.status === filter);
 
@@ -89,16 +91,30 @@ export function DiscountCodesSheet({ codes }: { codes: DiscountCodeRow[] }) {
                   </ul>
                 </details>
               )}
-              {c.status === "available" && (
-                <div>
-                  <Button
-                    onPress={() => {
-                      setConfirm(c);
-                    }}
-                    className={ui.buttonText}
-                  >
-                    {t("admin.discounts.disable")}
-                  </Button>
+              {(c.status === "available" || c.uses === 0) && (
+                <div className="flex flex-wrap gap-x-6">
+                  {c.status === "available" && (
+                    <Button
+                      onPress={() => {
+                        setError(null);
+                        setConfirm({ row: c, action: "disable" });
+                      }}
+                      className={ui.buttonText}
+                    >
+                      {t("admin.discounts.disable")}
+                    </Button>
+                  )}
+                  {c.uses === 0 && (
+                    <Button
+                      onPress={() => {
+                        setError(null);
+                        setConfirm({ row: c, action: "delete" });
+                      }}
+                      className={`${ui.buttonText} text-danger`}
+                    >
+                      {t("admin.discounts.delete")}
+                    </Button>
+                  )}
                 </div>
               )}
             </li>
@@ -117,9 +133,16 @@ export function DiscountCodesSheet({ codes }: { codes: DiscountCodeRow[] }) {
         <Modal className={ui.dialog}>
           <Dialog role="alertdialog" className="flex flex-col gap-4 outline-none">
             <Heading slot="title" className={ui.dialogTitle}>
-              {t("admin.discounts.disableTitle", { code: confirm?.code ?? "" })}
+              {confirm?.action === "delete"
+                ? t("admin.discounts.deleteTitle", { code: confirm.row.code })
+                : t("admin.discounts.disableTitle", { code: confirm?.row.code ?? "" })}
             </Heading>
-            <p className="leading-relaxed">{t("admin.discounts.disableBody")}</p>
+            <p className="leading-relaxed">{t(confirm?.action === "delete" ? "admin.discounts.deleteBody" : "admin.discounts.disableBody")}</p>
+            {error !== null && (
+              <p role="alert" className={ui.fieldError}>
+                {error}
+              </p>
+            )}
             <div className={ui.dialogActions}>
               <Button
                 onPress={() => {
@@ -137,12 +160,16 @@ export function DiscountCodesSheet({ codes }: { codes: DiscountCodeRow[] }) {
                   const target = confirm;
                   if (target === null) return;
                   startTransition(async () => {
-                    await disableDiscountCode(target.id);
-                    setConfirm(null);
+                    const result = target.action === "delete" ? await deleteDiscountCode(target.row.id) : await disableDiscountCode(target.row.id);
+                    if (result.ok) {
+                      setConfirm(null);
+                    } else {
+                      setError(t(`errors.${result.error}`));
+                    }
                   });
                 }}
               >
-                {t("admin.discounts.disable")}
+                {t(confirm?.action === "delete" ? "admin.discounts.delete" : "admin.discounts.disable")}
               </Button>
             </div>
           </Dialog>

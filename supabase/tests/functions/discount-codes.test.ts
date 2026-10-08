@@ -339,3 +339,47 @@ describe("aplicarea și plata cu cod (US2: FR-006–FR-012)", () => {
     expect((await quote(client, eventId, "ZZZZ-ZZZZ")).error?.message).toBe("RATE_LIMITED");
   });
 });
+
+describe("ștergerea unui cod (doar dacă n-a fost folosit)", () => {
+  async function codePayment(codeId: string, status: "open" | "paid" | "expired") {
+    const { eventId } = await awaitingEvent(`dc-del-${status}`);
+    const paymentId = await insertPayment({ eventId });
+    await sql(
+      `update public.payments set status = $3::public.payment_status, discount_code_id = $2, full_amount_minor = 29900,
+              discount_minor = 5000, amount_minor = 24900,
+              paid_at = case when $3 = 'paid' then now() end,
+              stripe_payment_intent_id = case when $3 = 'paid' then 'pi_del_' || id end
+        where id = $1`,
+      [paymentId, codeId, status],
+    );
+    return paymentId;
+  }
+
+  it("un cod nefolosit se șterge; plățile abandonate cu el pierd doar legătura", async () => {
+    const { client } = await adminClient({ aal2: true });
+    const code = await discountCode();
+    const abandoned = await codePayment(code.id, "expired");
+    expect((await client.rpc("delete_discount_code", { p_id: code.id })).error).toBeNull();
+    expect(await sql("select 1 from public.discount_codes where id = $1", [code.id])).toHaveLength(0);
+    const [payment] = await sql<{ discount_code_id: string | null; amount_minor: string }>(
+      "select discount_code_id, amount_minor from public.payments where id = $1",
+      [abandoned],
+    );
+    expect(payment).toEqual({ discount_code_id: null, amount_minor: "24900" });
+  });
+
+  it("un cod folosit sau rezervat nu se șterge; un organizator primește FORBIDDEN", async () => {
+    const { client } = await adminClient({ aal2: true });
+    const paid = await discountCode();
+    await codePayment(paid.id, "paid");
+    expect((await client.rpc("delete_discount_code", { p_id: paid.id })).error?.message).toBe("DISCOUNT_UNAVAILABLE");
+    const reserved = await discountCode();
+    await codePayment(reserved.id, "open");
+    expect((await client.rpc("delete_discount_code", { p_id: reserved.id })).error?.message).toBe("DISCOUNT_UNAVAILABLE");
+    expect(await sql("select 1 from public.discount_codes where id in ($1, $2)", [paid.id, reserved.id])).toHaveLength(2);
+
+    const { client: organizer } = await awaitingEvent("dc-del-forbidden");
+    const free = await discountCode();
+    expect((await organizer.rpc("delete_discount_code", { p_id: free.id })).error?.message).toBe("FORBIDDEN");
+  });
+});
