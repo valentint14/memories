@@ -76,7 +76,8 @@ export function PayActivationForm({ eventId, options }: { eventId: string; optio
             }}
             aria-invalid={tone === "error"}
             aria-describedby={`discount-${eventId}-status`}
-            className={`${ui.input} ${ui.data} min-w-0 flex-1 uppercase`}
+            // `w-0`: fără lățimea implicită a câmpului (~20 de caractere), care ar lărgi coloana pe telefon.
+            className={`${ui.input} ${ui.data} w-0 min-w-0 flex-1 uppercase`}
           />
           <button
             type="submit"

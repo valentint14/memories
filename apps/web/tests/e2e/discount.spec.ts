@@ -159,6 +159,9 @@ test("câmpul golit și „Aplică” readuc prețurile întregi (US2)", async (
   await panel.getByLabel("Cod de reducere").fill(code);
   await panel.getByRole("button", { name: "Aplică" }).click();
   await expect(panel.getByRole("button", { name: "Aplicat" })).toBeVisible();
+  // Rândul codului nu lărgește coloana: pe un telefon îngust, pagina nu se derulează lateral.
+  await page.setViewportSize({ width: 320, height: 800 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
   await panel.getByLabel("Cod de reducere").fill("");
   // Codul schimbat readuce butonul la „Aplică”.
   await panel.getByRole("button", { name: "Aplică" }).click();
