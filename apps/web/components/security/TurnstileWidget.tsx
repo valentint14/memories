@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface TurnstileApi {
   render(element: HTMLElement, options: Record<string, unknown>): string;
@@ -41,9 +41,14 @@ function loadScript(nonce: string): Promise<void> {
 /**
  * Widgetul Cloudflare Turnstile în modul „managed”: invizibil pentru majoritatea utilizatorilor;
  * scrie tokenul în câmpul ascuns `cf-turnstile-response` al formularului (research R3).
+ *
+ * Cât timp e invizibil, containerul nu ocupă loc (altfel rămâne un gol de ~70 px, plus distanțele
+ * formularului, între câmpuri și butoane). Apare doar când Cloudflare cere o interacțiune
+ * (`before-interactive-callback`) și dispare după ea (`after-interactive-callback`).
  */
 export function TurnstileWidget({ siteKey, nonce }: { siteKey: string; nonce: string }) {
   const container = useRef<HTMLDivElement>(null);
+  const [interactive, setInteractive] = useState(false);
 
   useEffect(() => {
     let widgetId: string | undefined;
@@ -58,6 +63,12 @@ export function TurnstileWidget({ siteKey, nonce }: { siteKey: string; nonce: st
           // Când apare, ocupă toată lățimea formularului (minimum 300 px), ca butoanele și câmpurile.
           size: "flexible",
           "response-field-name": "cf-turnstile-response",
+          "before-interactive-callback": () => {
+            setInteractive(true);
+          },
+          "after-interactive-callback": () => {
+            setInteractive(false);
+          },
         });
       })
       .catch(() => {
@@ -69,5 +80,6 @@ export function TurnstileWidget({ siteKey, nonce }: { siteKey: string; nonce: st
     };
   }, [siteKey, nonce]);
 
-  return <div ref={container} className="w-full" />;
+  // Invizibil: scos din fluxul formularului (fără înălțime, fără distanțele dintre rânduri).
+  return <div ref={container} className={interactive ? "w-full" : "pointer-events-none absolute h-0 w-full overflow-hidden"} />;
 }
