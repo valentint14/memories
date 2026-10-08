@@ -361,7 +361,7 @@ export const ro = {
   "home.intro": "Invitații tăi scanează un cod QR și încarcă pozele și filmările direct din telefon, fără cont și fără aplicație. Tu le vezi, le descarci și le ștergi dintr-un singur loc.",
   "home.formTitle": "Eveniment nou",
   "home.email": "Adresa de email",
-  "home.emailHint": "Îți trimitem pe email un cod de confirmare. Nu ai nevoie de parolă.",
+  "home.emailHint": "Primești pe email un cod, fără parolă.",
   "home.name": "Numele evenimentului",
   "home.date": "Data evenimentului",
   "home.acceptBefore": "Accept ",
