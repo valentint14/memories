@@ -101,10 +101,15 @@ export const ui = {
   /** Formularul unei foi: rândurile lui, apoi bara de acțiuni, la aceeași distanță. */
   sheetForm: "flex flex-1 flex-col gap-5",
 
-  overlay: "fixed inset-0 z-50 flex items-center justify-center bg-ink/60 p-4",
-  dialog: "w-full max-w-md rounded-xs border border-ink bg-paper-raised p-6 shadow-dialog",
+  /**
+   * Fundalul dialogurilor acoperă doar zona vizibilă (`--visual-viewport-height`, setată de
+   * `ModalOverlay`), nu tot ecranul: pe mobil, când apare tastatura, dialogul se recentrează deasupra
+   * ei în loc să rămână cu câmpul de text dedesubt. Dialogul nu depășește zona și se derulează.
+   */
+  overlay: "fixed top-0 left-0 z-50 flex h-(--visual-viewport-height) w-full items-center justify-center bg-ink/60 p-4",
+  dialog: "max-h-full w-full max-w-md overflow-y-auto rounded-xs border border-ink bg-paper-raised p-6 shadow-dialog",
   /** Dialog cu un formular pe două coloane (generarea codurilor de reducere). */
-  dialogWide: "w-full max-w-2xl rounded-xs border border-ink bg-paper-raised p-6 shadow-dialog",
+  dialogWide: "max-h-full w-full max-w-2xl overflow-y-auto rounded-xs border border-ink bg-paper-raised p-6 shadow-dialog",
   dialogTitle: "font-serif text-2xl leading-tight",
   dialogActions: "flex flex-wrap justify-end gap-3 border-t border-rule pt-4",
   /** Butoanele unui dialog al cărui conținut se încheie deja cu o linie (de ex. o listă încadrată). */

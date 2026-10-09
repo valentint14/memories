@@ -66,6 +66,15 @@ textarea:not([aria-invalid="true"]):not([data-invalid]):focus {
   border-color: var(--color-ink);
 }
 
+/*
+ * Când browserul derulează la câmpul focusat (de ex. la apariția tastaturii pe mobil), lasă loc
+ * deasupra și dedesubt, ca eticheta și mesajul de eroare să rămână vizibile.
+ */
+input,
+textarea {
+  scroll-margin-block: 6rem;
+}
+
 /* Fără bare de derulare vizibile; derularea merge în continuare cu rotița, touchpadul, atingerea și tastatura. */
 * {
   scrollbar-width: none;

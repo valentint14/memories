@@ -32,6 +32,9 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: PAPER,
+  // Pe Android, tastatura micșorează pagina (și `dvh`) în loc să se suprapună peste ea; iOS ignoră
+  // setarea, acolo dialogurile urmăresc zona vizibilă (`ui.overlay`).
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

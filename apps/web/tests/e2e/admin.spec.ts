@@ -126,3 +126,32 @@ test("ștergerea evenimentului cere numele și invalidează linkul (FR-006b)", a
   await page.goto(uploadUrl);
   await expect(page.getByText("Evenimentul nu a fost găsit")).toBeVisible();
 });
+
+test("pe mobil, dialogul cu câmp de text rămâne deasupra tastaturii", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "tastatura de pe ecran există doar pe mobil");
+  await loginAsNewAdmin(page, await createAdmin());
+  const name = uniqueName("Tastatură");
+  await createEvent(page, name);
+
+  await page.getByRole("button", { name: "Șterge evenimentul" }).click();
+  const dialog = page.getByRole("alertdialog");
+  const field = dialog.getByLabel("Tastează numele evenimentului");
+  await field.focus();
+
+  // Tastatura deschisă: zona vizibilă scade la ~300 px. Dialogul trebuie să încapă în ea (derulându-se),
+  // nu să rămână centrat pe tot ecranul, cu câmpul și butoanele sub tastatură.
+  const width = page.viewportSize()?.width ?? 390;
+  await page.setViewportSize({ width, height: 300 });
+  // Se derulează `Modal`, părintele dialogului; dialogul în sine are înălțimea întregului conținut.
+  const modal = dialog.locator("..");
+  await expect(async () => {
+    const box = await modal.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box?.y ?? -1).toBeGreaterThanOrEqual(0);
+    expect((box?.y ?? 0) + (box?.height ?? Infinity)).toBeLessThanOrEqual(300);
+  }).toPass();
+
+  await field.fill(name);
+  await dialog.getByRole("button", { name: "Șterge definitiv" }).click();
+  await expect(page).toHaveURL(/\/admin\/events$/);
+});

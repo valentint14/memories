@@ -170,7 +170,7 @@ export function DiscountGenerateForm() {
         }}
         className={ui.overlay}
       >
-        <Modal className={`${ui.dialogWide} flex max-h-[90dvh] flex-col`}>
+        <Modal className={`${ui.dialogWide} flex flex-col`}>
           <Dialog className="flex min-h-0 flex-col gap-5 outline-none">
             {({ close }) => (
               <>
