@@ -103,10 +103,11 @@ export const ui = {
 
   /**
    * Fundalul dialogurilor acoperă doar zona vizibilă (`--visual-viewport-height`, setată de
-   * `ModalOverlay`), nu tot ecranul: pe mobil, când apare tastatura, dialogul se recentrează deasupra
-   * ei în loc să rămână cu câmpul de text dedesubt. Dialogul nu depășește zona și se derulează.
+   * `ModalOverlay`), nu tot ecranul. Pe mobil dialogul stă sus, ca tastatura (care apare de jos) să
+   * nu acopere câmpurile de text; de la `sm` în sus e centrat. Dialogul nu depășește zona și se derulează.
    */
-  overlay: "fixed top-0 left-0 z-50 flex h-(--visual-viewport-height) w-full items-center justify-center bg-ink/60 p-4",
+  overlay:
+    "fixed top-0 left-0 z-50 flex h-(--visual-viewport-height) w-full items-start justify-center bg-ink/60 p-4 sm:items-center",
   dialog: "max-h-full w-full max-w-md overflow-y-auto rounded-xs border border-ink bg-paper-raised p-6 shadow-dialog",
   /** Dialog cu un formular pe două coloane (generarea codurilor de reducere). */
   dialogWide: "max-h-full w-full max-w-2xl overflow-y-auto rounded-xs border border-ink bg-paper-raised p-6 shadow-dialog",

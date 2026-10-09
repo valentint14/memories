@@ -136,18 +136,21 @@ test("pe mobil, dialogul cu câmp de text rămâne deasupra tastaturii", async (
   await page.getByRole("button", { name: "Șterge evenimentul" }).click();
   const dialog = page.getByRole("alertdialog");
   const field = dialog.getByLabel("Tastează numele evenimentului");
-  await field.focus();
-
-  // Tastatura deschisă: zona vizibilă scade la ~300 px. Dialogul trebuie să încapă în ea (derulându-se),
-  // nu să rămână centrat pe tot ecranul, cu câmpul și butoanele sub tastatură.
-  const width = page.viewportSize()?.width ?? 390;
-  await page.setViewportSize({ width, height: 300 });
   // Se derulează `Modal`, părintele dialogului; dialogul în sine are înălțimea întregului conținut.
   const modal = dialog.locator("..");
+  await field.focus();
+  await expect.poll(async () => (await modal.boundingBox())?.y).toBeLessThanOrEqual(16);
+
+  // Pe mobil dialogul stă în partea de sus. Cu tastatura deschisă (zona vizibilă ~300 px) rămâne sus
+  // și încape în zonă (derulându-se), nu ajunge cu câmpul și butoanele sub tastatură.
+  const width = page.viewportSize()?.width ?? 390;
+  await page.setViewportSize({ width, height: 300 });
   await expect(async () => {
     const box = await modal.boundingBox();
     expect(box).not.toBeNull();
+    // Sus, sub marginea fundalului (p-4), nu centrat.
     expect(box?.y ?? -1).toBeGreaterThanOrEqual(0);
+    expect(box?.y ?? Infinity).toBeLessThanOrEqual(16);
     expect((box?.y ?? 0) + (box?.height ?? Infinity)).toBeLessThanOrEqual(300);
   }).toPass();
 
