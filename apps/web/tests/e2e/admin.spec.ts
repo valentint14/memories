@@ -126,3 +126,35 @@ test("ștergerea evenimentului cere numele și invalidează linkul (FR-006b)", a
   await page.goto(uploadUrl);
   await expect(page.getByText("Evenimentul nu a fost găsit")).toBeVisible();
 });
+
+test("pe mobil, dialogul cu câmp de text rămâne deasupra tastaturii", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "tastatura de pe ecran există doar pe mobil");
+  await loginAsNewAdmin(page, await createAdmin());
+  const name = uniqueName("Tastatură");
+  await createEvent(page, name);
+
+  await page.getByRole("button", { name: "Șterge evenimentul" }).click();
+  const dialog = page.getByRole("alertdialog");
+  const field = dialog.getByLabel("Tastează numele evenimentului");
+  // Se derulează `Modal`, părintele dialogului; dialogul în sine are înălțimea întregului conținut.
+  const modal = dialog.locator("..");
+  await field.focus();
+  await expect.poll(async () => (await modal.boundingBox())?.y).toBeLessThanOrEqual(16);
+
+  // Pe mobil dialogul stă în partea de sus. Cu tastatura deschisă (zona vizibilă ~300 px) rămâne sus
+  // și încape în zonă (derulându-se), nu ajunge cu câmpul și butoanele sub tastatură.
+  const width = page.viewportSize()?.width ?? 390;
+  await page.setViewportSize({ width, height: 300 });
+  await expect(async () => {
+    const box = await modal.boundingBox();
+    expect(box).not.toBeNull();
+    // Sus, sub marginea fundalului (p-4), nu centrat.
+    expect(box?.y ?? -1).toBeGreaterThanOrEqual(0);
+    expect(box?.y ?? Infinity).toBeLessThanOrEqual(16);
+    expect((box?.y ?? 0) + (box?.height ?? Infinity)).toBeLessThanOrEqual(300);
+  }).toPass();
+
+  await field.fill(name);
+  await dialog.getByRole("button", { name: "Șterge definitiv" }).click();
+  await expect(page).toHaveURL(/\/admin\/events$/);
+});

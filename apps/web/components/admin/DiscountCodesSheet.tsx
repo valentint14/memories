@@ -181,7 +181,7 @@ export function DiscountCodesSheet({ codes }: { codes: DiscountCodeRow[] }) {
         }}
         className={ui.overlay}
       >
-        <Modal className={`${ui.dialog} flex max-h-[90dvh] flex-col`}>
+        <Modal className={`${ui.dialog} flex flex-col`}>
           <Dialog className="flex min-h-0 flex-col gap-5 overflow-y-auto outline-none">
             {({ close }) =>
               selected !== null && (
