@@ -17,13 +17,13 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
   }, [error]);
 
   return (
-    <div className="min-h-dvh">
+    <div className="flex-1">
       <div className="border-b border-rule bg-paper">
         <div className="mx-auto flex h-16 max-w-6xl items-center px-4 sm:px-8">
           <Wordmark trim />
         </div>
       </div>
-      <main className={ui.pageColumn}>
+      <main id="continut" className={ui.pageColumn}>
         <header className="flex flex-col gap-3">
           <h1 className={ui.pageTitle}>{t("error.title")}</h1>
           <p role="alert" className="max-w-2xl leading-relaxed text-ink-muted">

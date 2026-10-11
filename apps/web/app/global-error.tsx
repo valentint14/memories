@@ -18,7 +18,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
   return (
     <html lang="ro">
       <body className="min-h-dvh bg-paper font-sans text-ink antialiased">
-        <main className={ui.pageColumn}>
+        <main id="continut" className={ui.pageColumn}>
           <header className="flex flex-col gap-3">
             <h1 className={ui.pageTitle}>{t("error.title")}</h1>
             <p role="alert" className="max-w-2xl leading-relaxed text-ink-muted">

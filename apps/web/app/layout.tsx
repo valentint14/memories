@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans, Newsreader } from "next/font/google";
 import type { ReactNode } from "react";
 import { HydrationMarker } from "@/components/HydrationMarker";
+import { SiteFooter } from "@/components/nav/SiteFooter";
+import { t } from "@/lib/i18n";
 import { PAPER } from "@/lib/ui";
 import "./globals.css";
 
@@ -50,8 +52,15 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ro" className={`${serif.variable} ${sans.variable} ${mono.variable}`}>
-      <body className="min-h-dvh bg-paper font-sans text-ink antialiased">
+      <body className="flex min-h-dvh flex-col bg-paper font-sans text-ink antialiased">
+        <a
+          href="#continut"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-xs focus:bg-ink focus:px-4 focus:py-3 focus:font-semibold focus:text-paper-raised"
+        >
+          {t("nav.skipToContent")}
+        </a>
         {children}
+        <SiteFooter />
         <HydrationMarker />
       </body>
     </html>

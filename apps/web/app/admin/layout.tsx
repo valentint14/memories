@@ -11,9 +11,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   if (access === "needs-mfa") redirect("/auth/mfa");
 
   return (
-    <div className="min-h-dvh">
+    <div className="flex-1">
       <SiteHeader context="admin" />
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-8 sm:py-10">{children}</main>
+      <main id="continut" className="mx-auto max-w-6xl px-4 py-8 sm:px-8 sm:py-10">{children}</main>
     </div>
   );
 }

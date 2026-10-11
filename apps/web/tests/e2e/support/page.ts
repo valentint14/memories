@@ -25,3 +25,6 @@ export async function fillDate(scope: Page | Locator, label: string, value: stri
   await scope.getByRole("group", { name: label }).getByRole("spinbutton").first().click();
   await ("keyboard" in scope ? scope : scope.page()).keyboard.type(digits);
 }
+
+/** Bifa de la plată: serviciul începe imediat, fără drept de retragere (activare sau prelungire). */
+export const WITHDRAWAL_WAIVER = /înceapă imediat|se aplice imediat/;

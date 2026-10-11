@@ -20,6 +20,8 @@ const startSchema = z.object({
   optionId: z.uuid(),
   expectedAmountMinor: z.coerce.number().int().positive(),
   discountCode: z.string().trim().max(20).optional(),
+  // Începerea imediată a serviciului și renunțarea la retragere: fără bifă, plata nu pornește.
+  withdrawalWaiver: z.literal("on"),
 });
 
 /** „K7QM3XPA” → „K7QM-3XPA” (forma afișată a unui cod de reducere). */
@@ -100,6 +102,16 @@ export async function startPaymentForm(_prev: FormState, formData: FormData): Pr
     throwIfDbError(error);
     const prepared = data?.[0];
     if (!prepared) throw new ActionError("INTERNAL");
+    // Dovada bifei, păstrată pe plată (și când se reia o sesiune deschisă); prima bifă rămâne.
+    throwIfDbError(
+      (
+        await adminSupabase()
+          .from("payments")
+          .update({ withdrawal_waived_at: new Date().toISOString() })
+          .eq("id", prepared.payment_id)
+          .is("withdrawal_waived_at", null)
+      ).error,
+    );
     // Tipurile generate pentru `returns table` nu marchează coloanele nule.
     const reuseUrl = prepared.reuse_url as string | null;
     const replacedSessionId = prepared.replaced_session_id as string | null;

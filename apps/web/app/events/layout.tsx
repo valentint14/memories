@@ -14,9 +14,9 @@ export default async function EventsLayout({ children }: { children: ReactNode }
   const { data: isAdminUser } = await supabase.rpc("is_platform_admin_user");
 
   return (
-    <div className="min-h-dvh">
+    <div className="flex-1">
       <SiteHeader context="organizer" email={data.user.email ?? null} />
-      <main className={ui.pageColumn}>
+      <main id="continut" className={ui.pageColumn}>
         {isAdminUser === true && (
           <p role="status" className={ui.caution}>
             {t("organizer.adminSession", { email: data.user.email ?? "" })}

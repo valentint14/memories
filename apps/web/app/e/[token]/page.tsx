@@ -30,7 +30,7 @@ export default async function GuestUploadPage({ params }: { params: Promise<{ to
 
   if (event.state === "not_found") {
     return (
-      <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-3 p-6">
+      <main id="continut" className="mx-auto flex w-full flex-1 max-w-md flex-col justify-center gap-3 p-6">
         <h1 className={ui.sectionTitle}>{t("errors.EVENT_NOT_FOUND")}</h1>
       </main>
     );
@@ -48,7 +48,7 @@ export default async function GuestUploadPage({ params }: { params: Promise<{ to
             : null;
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex flex-1 flex-col">
       {/* Aceeași bară ca în restul aplicației, fără linkuri: invitatul nu are cont. */}
       <div className="border-b border-rule bg-paper">
         <div className="mx-auto flex h-16 max-w-md items-center px-4">
@@ -56,7 +56,7 @@ export default async function GuestUploadPage({ params }: { params: Promise<{ to
         </div>
       </div>
 
-      <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 pt-8">
+      <main id="continut" className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 pt-8">
         <header className="flex flex-col items-center gap-3 text-center">
           {event.eventDate !== null && <p className={`${ui.kicker} text-accent`}>{formatDate(event.eventDate)}</p>}
           <h1 className={ui.pageTitle}>{event.name}</h1>

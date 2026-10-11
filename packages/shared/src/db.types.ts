@@ -753,6 +753,7 @@ export type Database = {
           stripe_session_id: string | null
           surcharge_minor: number
           updated_at: string
+          withdrawal_waived_at: string | null
         }
         Insert: {
           amount_minor: number
@@ -790,6 +791,7 @@ export type Database = {
           stripe_session_id?: string | null
           surcharge_minor: number
           updated_at?: string
+          withdrawal_waived_at?: string | null
         }
         Update: {
           amount_minor?: number
@@ -827,6 +829,7 @@ export type Database = {
           stripe_session_id?: string | null
           surcharge_minor?: number
           updated_at?: string
+          withdrawal_waived_at?: string | null
         }
         Relationships: [
           {

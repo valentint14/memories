@@ -1,7 +1,7 @@
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 import { loginAsNewAdmin, loginWithMagicLink } from "./support/auth";
 import { createAdmin, createEvent, createOrganizer, serviceClient } from "./support/db";
-import { gotoHydrated, uniqueName } from "./support/page";
+import { gotoHydrated, uniqueName, WITHDRAWAL_WAIVER } from "./support/page";
 import { payFakeSession, sendWebhook, sessionIdFromCheckoutUrl, stubCheckoutPage } from "./support/stripe";
 
 // US8 — organizatorul alege cât timp se păstrează fișierele (quickstart 16, 18–21).
@@ -53,6 +53,7 @@ test("organizatorul plătește prelungirea și vede noul preț final după plat�
   await expect(dialog).toContainText("398,00");
   await expect(dialog).toContainText("99,00");
   await stubCheckoutPage(page);
+  await dialog.getByLabel(WITHDRAWAL_WAIVER).check();
   await dialog.getByRole("button", { name: "Plătește 99,00 RON" }).click();
   const sessionId = await sessionIdFromCheckoutUrl(page);
 
@@ -88,9 +89,11 @@ test("dacă prețul se schimbă între timp, dialogul arată prețul nou înaint
 
   await setSurcharge(6, 5900);
   await stubCheckoutPage(page);
+  await dialog.getByLabel(WITHDRAWAL_WAIVER).check();
   await dialog.getByRole("button", { name: "Plătește 49,00 RON" }).click();
   await expect(dialog.getByText("Prețul s-a schimbat")).toBeVisible();
   await expect(dialog).toContainText("358,00");
+  await dialog.getByLabel(WITHDRAWAL_WAIVER).check();
   await dialog.getByRole("button", { name: "Plătește 59,00 RON" }).click();
   await sessionIdFromCheckoutUrl(page);
 });
