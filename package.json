@@ -21,7 +21,7 @@
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "@supabase/supabase-js": "2.117.1",
-    "@types/node": "24.13.6",
+    "@types/node": "26.6.4",
     "@types/pg": "8.23.1",
     "eslint": "10.11.0",
     "globals": "17.12.0",
