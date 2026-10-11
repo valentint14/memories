@@ -18,7 +18,10 @@ Toate cele 5 puncte sunt rezolvate pe branch-ul `feat/lista-cerinte`:
 
 - **2 (favicon):** `app/icon.png` (512 px) și `app/apple-icon.png` (180 px), litera „M” în Newsreader, paper pe cerneală.
 - **4 (404 și erori):** `app/not-found.tsx`, `app/error.tsx` și `app/global-error.tsx`, în română, cu mesajele în `ro.ts`; erorile se raportează în Sentry.
-- **6 (încărcare):** `loading.tsx` cu `PageSkeleton`, în grupurile de rute `app/events/(liste)` și `app/admin/(liste)`. Paginile `events/[eventId]` și `admin/events/[eventId]` rămân în afara grupurilor, deoarece un `loading.tsx` ar trimite răspunsul înainte de `notFound()` și ar schimba codul 404 în 200 (testul din `gallery.spec.ts`, SC-012). URL-urile nu s-au schimbat.
+- **6 (încărcare):** `loading.tsx` cu `PageSkeleton`, doar pe cele două liste de citire: `events` (organizator) și `admin/events`, în grupurile de rute `(liste)`. Alte pagini nu l-au primit, din două motive:
+  - un `loading.tsx` trimite răspunsul înainte ca pagina să se rezolve, deci `notFound()` ar da 200 în loc de 404 (`events/[eventId]`, SC-012 din `gallery.spec.ts`);
+  - conținutul din spatele lui se hidratează după restul paginii, iar un formular completat înainte își pierde valorile: testul `admin.spec.ts:63` a picat pe iPhone la `admin/events/new`. Paginile cu formulare (`new`, retenție, coduri de reducere, pachet) rămân fără schelet.
+  URL-urile nu s-au schimbat.
 - **10 (imagine de partajare):** `app/opengraph-image.png`, `metadataBase` din `APP_URL`, `openGraph` și `twitter` în layout; pagina `/e/[token]` are titlu și descriere generice și repetă imaginea explicită (altfel `openGraph` din pagină o înlocuiește pe cea din layout).
 - **14 (hover):** `lib/ui.ts`, doar pe butoane active (`not-disabled:not-data-disabled:hover:`), cu tokeni existenți.
 
