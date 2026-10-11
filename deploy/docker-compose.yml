@@ -27,7 +27,8 @@ services:
     stop_grace_period: 10m
 
   cloudflared:
-    image: cloudflare/cloudflared:latest
+    # Versiune fixată (Dependabot propune actualizările); `latest` ar schimba comportamentul fără ca cineva să știe.
+    image: cloudflare/cloudflared:2026.10.0
     command: tunnel --no-autoupdate run
     environment:
       TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?lipsește CLOUDFLARE_TUNNEL_TOKEN în .env}
