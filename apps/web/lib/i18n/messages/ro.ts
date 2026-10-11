@@ -627,6 +627,20 @@ export const ro = {
     other: "{count} de fișiere nu sunt incluse (în procesare sau neprocesabile).",
   },
   "plural.filesFailed": { one: "{count} fișier nu s-a încărcat", few: "{count} fișiere nu s-au încărcat", other: "{count} de fișiere nu s-au încărcat" },
+
+  // Pagina 404, erorile neprevăzute, încărcarea paginilor
+  "notFound.title": "Pagina nu a fost găsită",
+  "notFound.body": "Linkul poate fi greșit sau pagina nu mai există. Verifică adresa sau întoarce-te la prima pagină.",
+  "notFound.home": "Prima pagină",
+  "error.title": "Ceva nu a mers bine",
+  "error.body": "Nu am putut încărca pagina. Încearcă din nou; dacă problema continuă, reîncearcă puțin mai târziu.",
+  "error.retry": "Încearcă din nou",
+  "error.home": "Prima pagină",
+  "loading.label": "Se încarcă…",
+
+  // Previzualizarea linkurilor trimise în mesagerie (Open Graph)
+  "share.guestTitle": "Încarcă poze la eveniment",
+  "share.guestDescription": "Adaugă pozele și filmările tale de la eveniment. Nu ai nevoie de cont sau de aplicație.",
 } as const satisfies Record<string, string | PluralMessage>;
 
 export type Messages = { [K in keyof typeof ro]: (typeof ro)[K] extends PluralMessage ? PluralMessage : string };

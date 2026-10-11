@@ -22,11 +22,21 @@ const mono = IBM_Plex_Mono({
   preload: false,
 });
 
-export const metadata: Metadata = {
-  title: { default: "Memories", template: "%s · Memories" },
-  description: "Pozele și filmările invitaților, într-un singur loc.",
-  robots: { index: false, follow: false },
-};
+const DESCRIPTION = "Pozele și filmările invitaților, într-un singur loc.";
+
+// `metadataBase` face absolute adresele din etichetele Open Graph (imaginea din `opengraph-image.png`),
+// altfel previzualizarea din mesagerie nu o găsește. Lipsa `APP_URL` (de ex. la build) nu oprește aplicația.
+export function generateMetadata(): Metadata {
+  const appUrl = process.env.APP_URL;
+  return {
+    metadataBase: appUrl ? new URL(appUrl) : undefined,
+    title: { default: "Memories", template: "%s · Memories" },
+    description: DESCRIPTION,
+    robots: { index: false, follow: false },
+    openGraph: { type: "website", siteName: "Memories", locale: "ro_RO", description: DESCRIPTION },
+    twitter: { card: "summary_large_image" },
+  };
+}
 
 export const viewport: Viewport = {
   width: "device-width",

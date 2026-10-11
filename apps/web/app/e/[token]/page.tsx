@@ -8,7 +8,16 @@ import { guestSessionName, resolveGuestEvent } from "@/lib/guest/event";
 import { formatDate, formatDateTime, t } from "@/lib/i18n";
 import { ui } from "@/lib/ui";
 
-export const metadata: Metadata = { title: "Încarcă poze", referrer: "no-referrer" };
+// Previzualizarea linkului în mesagerie e generică: nu include numele evenimentului sau al
+// organizatorului, fiindcă linkul e un token secret trimis mai departe de invitați. `openGraph` de
+// aici înlocuiește pe cel din layout, deci imaginea generică se repetă explicit.
+const SHARE_IMAGE = { url: "/opengraph-image.png", width: 1200, height: 630, type: "image/png" };
+export const metadata: Metadata = {
+  title: "Încarcă poze",
+  referrer: "no-referrer",
+  openGraph: { title: t("share.guestTitle"), description: t("share.guestDescription"), images: [SHARE_IMAGE] },
+  twitter: { card: "summary_large_image", title: t("share.guestTitle"), description: t("share.guestDescription"), images: [SHARE_IMAGE.url] },
+};
 
 /**
  * Pagina invitatului: fără cont, fără instalare, direct din codul QR (FR-011, FR-012, FR-020), în
