@@ -45,11 +45,11 @@ export default async function HomePage() {
   const maxDate = `${String(Number(today.slice(0, 4)) + 2)}${today.slice(4)}`;
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex flex-1 flex-col">
       <SiteHeader context="public" email={signedInEmail} />
 
       {/* O singură coloană: prezentarea, formularul ca bandă pe toată lățimea, apoi pașii. */}
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-10 sm:px-8 sm:py-14">
+      <main id="continut" className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-10 sm:px-8 sm:py-14">
         <div className="flex flex-col gap-6">
           <p className={`${ui.kicker} text-accent`}>{t("home.title")}</p>
           <h1 className="font-serif text-5xl leading-[1.03] tracking-tight text-balance sm:text-6xl lg:text-7xl">

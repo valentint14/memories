@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { headingId } from "./heading-id";
 
 /**
  * Randare Markdown minimală pentru documentele legale din repository (titluri, paragrafe, liste,
@@ -16,7 +17,7 @@ export function renderMarkdown(source: string): ReactNode[] {
     const key = `b${String(index)}`;
     const lines = block.split("\n");
     const first = lines[0] ?? "";
-    if (first.startsWith("## ")) return <h2 key={key} className="mt-6 font-serif text-2xl leading-tight">{inline(first.slice(3), key)}</h2>;
+    if (first.startsWith("## ")) return <h2 key={key} id={headingId(first.slice(3))} className="mt-6 scroll-mt-24 font-serif text-2xl leading-tight">{inline(first.slice(3), key)}</h2>;
     if (first.startsWith("# ")) return <h1 key={key} className="font-serif text-4xl leading-[1.05] tracking-tight sm:text-5xl">{inline(first.slice(2), key)}</h1>;
     if (lines.every((l) => l.startsWith("> "))) {
       return (

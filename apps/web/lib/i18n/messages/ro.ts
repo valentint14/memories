@@ -379,7 +379,7 @@ export const ro = {
   "home.step1": "Creezi evenimentul și descarci codul QR pentru mese.",
   "home.step2": "Invitații scanează codul și încarcă din browser. Fără cont, fără instalare.",
   "home.step3": "Tu vezi totul pe măsură ce vine, descarci originalele și ștergi ce nu vrei.",
-  "home.footnote": "Datele sunt găzduite în Uniunea Europeană. Fișierele se șterg automat la sfârșitul perioadei de păstrare alese.",
+  "home.footnote": "Fișierele sunt găzduite în Uniunea Europeană și se șterg automat la sfârșitul perioadei de păstrare alese.",
   "code.title": "Verifică-ți emailul",
   "code.intro": "Dacă adresa poate primi un cod, ți-am trimis un email cu un cod de 6 cifre și un link. Codul este valabil 15 minute.",
   "code.otherDevice": "Poți introduce codul aici, chiar dacă ai deschis emailul pe alt dispozitiv, sau poți apăsa pe linkul din email.",
@@ -479,7 +479,7 @@ export const ro = {
   "organizer.new.nextSheet": "Ce urmează",
   "organizer.new.step1": "Evenimentul apare în „Evenimentele mele”, în așteptarea activării.",
   "organizer.new.step2": "Descarci și tipărești codul QR pentru mese; rămâne același și după activare.",
-  "organizer.new.step3": "Trimiți o cerere de activare: administratorul te contactează pentru plată și activează evenimentul. Din acel moment, invitații pot încărca fișiere.",
+  "organizer.new.step3": "Plătești online pachetul complet, pe pagina securizată Stripe. Din momentul confirmării plății, invitații pot încărca fișiere.",
   "organizer.newIntro": "Evenimentul se creează direct în contul tău, fără email de confirmare. Invitații vor putea încărca fișiere după activarea pachetului complet.",
   "organizer.purgeOn": "Fișierele se șterg automat pe {date}.",
   "organizer.expired": "Expirat",
@@ -584,7 +584,7 @@ export const ro = {
   "guest.privacyWho": "Pozele și filmările pe care le încarci sunt văzute doar de organizatorul evenimentului. Ceilalți invitați nu le pot vedea. Numele este opțional.",
   "guest.privacyLocation": "Eliminăm automat din fișiere locația (coordonatele GPS) înainte ca organizatorul să le vadă.",
   "guest.privacyRetention": "Fișierele se șterg automat pe {date}, dacă organizatorul nu prelungește păstrarea. După ștergere, copiile de siguranță dispar în cel mult 7 zile.",
-  "guest.privacyProcessors": "Datele sunt găzduite în Uniunea Europeană, la furnizori cu acorduri de prelucrare a datelor (Supabase, Vercel, Resend, Sentry).",
+  "guest.privacyProcessors": "Fișierele sunt găzduite în Uniunea Europeană, la furnizori cu acorduri de prelucrare a datelor (Supabase, Oracle Cloud, Cloudflare, Sentry). Detalii găsești în politica de confidențialitate, din subsolul paginii.",
 
   // Upload
   "upload.limitReached": "Ai atins limita de {limit} fișiere pentru acest eveniment.",
@@ -627,6 +627,39 @@ export const ro = {
     other: "{count} de fișiere nu sunt incluse (în procesare sau neprocesabile).",
   },
   "plural.filesFailed": { one: "{count} fișier nu s-a încărcat", few: "{count} fișiere nu s-au încărcat", other: "{count} de fișiere nu s-au încărcat" },
+
+  // Pagina 404, erorile neprevăzute, încărcarea paginilor
+  "notFound.title": "Pagina nu a fost găsită",
+  "notFound.body": "Linkul poate fi greșit sau pagina nu mai există. Verifică adresa sau întoarce-te la prima pagină.",
+  "notFound.home": "Prima pagină",
+  "error.title": "Ceva nu a mers bine",
+  "error.body": "Nu am putut încărca pagina. Încearcă din nou; dacă problema continuă, reîncearcă puțin mai târziu.",
+  "error.retry": "Încearcă din nou",
+  "error.home": "Prima pagină",
+  "loading.label": "Se încarcă…",
+
+  // Plata: începerea imediată a serviciului și renunțarea la dreptul de retragere
+  "payment.withdrawalWaiver": "Cer ca serviciul să înceapă imediat după plată și înțeleg că, odată ce evenimentul este activat, pierd dreptul de retragere de 14 zile.",
+  "payment.withdrawalWaiverRetention": "Cer ca prelungirea să se aplice imediat după plată și înțeleg că, odată aplicată, pierd dreptul de retragere de 14 zile pentru această plată.",
+  "payment.withdrawalLink": "Retragere și rambursări",
+
+  // Subsol, datele prestatorului, „Sari la conținut”
+  "footer.label": "Informații legale și de contact",
+  "footer.terms": "Termeni și condiții",
+  "footer.privacy": "Politica de confidențialitate",
+  "footer.withdrawal": "Retragere și rambursări",
+  "footer.contact": "Contact",
+  "business.label": "Prestatorul serviciului",
+  "business.taxId": "CUI",
+  "business.registrationNo": "Nr. de înregistrare",
+  "business.address": "Sediul",
+  "business.email": "Email",
+  "business.phone": "Telefon",
+  "nav.skipToContent": "Sari la conținut",
+
+  // Previzualizarea linkurilor trimise în mesagerie (Open Graph)
+  "share.guestTitle": "Încarcă poze la eveniment",
+  "share.guestDescription": "Adaugă pozele și filmările tale de la eveniment. Nu ai nevoie de cont sau de aplicație.",
 } as const satisfies Record<string, string | PluralMessage>;
 
 export type Messages = { [K in keyof typeof ro]: (typeof ro)[K] extends PluralMessage ? PluralMessage : string };

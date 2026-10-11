@@ -8,9 +8,9 @@ import { SiteHeader } from "../nav/SiteHeader";
  */
 export function AuthPage({ title, intro, children }: { title: string; intro?: ReactNode; children: ReactNode }) {
   return (
-    <div className="min-h-dvh">
+    <div className="flex-1">
       <SiteHeader context="public" />
-      <main className={ui.pageColumn}>
+      <main id="continut" className={ui.pageColumn}>
         <header className="flex flex-col gap-3">
           <h1 className={ui.pageTitle}>{title}</h1>
           {intro}

@@ -7,6 +7,7 @@ import { formatDate, formatMoney, t, tp } from "@/lib/i18n";
 import type { ActivationOption } from "@/lib/organizer/activation";
 import { ui } from "@/lib/ui";
 import { SheetActions } from "../ui/SheetActions";
+import { WithdrawalWaiver } from "../ui/WithdrawalWaiver";
 import { CheckIcon, CloseIcon } from "../ui/icons";
 
 /**
@@ -97,6 +98,8 @@ export function PayActivationForm({ eventId, options }: { eventId: string; optio
           {applied !== null && <p role="status">{t("activation.discount.applied", { code: applied.code, amount: formatMoney(discountMinor) })}</p>}
         </div>
       </div>
+
+      <WithdrawalWaiver id={`waiver-${eventId}`} label="payment.withdrawalWaiver" />
 
       <SheetActions
         status={

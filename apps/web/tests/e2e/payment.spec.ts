@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { loginAsNewAdmin, loginWithMagicLink } from "./support/auth";
 import { createAdmin, createOrganizer, serviceClient } from "./support/db";
-import { fillDate, gotoHydrated, uniqueName, waitForHydration } from "./support/page";
+import { fillDate, gotoHydrated, uniqueName, waitForHydration, WITHDRAWAL_WAIVER } from "./support/page";
 import { futureDate } from "./support/self-service";
 import { latestPayment, payFakeSession, sendWebhook, sessionIdFromCheckoutUrl, stubCheckoutPage } from "./support/stripe";
 
@@ -37,6 +37,7 @@ test("plata cu opțiunea inclusă activează evenimentul prin webhook", async ({
   expect(accessibility.violations.map((v) => v.id)).toEqual([]);
 
   await stubCheckoutPage(page);
+  await panel.getByLabel(WITHDRAWAL_WAIVER).check();
   await panel.getByRole("button", { name: "Plătește și activează" }).click();
   const sessionId = await sessionIdFromCheckoutUrl(page);
 
@@ -63,6 +64,7 @@ test("o perioadă mai lungă se plătește integral; la întoarcere, evenimentul
   await panel.getByRole("radio", { name: /^12 luni/ }).check();
 
   await stubCheckoutPage(page);
+  await panel.getByLabel(WITHDRAWAL_WAIVER).check();
   await panel.getByRole("button", { name: "Plătește și activează" }).click();
   const sessionId = await sessionIdFromCheckoutUrl(page);
   expect((await latestPayment(eventId)).amount_minor).toBe(await priceOf(12));
@@ -80,6 +82,7 @@ test("anularea, expirarea și webhook-urile repetate lasă evenimentul în aște
   const eventId = await newAwaitingEvent(page);
   const panel = page.getByRole("region", { name: "Activarea pachetului complet" });
   await stubCheckoutPage(page);
+  await panel.getByLabel(WITHDRAWAL_WAIVER).check();
   await panel.getByRole("button", { name: "Plătește și activează" }).click();
   const sessionId = await sessionIdFromCheckoutUrl(page);
 
@@ -96,6 +99,7 @@ test("anularea, expirarea și webhook-urile repetate lasă evenimentul în aște
   expect((await latestPayment(eventId)).status).toBe("expired");
 
   // O nouă încercare pornește o sesiune nouă.
+  await panel.getByLabel(WITHDRAWAL_WAIVER).check();
   await panel.getByRole("button", { name: "Plătește și activează" }).click();
   const second = await sessionIdFromCheckoutUrl(page);
   expect(second).not.toBe(sessionId);
@@ -107,6 +111,7 @@ test("anularea, expirarea și webhook-urile repetate lasă evenimentul în aște
 test("după plată, fișa adminului arată foaia „Plăți” cu suma, starea și facturarea", async ({ page, browser }) => {
   const eventId = await newAwaitingEvent(page);
   await stubCheckoutPage(page);
+  await page.getByLabel(WITHDRAWAL_WAIVER).check();
   await page.getByRole("button", { name: "Plătește și activează" }).click();
   const sessionId = await sessionIdFromCheckoutUrl(page);
   const session = await payFakeSession(sessionId);

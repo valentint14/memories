@@ -2,6 +2,7 @@ import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { publicEnv } from "../env";
+import { sessionCookieOptions } from "./cookie-options";
 import type { Database, TypedClient } from "./types";
 
 /** Client cu sesiunea utilizatorului curent (RLS se aplică). */
@@ -12,7 +13,7 @@ export async function serverSupabase(): Promise<TypedClient> {
       getAll: () => cookieStore.getAll(),
       setAll: (toSet) => {
         try {
-          for (const { name, value, options } of toSet) cookieStore.set(name, value, options);
+          for (const { name, value, options } of toSet) cookieStore.set(name, value, sessionCookieOptions(options));
         } catch {
           // Apel din Server Component: proxy.ts reîmprospătează sesiunea.
         }

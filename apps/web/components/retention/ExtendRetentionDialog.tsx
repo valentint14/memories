@@ -4,6 +4,7 @@ import { Button, Dialog, Heading, Modal, ModalOverlay } from "react-aria-compone
 import { formatDateTime, formatMoney, t, tp } from "@/lib/i18n";
 import type { RetentionOptionQuote } from "@/lib/organizer/retention";
 import { ui } from "@/lib/ui";
+import { WithdrawalWaiver } from "../ui/WithdrawalWaiver";
 
 /**
  * Revizuirea prelungirii înainte de plată (FR-041; 003: FR-020, FR-022): prețul final nou,
@@ -66,17 +67,20 @@ export function ExtendRetentionDialog({
               {error}
             </p>
           )}
-          <form action={action} className={ui.dialogActions}>
+          <form action={action} className="flex flex-col gap-4">
             <input type="hidden" name="eventId" value={eventId} />
             <input type="hidden" name="purpose" value="retention_extension" />
             <input type="hidden" name="optionId" value={option.optionId} />
             <input type="hidden" name={`amount_${option.optionId}`} value={difference} />
-            <Button onPress={onCancel} isDisabled={pending} className={ui.buttonSecondary}>
-              {t("common.cancel")}
-            </Button>
-            <Button type="submit" isDisabled={pending} className={ui.buttonPrimary}>
-              {t("retention.pay", { price: formatMoney(difference) })}
-            </Button>
+            <WithdrawalWaiver id={`waiver-retention-${eventId}`} label="payment.withdrawalWaiverRetention" />
+            <div className={ui.dialogActions}>
+              <Button onPress={onCancel} isDisabled={pending} className={ui.buttonSecondary}>
+                {t("common.cancel")}
+              </Button>
+              <Button type="submit" isDisabled={pending} className={ui.buttonPrimary}>
+                {t("retention.pay", { price: formatMoney(difference) })}
+              </Button>
+            </div>
           </form>
         </Dialog>
       </Modal>

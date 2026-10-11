@@ -8,7 +8,16 @@ import { guestSessionName, resolveGuestEvent } from "@/lib/guest/event";
 import { formatDate, formatDateTime, t } from "@/lib/i18n";
 import { ui } from "@/lib/ui";
 
-export const metadata: Metadata = { title: "Încarcă poze", referrer: "no-referrer" };
+// Previzualizarea linkului în mesagerie e generică: nu include numele evenimentului sau al
+// organizatorului, fiindcă linkul e un token secret trimis mai departe de invitați. `openGraph` de
+// aici înlocuiește pe cel din layout, deci imaginea generică se repetă explicit.
+const SHARE_IMAGE = { url: "/opengraph-image.png", width: 1200, height: 630, type: "image/png" };
+export const metadata: Metadata = {
+  title: "Încarcă poze",
+  referrer: "no-referrer",
+  openGraph: { title: t("share.guestTitle"), description: t("share.guestDescription"), images: [SHARE_IMAGE] },
+  twitter: { card: "summary_large_image", title: t("share.guestTitle"), description: t("share.guestDescription"), images: [SHARE_IMAGE.url] },
+};
 
 /**
  * Pagina invitatului: fără cont, fără instalare, direct din codul QR (FR-011, FR-012, FR-020), în
@@ -21,7 +30,7 @@ export default async function GuestUploadPage({ params }: { params: Promise<{ to
 
   if (event.state === "not_found") {
     return (
-      <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-3 p-6">
+      <main id="continut" className="mx-auto flex w-full flex-1 max-w-md flex-col justify-center gap-3 p-6">
         <h1 className={ui.sectionTitle}>{t("errors.EVENT_NOT_FOUND")}</h1>
       </main>
     );
@@ -39,7 +48,7 @@ export default async function GuestUploadPage({ params }: { params: Promise<{ to
             : null;
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex flex-1 flex-col">
       {/* Aceeași bară ca în restul aplicației, fără linkuri: invitatul nu are cont. */}
       <div className="border-b border-rule bg-paper">
         <div className="mx-auto flex h-16 max-w-md items-center px-4">
@@ -47,7 +56,7 @@ export default async function GuestUploadPage({ params }: { params: Promise<{ to
         </div>
       </div>
 
-      <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 pt-8">
+      <main id="continut" className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 pt-8">
         <header className="flex flex-col items-center gap-3 text-center">
           {event.eventDate !== null && <p className={`${ui.kicker} text-accent`}>{formatDate(event.eventDate)}</p>}
           <h1 className={ui.pageTitle}>{event.name}</h1>

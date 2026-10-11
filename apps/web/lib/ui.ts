@@ -12,7 +12,10 @@ export const PAPER = "#f3eee4";
 
 const button =
   "inline-flex cursor-pointer items-center justify-center gap-2 rounded-xs px-5 disabled:cursor-not-allowed disabled:opacity-50 data-disabled:cursor-not-allowed data-disabled:opacity-50";
-const primary = `${button} bg-ink font-semibold text-paper-raised`;
+// Hover doar pe butoanele active; `hover:` se aplică numai pe dispozitive cu mouse (Tailwind 4), deci nu rămâne „lipit” pe telefon.
+const hoverSolid = "not-disabled:not-data-disabled:hover:bg-ink-muted";
+const hoverOutline = "not-disabled:not-data-disabled:hover:bg-rule/40";
+const primary = `${button} ${hoverSolid} bg-ink font-semibold text-paper-raised`;
 const field = "rounded-xs border border-field bg-paper-raised px-3.5 text-ink aria-[invalid=true]:border-danger data-invalid:border-danger";
 
 export const ui = {
@@ -45,17 +48,17 @@ export const ui = {
   /** Acțiunea principală a invitatului, în banda fixată jos. */
   buttonPrimaryLarge: `${primary} min-h-14 text-lg`,
   /** Acțiuni secundare: contur de cerneală. */
-  buttonSecondary: `${button} min-h-12 border border-ink font-medium text-ink`,
+  buttonSecondary: `${button} ${hoverOutline} min-h-12 border border-ink font-medium text-ink`,
   /** Acțiune secundară pe o bară de instrumente, la înălțimea lui `inputCompact`. */
-  buttonSecondaryCompact: `${button} min-h-10 border border-ink text-sm font-medium text-ink`,
+  buttonSecondaryCompact: `${button} ${hoverOutline} min-h-10 border border-ink text-sm font-medium text-ink`,
   /** Ștergere definitivă, în afara dialogului de confirmare; și acțiunea secundară refuzată (cod de reducere greșit). */
-  buttonDanger: `${button} min-h-12 border border-danger font-medium text-danger`,
+  buttonDanger: `${button} ${hoverOutline} min-h-12 border border-danger font-medium text-danger`,
   /** Acțiune secundară reușită (cod de reducere aplicat): contur verde. */
-  buttonSuccess: `${button} min-h-12 border border-success font-medium text-success`,
+  buttonSuccess: `${button} ${hoverOutline} min-h-12 border border-success font-medium text-success`,
   /** Ștergere pe o bară de instrumente (bara galeriei), la înălțimea lui `inputCompact`. */
-  buttonDangerCompact: `${button} min-h-10 border border-danger text-sm font-medium text-danger`,
+  buttonDangerCompact: `${button} ${hoverOutline} min-h-10 border border-danger text-sm font-medium text-danger`,
   /** Confirmarea finală a unei ștergeri, în dialog (acțiunea principală a dialogului). */
-  buttonDangerSolid: `${button} min-h-12 bg-danger font-semibold text-paper-raised`,
+  buttonDangerSolid: `${button} not-disabled:not-data-disabled:hover:bg-danger/85 min-h-12 bg-danger font-semibold text-paper-raised`,
   /** Acțiune discretă: text subliniat. */
   buttonText:
     "inline-flex min-h-11 cursor-pointer items-center font-medium text-ink underline underline-offset-4 hover:text-ink-muted disabled:cursor-not-allowed disabled:opacity-50 data-disabled:opacity-50",

@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { loginAsNewAdmin, loginWithMagicLink } from "./support/auth";
 import { createAdmin, createOrganizer, serviceClient } from "./support/db";
-import { fillDate, gotoHydrated, uniqueName, waitForHydration } from "./support/page";
+import { fillDate, gotoHydrated, uniqueName, waitForHydration, WITHDRAWAL_WAIVER } from "./support/page";
 import { futureDate } from "./support/self-service";
 import { chargeRefunded, latestPayment, payFakeSession, sendWebhook, sessionIdFromCheckoutUrl, stubCheckoutPage } from "./support/stripe";
 
@@ -26,6 +26,7 @@ async function paidEvent(page: Page): Promise<PaidEvent> {
   const eventId = page.url().split("/").pop() ?? "";
 
   await stubCheckoutPage(page);
+  await page.getByRole("region", { name: "Activarea pachetului complet" }).getByLabel(WITHDRAWAL_WAIVER).check();
   await page.getByRole("region", { name: "Activarea pachetului complet" }).getByRole("button", { name: "Plătește și activează" }).click();
   const session = await payFakeSession(await sessionIdFromCheckoutUrl(page));
   expect(await sendWebhook(page, "checkout.session.completed", session)).toBe(200);

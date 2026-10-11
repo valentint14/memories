@@ -48,6 +48,23 @@ test("autentificare", async ({ page }) => {
   await expectAccessible(page, "/login");
 });
 
+test("pagina 404, subsolul și linkul „Sari la conținut”", async ({ page }) => {
+  await gotoHydrated(page, "/nu-exista");
+  await expectAccessible(page, "404");
+
+  // Linkul de sărit apare la focus și duce la conținutul principal.
+  const skip = page.getByRole("link", { name: "Sari la conținut" });
+  await skip.focus();
+  await expect(skip).toBeVisible();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/#continut$/);
+
+  const footer = page.getByRole("contentinfo");
+  for (const name of ["Termeni și condiții", "Politica de confidențialitate", "Retragere și rambursări"]) {
+    await expect(footer.getByRole("link", { name })).toBeVisible();
+  }
+});
+
 test("zona organizatorului: listă, galerie, vizualizator și dialoguri", async ({ page }) => {
   const email = await createOrganizer();
   const event = await createEvent({ organizerEmail: email, name: uniqueName("Nunta a11y") });

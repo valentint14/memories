@@ -1,0 +1,34 @@
+# Actualizări automate pentru dependențe: o propunere (PR) pe săptămână, grupată, ca să nu inunde
+# repository-ul. CI-ul rulează pe fiecare propunere ca pe orice alt PR.
+version: 2
+updates:
+  # pnpm e tratat de ecosistemul `npm`; workspace-ul se citește din `pnpm-workspace.yaml`.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  # Imaginile de bază din Dockerfile-uri (Node).
+  - package-ecosystem: docker
+    directories:
+      - /apps/web
+      - /apps/worker
+    schedule:
+      interval: weekly
+
+  # Imaginile din `deploy/docker-compose.yml` (cloudflared e fixat la o versiune).
+  - package-ecosystem: docker-compose
+    directory: /deploy
+    schedule:
+      interval: weekly

@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { loginAsNewAdmin, loginWithMagicLink } from "./support/auth";
 import { createAdmin, createOrganizer, serviceClient } from "./support/db";
-import { fillDate, gotoHydrated, uniqueName, waitForHydration } from "./support/page";
+import { fillDate, gotoHydrated, uniqueName, waitForHydration, WITHDRAWAL_WAIVER } from "./support/page";
 import { futureDate } from "./support/self-service";
 import { payFakeSession, sendWebhook, sessionIdFromCheckoutUrl, stubCheckoutPage } from "./support/stripe";
 
@@ -146,6 +146,7 @@ test("organizatorul aplică un cod, plătește suma redusă, iar codul nu mai po
   expect(accessibility.violations.map((v) => v.id)).toEqual([]);
 
   await stubCheckoutPage(page);
+  await panel.getByLabel(WITHDRAWAL_WAIVER).check();
   await panel.getByRole("button", { name: "Plătește și activează" }).click();
   const session = await payFakeSession(await sessionIdFromCheckoutUrl(page));
   expect(await sendWebhook(page, "checkout.session.completed", session)).toBe(200);
@@ -198,6 +199,7 @@ test("adminul vede utilizarea codului și reducerea în foaia „Plăți” (US3
   await panel.getByRole("button", { name: "Aplică" }).click();
   await expect(panel.getByRole("button", { name: "Aplicat" })).toBeVisible();
   await stubCheckoutPage(page);
+  await panel.getByLabel(WITHDRAWAL_WAIVER).check();
   await panel.getByRole("button", { name: "Plătește și activează" }).click();
   const session = await payFakeSession(await sessionIdFromCheckoutUrl(page));
   expect(await sendWebhook(page, "checkout.session.completed", session)).toBe(200);
