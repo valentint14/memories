@@ -322,8 +322,8 @@ importers:
         specifier: 2.117.1
         version: 2.117.1(@opentelemetry/api@1.9.1)
       exiftool-vendored:
-        specifier: 38.1.2
-        version: 38.1.2
+        specifier: 39.0.1
+        version: 39.0.1
       file-type:
         specifier: 22.1.1
         version: 22.1.1(supports-color@8.1.1)
@@ -1840,8 +1840,8 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
 
-  batch-cluster@19.3.2:
-    resolution: {integrity: sha512-4O/cwXEUHnKiAis2gWyu44p6kPm6TaI/c6uBZJsJkrulfxf2fTJJdWe3JfYEmCremGXne/HHtoL6zB2EUQnTaA==}
+  batch-cluster@19.5.0:
+    resolution: {integrity: sha512-iI7wS1ljoQGV2+y9LUx8VBFsfMX9VLT/aeN4P07NZYWcD3dC6SZMMJLJlmoibJ4zsnpLODXVCfndTJJNTes5PA==}
     engines: {node: '>=22'}
 
   bowser@2.14.1:
@@ -2024,17 +2024,17 @@ packages:
     resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
     engines: {node: '>=0.8.x'}
 
-  exiftool-vendored.exe@13.59.2:
-    resolution: {integrity: sha512-U0l0CApIGO+AjpFYCiNCApQsMdlf6sqCyEl4wlKKqvwVAEVcvMRw91k7zj32OPFZE+/+XlLFsc6876MpOqBLiw==}
+  exiftool-vendored.exe@13.59.3:
+    resolution: {integrity: sha512-F5hpk1yVGZSDHjSKsyumyniY56IM3zawKOejOqtyT2r476fvWrUxpBmWT7Ena104TGPt/2+448Q/vrVt+yOzwQ==}
     os: [win32]
 
-  exiftool-vendored.pl@13.59.2:
-    resolution: {integrity: sha512-5B80JT9phZSUsc7zz77rQ6DfW0YssTpJ5qW/1bOH1N8XQq/jcn+9eRW9HFwhVT9uoIliw9Fg007ST3pUzQIzyw==}
+  exiftool-vendored.pl@13.59.3:
+    resolution: {integrity: sha512-QmYq2JKCXRK9Uo3E3nHb0gQ6Xce2HK7wPtrHF5r+IYWyiM5WkOhiT3BesLI9lvJvPAbzjqFxQlrjXv+/cuSX/Q==}
     os: ['!win32']
     hasBin: true
 
-  exiftool-vendored@38.1.2:
-    resolution: {integrity: sha512-RDeZ5y9I/w8fwpwjVPzKMWzY09WJ5j9+MRx1txmVYt5MVcoSHnrI2Ho4qQzkvTYqwL17e27Z9Q+pU4ILuplEVQ==}
+  exiftool-vendored@39.0.1:
+    resolution: {integrity: sha512-4eliBi259idYXoVZcIsN8qZVXA3qljlAeLzVS85nvp1uQhe1lpNcXyUUT0jGvAOWwXDZm3UUrvvw21VQ0L2OeQ==}
     engines: {node: '>=22'}
 
   expect-type@1.4.0:
@@ -4322,7 +4322,7 @@ snapshots:
 
   baseline-browser-mapping@2.11.25: {}
 
-  batch-cluster@19.3.2: {}
+  batch-cluster@19.5.0: {}
 
   bowser@2.14.1: {}
 
@@ -4510,22 +4510,22 @@ snapshots:
 
   events@3.3.0: {}
 
-  exiftool-vendored.exe@13.59.2:
+  exiftool-vendored.exe@13.59.3:
     optional: true
 
-  exiftool-vendored.pl@13.59.2:
+  exiftool-vendored.pl@13.59.3:
     optional: true
 
-  exiftool-vendored@38.1.2:
+  exiftool-vendored@39.0.1:
     dependencies:
       '@photostructure/tz-lookup': 11.7.0
       '@types/luxon': 3.7.5
-      batch-cluster: 19.3.2
+      batch-cluster: 19.5.0
       he: 1.2.0
       luxon: 3.7.2
     optionalDependencies:
-      exiftool-vendored.exe: 13.59.2
-      exiftool-vendored.pl: 13.59.2
+      exiftool-vendored.exe: 13.59.3
+      exiftool-vendored.pl: 13.59.3
 
   expect-type@1.4.0: {}
 
