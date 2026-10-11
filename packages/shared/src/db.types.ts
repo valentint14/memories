@@ -888,16 +888,19 @@ export type Database = {
         Row: {
           bucket_key: string
           count: number
+          window_end: string
           window_start: string
         }
         Insert: {
           bucket_key: string
           count?: number
+          window_end: string
           window_start: string
         }
         Update: {
           bucket_key?: string
           count?: number
+          window_end?: string
           window_start?: string
         }
         Relationships: []
