@@ -242,7 +242,10 @@ openssl rand -hex 32               # valoarea pentru IP_HASH_SECRET din web.env
 Completează fișierele cu `nano` (valorile direct după `=`, fără ghilimele, cu excepția lui
 `SMTP_FROM`): `worker.env` cu datele din pașii 2 și 4, `web.env` cu cheia `service_role`,
 `APP_URL` (fără `/` la final), `IP_HASH_SECRET` și `TURNSTILE_SECRET_KEY`, `.env` cu tokenul
-tunelului. Apoi:
+tunelului. Tot în `web.env` intră datele firmei (`BUSINESS_NAME`, `BUSINESS_TAX_ID`,
+`BUSINESS_REGISTRATION_NO`, `BUSINESS_ADDRESS`, `BUSINESS_EMAIL`, `BUSINESS_PHONE`): apar în
+subsolul paginilor și pe paginile legale, iar un rând gol nu se afișează. Completează-le pe toate
+înainte de lansare. Apoi:
 
 ```sh
 docker compose pull
