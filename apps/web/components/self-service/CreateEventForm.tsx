@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState, type ReactNode } from "react";
 import { requestEventCreationForm, type FormState } from "@/lib/actions/self-service";
+import { useFocusFirstError } from "@/lib/focus-first-error";
 import { t, type MessageKey } from "@/lib/i18n";
 import { ui } from "@/lib/ui";
 import { DateField } from "../ui/DateField";
@@ -38,9 +39,10 @@ export function CreateEventForm({
   const fields = state.status === "error" ? (state.fields ?? {}) : {};
   const general = state.status === "error" && state.error !== "VALIDATION" ? state.error : undefined;
   const values = state.status === "error" ? (state.values ?? {}) : {};
+  const formRef = useFocusFirstError<HTMLFormElement>(state.status === "error" ? state : null);
 
   return (
-    <form action={action} noValidate className={ui.sheetForm}>
+    <form ref={formRef} action={action} noValidate className={ui.sheetForm}>
       <input type="hidden" name="termsVersion" value={termsVersion} />
       <input type="hidden" name="privacyVersion" value={privacyVersion} />
 
