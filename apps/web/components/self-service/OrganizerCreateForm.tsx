@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { createEventForm } from "@/lib/actions/organizer";
 import type { FormState } from "@/lib/actions/self-service";
+import { useFocusFirstError } from "@/lib/focus-first-error";
 import { t, type MessageKey } from "@/lib/i18n";
 import { ui } from "@/lib/ui";
 import { DateField } from "../ui/DateField";
@@ -27,9 +28,10 @@ export function OrganizerCreateForm({
   const fields = state.status === "error" ? (state.fields ?? {}) : {};
   const general = state.status === "error" && state.error !== "VALIDATION" ? state.error : undefined;
   const values = state.status === "error" ? (state.values ?? {}) : {};
+  const formRef = useFocusFirstError<HTMLFormElement>(state.status === "error" ? state : null);
 
   return (
-    <form action={action} noValidate className={ui.sheetForm}>
+    <form ref={formRef} action={action} noValidate className={ui.sheetForm}>
       {versions !== null && (
         <>
           <input type="hidden" name="termsVersion" value={versions.terms} />

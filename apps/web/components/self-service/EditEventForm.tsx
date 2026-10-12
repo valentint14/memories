@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { updateOwnEvent } from "@/lib/actions/organizer";
+import { useFocusFirstError } from "@/lib/focus-first-error";
 import { t, type MessageKey } from "@/lib/i18n";
 import { ui } from "@/lib/ui";
 import { DateField } from "../ui/DateField";
@@ -15,9 +16,11 @@ export function EditEventForm({ eventId, name, eventDate }: { eventId: string; n
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [pending, startTransition] = useTransition();
+  const formRef = useFocusFirstError<HTMLFormElement>(Object.keys(fields).length > 0 ? fields : null);
 
   return (
     <form
+      ref={formRef}
       noValidate
       className={ui.sheetForm}
       onSubmit={(e) => {

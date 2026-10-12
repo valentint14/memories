@@ -106,6 +106,22 @@ test("afișează erorile lângă câmpuri și nu trimite formularul incomplet", 
   await expect(page.getByText("Trebuie să accepți termenii și politica de confidențialitate.")).toBeVisible();
 });
 
+test("trimiterea unui formular gol duce la primul câmp cu eroare", async ({ page }) => {
+  await page.goto("/");
+  await waitForHydration(page);
+  await page.getByRole("button", { name: "Creează evenimentul" }).click();
+  await expect(page.getByText("Trebuie să accepți termenii și politica de confidențialitate.")).toBeVisible();
+  await expect(page.getByLabel("Adresa de email")).toBeFocused();
+  await expect(page.getByLabel("Adresa de email")).toBeInViewport();
+
+  // Cu emailul și numele corecte, prima eroare rămasă e data.
+  await page.getByLabel("Adresa de email").fill(randomEmail("ss-focus"));
+  await page.getByLabel("Numele evenimentului").fill(uniqueName("Focus"));
+  await page.getByRole("button", { name: "Creează evenimentul" }).click();
+  await expect(page.getByText("Trebuie să accepți termenii și politica de confidențialitate.")).toBeVisible();
+  await expect(page.getByRole("group", { name: "Data evenimentului" }).getByRole("spinbutton").first()).toBeFocused();
+});
+
 test("răspunsul e același pentru o adresă existentă și pentru una nouă", async ({ page }) => {
   const pages: string[] = [];
   for (const email of ["org-a@example.test", randomEmail("ss-new")]) {

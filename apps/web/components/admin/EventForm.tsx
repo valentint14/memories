@@ -6,6 +6,7 @@ import { useMemo, useState, useTransition } from "react";
 import { Button, FieldError, Form, Input, Label, Text, TextField } from "react-aria-components";
 import { createEvent, updateEvent } from "@/lib/actions/admin";
 import { isoToLocalInput, localInputToIso } from "@/lib/dates";
+import { useFocusFirstError } from "@/lib/focus-first-error";
 import { formatDateTime, formatMoney, t, type MessageKey } from "@/lib/i18n";
 import { ui } from "@/lib/ui";
 import { DateField } from "../ui/DateField";
@@ -64,6 +65,7 @@ export function EventForm({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const formRef = useFocusFirstError<HTMLFormElement>(Object.keys(errors).length > 0 ? errors : null);
   const [formError, setFormError] = useState<string | null>(null);
   const [basePriceLei, setBasePriceLei] = useState(initial ? String(initial.basePriceMinor / 100) : "");
   const [uploadEndsLocal, setUploadEndsLocal] = useState(initial ? isoToLocalInput(initial.uploadEndsAt) : "");
@@ -186,6 +188,7 @@ export function EventForm({
 
   return (
     <Form
+      ref={formRef}
       validationBehavior="aria"
       validationErrors={Object.fromEntries(Object.entries(errors).map(([k, v]) => [k, messageFor(v)]))}
       className={sheets ? "flex flex-col gap-6" : `grid gap-5 sm:grid-cols-2 ${fill ? "" : "max-w-3xl"}`}
