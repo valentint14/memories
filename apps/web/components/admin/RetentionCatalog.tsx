@@ -117,7 +117,7 @@ function OptionRow({ option, basePriceMinor, included }: { option: CatalogRow; b
                   if (result.ok) router.refresh();
                 });
               }}
-              className={ui.buttonSecondaryCompact}
+              className={`${ui.buttonSecondaryCompact} min-w-24 justify-center`}
             >
               {t("admin.retentionPage.save")}
             </button>
@@ -130,7 +130,7 @@ function OptionRow({ option, basePriceMinor, included }: { option: CatalogRow; b
                 setRemovalError(null);
                 setRemoval("confirm");
               }}
-              className={`${ui.buttonText} text-sm text-danger`}
+              className={`${ui.buttonDangerCompact} min-w-24 justify-center`}
             >
               {t("admin.retentionPage.delete")}
             </button>
