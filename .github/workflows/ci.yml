@@ -18,8 +18,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           # Cache-ul automat ar cere pnpm înainte ca Corepack să-l activeze.
@@ -46,9 +46,9 @@ jobs:
         run: pnpm test:db
 
       # Straturile Docker se păstrează în cache-ul GitHub Actions, comun cu joburile E2E.
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
       - name: Build imagine worker
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: apps/worker/Dockerfile
@@ -58,7 +58,7 @@ jobs:
           cache-to: type=gha,scope=worker,mode=max
       # Pe main imaginea web se construiește doar la publicare; aici se prinde un Dockerfile stricat.
       - name: Build imagine web
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: apps/web/Dockerfile
@@ -110,8 +110,8 @@ jobs:
       E2E_EXTRA_SERVERS: ${{ matrix.extra }}
       E2E_WORKERS: "3"
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           package-manager-cache: false
@@ -126,9 +126,9 @@ jobs:
         run: node scripts/ci-env.mjs >> "$GITHUB_ENV"
 
       # Worker-ul procesează încărcările din teste; imaginea vine în mare parte din cache.
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
       - name: Build imagine worker
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: apps/worker/Dockerfile
@@ -147,7 +147,7 @@ jobs:
       - name: Versiunea Playwright
         id: pw
         run: echo "version=$(node -p "require('./apps/web/node_modules/@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         id: pw-cache
         with:
           path: ~/.cache/ms-playwright
@@ -161,7 +161,7 @@ jobs:
 
       - name: E2E
         run: pnpm test:e2e
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-report-${{ matrix.name }}
@@ -195,7 +195,7 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Autentificare în GitHub Container Registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
       - name: Worker
