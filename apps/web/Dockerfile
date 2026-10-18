@@ -3,7 +3,7 @@
 #
 # Variabilele NEXT_PUBLIC_* sunt incluse în bundle la build (ajung în browser), deci se dau ca
 # argumente de build; secretele (SUPABASE_SERVICE_ROLE_KEY etc.) se dau doar la rulare.
-FROM node:24.21.0-trixie-slim AS build
+FROM node:26.12.0-trixie-slim AS build
 
 WORKDIR /app
 RUN corepack enable
@@ -29,7 +29,7 @@ ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL \
     NEXT_OUTPUT=standalone
 RUN pnpm --filter web build
 
-FROM node:24.21.0-trixie-slim
+FROM node:26.12.0-trixie-slim
 
 WORKDIR /app
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0 PORT=3000
