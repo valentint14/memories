@@ -26,7 +26,7 @@ async function awaitingEvent(client: SupabaseClient): Promise<string> {
   const { data, error } = await client.rpc("create_event_as_organizer", {
     p_name: "Nume inițial",
     p_event_date: inDays(15),
-    p_terms_version: "2026-10-11",
+    p_terms_version: "2026-10-19",
     p_privacy_version: "2026-10-11",
   });
   if (error) throw new Error(error.message);

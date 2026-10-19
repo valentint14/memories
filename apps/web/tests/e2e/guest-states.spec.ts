@@ -40,7 +40,7 @@ test("evenimentul neconfirmat nu există pentru invitați", async ({ page }) => 
     p_email: randomEmail("guest-unconf"),
     p_name: "Neconfirmat",
     p_event_date: futureDate(10),
-    p_terms_version: "2026-10-11",
+    p_terms_version: "2026-10-19",
     p_privacy_version: "2026-10-11",
   });
   const { data: request } = await serviceClient().from("auth_requests").select("event_id").eq("id", requestId ?? "").single();

@@ -22,7 +22,7 @@ export async function SiteFooter() {
   ].filter((part): part is string => part !== null);
 
   return (
-    <footer aria-label={t("footer.label")} className="mt-auto border-t border-rule bg-paper">
+    <footer aria-label={t("footer.label")} className="mt-auto border-t border-rule bg-paper print:hidden">
       <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-6 text-sm text-ink-muted sm:px-8">
         <nav aria-label={t("footer.label")} className="flex flex-wrap gap-x-6">
           <Link href="/terms" className={link}>

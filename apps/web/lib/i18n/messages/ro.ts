@@ -409,6 +409,8 @@ export const ro = {
   "confirm.newRequest": "Cere un email nou",
   "legal.version": "Versiunea din {date}",
   "legal.back": "Înapoi la pagina principală",
+  "legal.toc": "Cuprins",
+  "legal.print": "Tipărește",
   "status.awaiting_activation": "În așteptarea activării",
   "status.active": "Activ",
   "status.suspended": "Suspendat",
