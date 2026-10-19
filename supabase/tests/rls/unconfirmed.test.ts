@@ -18,7 +18,7 @@ beforeAll(async () => {
     p_email: email,
     p_name: "Botez neconfirmat",
     p_event_date: new Date(Date.now() + 5 * 86_400_000).toISOString().slice(0, 10),
-    p_terms_version: "2026-10-11",
+    p_terms_version: "2026-10-19",
     p_privacy_version: "2026-10-11",
   });
   if (error) throw new Error(error.message);

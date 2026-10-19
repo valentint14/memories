@@ -4,7 +4,8 @@ import { closePool, createTestEvent, organizerClient, randomEmail, sql, type Sup
 // Crearea din cont, fără email de confirmare (002: FR-005, FR-021, FR-041).
 afterAll(closePool);
 
-const V = "2026-10-11";
+const TERMS = "2026-10-19";
+const PRIVACY = "2026-10-11";
 
 function inDays(days: number): string {
   return new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 10);
@@ -14,7 +15,7 @@ async function create(client: SupabaseClient, name: string, versions = true) {
   return client.rpc("create_event_as_organizer", {
     p_name: name,
     p_event_date: inDays(20),
-    ...(versions ? { p_terms_version: V, p_privacy_version: V } : {}),
+    ...(versions ? { p_terms_version: TERMS, p_privacy_version: PRIVACY } : {}),
   });
 }
 
@@ -60,7 +61,7 @@ describe("create_event_as_organizer", () => {
       p_name: "Versiune veche",
       p_event_date: inDays(20),
       p_terms_version: "2020-01-01",
-      p_privacy_version: V,
+      p_privacy_version: PRIVACY,
     });
     expect(old.error?.message).toBe("TERMS_OUTDATED");
     // După o acceptare a versiunii curente, nu mai trebuie trimise.
@@ -74,8 +75,8 @@ describe("create_event_as_organizer", () => {
     const past = await client.rpc("create_event_as_organizer", {
       p_name: "Trecut",
       p_event_date: "2020-01-01",
-      p_terms_version: V,
-      p_privacy_version: V,
+      p_terms_version: TERMS,
+      p_privacy_version: PRIVACY,
     });
     expect(past.error?.message).toBe("VALIDATION");
   });

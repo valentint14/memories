@@ -9,7 +9,7 @@ async function unconfirmedEvent(): Promise<{ requestId: string; eventId: string 
     p_email: randomEmail("cleanup"),
     p_name: "Aniversare",
     p_event_date: new Date(Date.now() + 3 * 86_400_000).toISOString().slice(0, 10),
-    p_terms_version: "2026-10-11",
+    p_terms_version: "2026-10-19",
     p_privacy_version: "2026-10-11",
   });
   if (error) throw new Error(error.message);
@@ -62,7 +62,7 @@ describe("purge_stale_auth_users (research R6)", () => {
       p_email: withEvent,
       p_name: "Are eveniment",
       p_event_date: new Date(Date.now() + 5 * 86_400_000).toISOString().slice(0, 10),
-      p_terms_version: "2026-10-11",
+      p_terms_version: "2026-10-19",
       p_privacy_version: "2026-10-11",
     });
 
