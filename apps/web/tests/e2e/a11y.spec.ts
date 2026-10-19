@@ -138,6 +138,9 @@ test.describe("002: creare self-service, confirmare, documente legale", () => {
 
     // Cuprinsul duce la secțiuni, iar ancora din subsol și din foaia de plată rămâne valabilă.
     await gotoHydrated(page, "/terms");
+    // Pe telefon cuprinsul e pliat sub antet; pe ecran lat stă deschis în stânga.
+    const tocSummary = page.locator("summary", { hasText: "Cuprins" });
+    if (await tocSummary.isVisible()) await tocSummary.click();
     await page.getByRole("navigation", { name: "Cuprins" }).getByRole("link", { name: "9. Păstrarea și ștergerea" }).click();
     await expect(page).toHaveURL(/#pastrarea-si-stergerea$/);
     await expect(page.getByRole("heading", { name: "9. Păstrarea și ștergerea" })).toBeInViewport();
