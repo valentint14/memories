@@ -135,6 +135,14 @@ test.describe("002: creare self-service, confirmare, documente legale", () => {
       await gotoHydrated(page, path);
       await expectAccessible(page, path);
     }
+
+    // Cuprinsul duce la secțiuni, iar ancora din subsol și din foaia de plată rămâne valabilă.
+    await gotoHydrated(page, "/terms");
+    await page.getByRole("navigation", { name: "Cuprins" }).getByRole("link", { name: "9. Păstrarea și ștergerea" }).click();
+    await expect(page).toHaveURL(/#pastrarea-si-stergerea$/);
+    await expect(page.getByRole("heading", { name: "9. Păstrarea și ștergerea" })).toBeInViewport();
+    await gotoHydrated(page, "/terms#retragere-si-rambursari");
+    await expect(page.getByRole("heading", { name: "6. Retragere și rambursări" })).toBeInViewport();
   });
 
   test("pagina invitatului pentru evenimente neactivate și suspendate", async ({ page }) => {
