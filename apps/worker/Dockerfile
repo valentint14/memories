@@ -3,7 +3,7 @@
 #
 # HEIC: sharp 0.35 cere libvips ≥ 8.18.6, iar Debian are 8.16 — deci sharp folosește binarul
 # precompilat (fără HEIC), iar pozele HEIC se decodează cu `heif-dec` (research.md R5).
-FROM node:24.21.0-trixie-slim
+FROM node:26.13.0-trixie-slim
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
